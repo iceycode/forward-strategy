@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="12" height="12" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="dg_edging132" tilewidth="32" tileheight="32">
+  <image source="dg_edging132.gif" width="256" height="512"/>
+  <terraintypes>
+   <terrain name="obstacle" tile="-1"/>
+  </terraintypes>
+  <tile id="122" terrain="0,0,0,0"/>
+ </tileset>
+ <tileset firstgid="129" name="Panels" tilewidth="32" tileheight="32">
+  <image source="PanelTileset.png" width="64" height="64"/>
+  <terraintypes>
+   <terrain name="panelUp" tile="-1"/>
+   <terrain name="panelOver" tile="-1"/>
+  </terraintypes>
+  <tile id="0">
+   <properties>
+    <property name="Panel" value="0"/>
+   </properties>
+  </tile>
+  <tile id="1" terrain="0,0,0,0">
+   <properties>
+    <property name="Panel" value="1"/>
+   </properties>
+  </tile>
+  <tile id="2">
+   <properties>
+    <property name="Panel" value="2"/>
+   </properties>
+  </tile>
+  <tile id="3" terrain="1,1,1,1">
+   <properties>
+    <property name="Panel" value="3"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="panels1" width="12" height="12" opacity="0.39">
+  <data encoding="base64" compression="zlib">
+   eJxrZGBgaITiJhJxIxX00ttOUvWMYvwYAMcWSRU=
+  </data>
+ </layer>
+ <layer name="panels2" width="12" height="12" opacity="0.42">
+  <data encoding="base64" compression="zlib">
+   eJxrZmBgaB7Fo5hMDACAfUmx
+  </data>
+ </layer>
+ <layer name="grass" width="12" height="12">
+  <properties>
+   <property name="Terrain" value="ground"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJwrY2BgKCMR16JhdHlFBgTAph4fgKlHNg8GqoDYCIiN0dTjwlVIGAa0gFgbiJWg5sDMq8KBCcnDzMMljw50gFiTCHUwe4lVD3OLDQ71uPwGCwdi1GPDAF5OL/Q=
+  </data>
+ </layer>
+ <layer name="water" width="12" height="12">
+  <properties>
+   <property name="Terrain" value="water"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxjYKAN4AJibhxyFkBsCsSGQGwCpUWAmBOHejMgNkcT48GjHhsQAmJhEtRTC/ABMT8Dwp/41MkBsQIQ8xJhrhgQs0GxOGVOpAgAAO3tAvE=
+  </data>
+ </layer>
+ <layer name="obstacles" width="12" height="12">
+  <properties>
+   <property name="Terrain" value="obstacle"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxjYMANynGI1+HRQwjUk6i+ggw7YO6uJlEftdSTag49AbXdBgCpagTL
+  </data>
+ </layer>
+ <layer name="grid" width="12" height="12">
+  <properties>
+   <property name="Normal" value="true"/>
+   <property name="selected" value="false"/>
+   <property name="up1" value="false"/>
+   <property name="up2" value="false"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxrZGBgaBzFo5hMDAA6LkiR
+  </data>
+ </layer>
+</map>

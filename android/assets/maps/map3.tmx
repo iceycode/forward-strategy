@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="12" height="12" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="dg_edging132" tilewidth="32" tileheight="32">
+  <image source="dg_edging132.gif" width="256" height="512"/>
+ </tileset>
+ <layer name="ground" width="12" height="12">
+  <properties>
+   <property name="Terrain" value="ground"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJyNkEsKgEAMQ3sV3flZjVvP1UXBu9sBgyW0joG3mYYkjIqIFsjH+xXg+ySvlLwjwc99XeY05yB/tdsC0OpszvzkIA8eI+I9A3ncxb3Q7ixJDgu9f/3Ychb+bFsL/1D5R9yt1yyg
+  </data>
+ </layer>
+ <layer name="water" width="12" height="12">
+  <properties>
+   <property name="Terrain" value="water"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxjYKAN4AJibhxyFkBsCsSGQGwCpUWAmBOHejMgNkcT48GjHhsQAmJhEtRTC/ABMT8Dwp/41MkBsQIQ8xJhrhgQs0GxOGVOpAgAAO3tAvE=
+  </data>
+ </layer>
+ <layer name="obstacles" width="12" height="12">
+  <properties>
+   <property name="Terrain" value="obstacle"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxjYMANynGI1+HRQwjUU6CXWIDL3YRANZXsp5Y5tADUdhsAvlQDXQ==
+  </data>
+ </layer>
+</map>

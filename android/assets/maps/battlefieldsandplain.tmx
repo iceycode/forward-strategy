@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="12" height="12" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="sandbeach 2 tileset" tilewidth="32" tileheight="32">
+  <image source="../../Tile Sets/T_sandbeach2/sandbeach 2 tileset.bmp" width="1024" height="1024"/>
+  <terraintypes>
+   <terrain name="sand" tile="65"/>
+   <terrain name="Sand-2" tile="97"/>
+   <terrain name="river" tile="35"/>
+  </terraintypes>
+  <tile id="0" terrain="0,0,0,0"/>
+  <tile id="1" terrain="0,0,0,0"/>
+  <tile id="2" terrain="2,2,2,2"/>
+  <tile id="3" terrain="2,2,2,2"/>
+  <tile id="4" terrain="2,2,2,2"/>
+  <tile id="5" terrain="2,,2,"/>
+  <tile id="6" terrain="0,0,0,0"/>
+  <tile id="7" terrain="0,0,0,0"/>
+  <tile id="8" terrain="0,0,0,0"/>
+  <tile id="9" terrain="0,0,0,0"/>
+  <tile id="10" terrain="0,0,0,0"/>
+  <tile id="32" terrain="0,0,0,0"/>
+  <tile id="33" terrain="0,0,0,"/>
+  <tile id="34" terrain="2,2,2,2"/>
+  <tile id="35" terrain="2,2,2,2"/>
+  <tile id="36" terrain="2,2,2,2"/>
+  <tile id="37" terrain="2,,2,"/>
+  <tile id="38" terrain="0,0,0,0"/>
+  <tile id="39" terrain="0,0,0,0"/>
+  <tile id="40" terrain="0,,,"/>
+  <tile id="64" terrain="0,0,0,0"/>
+  <tile id="65" terrain=",,0,0"/>
+  <tile id="66" terrain="2,2,2,2"/>
+  <tile id="67" terrain="2,2,2,2"/>
+  <tile id="68" terrain="2,2,2,2"/>
+  <tile id="69" terrain="2,,2,"/>
+  <tile id="70" terrain="0,0,0,0"/>
+  <tile id="71" terrain="0,0,0,0"/>
+  <tile id="96" terrain="1,1,1,1"/>
+  <tile id="97" terrain="1,1,1,1"/>
+  <tile id="98" terrain="2,2,2,2"/>
+  <tile id="99" terrain="2,2,2,2"/>
+  <tile id="100" terrain="2,2,2,2"/>
+  <tile id="101" terrain="2,,2,"/>
+  <tile id="102" terrain="0,0,0,0"/>
+  <tile id="103" terrain="0,0,0,0"/>
+  <tile id="104" terrain="0,0,0,0"/>
+  <tile id="105" terrain="0,0,0,0"/>
+  <tile id="106" terrain="0,0,0,"/>
+  <tile id="107" terrain="0,,,"/>
+  <tile id="128" terrain="1,1,1,1"/>
+  <tile id="129" terrain="1,1,1,1"/>
+  <tile id="134" terrain="0,0,0,0"/>
+  <tile id="135" terrain="0,0,0,0"/>
+  <tile id="136" terrain="0,0,0,0"/>
+  <tile id="137" terrain="0,0,0,0"/>
+  <tile id="138" terrain="0,0,0,0"/>
+  <tile id="160" terrain="1,1,1,1"/>
+  <tile id="161" terrain="1,1,1,1"/>
+ </tileset>
+ <layer name="Ground" width="12" height="12">
+  <maps encoding="base64" compression="zlib">
+   eJx1kdENACEIQ1kVNqmbwKTnJZC8M95HI2qhFMrMtLE2quFANoS7Nz/7XHgXzvctUD8AP+Lh3rR06OWhGYgLXgJ+hLzA3S911Zzhnr6nPwdPyMvWpYbs2+v8c96TT+74GU4hf3bDHv5mxH1yD7KvZ0G/EC9ocj4PCs9HbA==
+  </maps>
+ </layer>
+ <layer name="Fringe" width="12" height="12">
+  <maps encoding="base64" compression="zlib">
+   eJyljwkKgDAMBANWP+LxEY+PeHzE491OoYUS2lpwYQiESWBFRIxDgulTuV0NTeCk/BY66GEo8EeYYIZF+Sbir7DBDof6qV2bEy644Snwc31jfq5v7Eb3zf220X1Tno/u++X/zQs59Asp
+  </maps>
+ </layer>
+ <layer name="Collisions" width="12" height="12">
+  <maps encoding="base64" compression="zlib">
+   eJxjYBgFo4B8AAACQAAB
+  </maps>
+ </layer>
+</map>

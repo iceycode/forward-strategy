@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="12" height="12" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="grid" tilewidth="32" tileheight="32">
+  <image source="../Grid/grid.png" width="32" height="32"/>
+ </tileset>
+ <tileset firstgid="2" name="grass1" tilewidth="32" tileheight="32">
+  <image source="../Ground colors/grass1.png" width="32" height="32"/>
+ </tileset>
+ <tileset firstgid="3" name="water1" tilewidth="32" tileheight="32">
+  <image source="../Ground colors/water1.png" width="32" height="32"/>
+ </tileset>
+ <layer name="grid" width="12" height="12">
+  <data encoding="base64" compression="zlib">
+   eJxjYmBgYBrFo5hMDABIjwEh
+  </data>
+ </layer>
+ <layer name="ground" width="12" height="12" opacity="0.55">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYBzFo5hMDAClYACR
+  </data>
+ </layer>
+ <layer name="obstacles" width="12" height="12">
+  <data encoding="base64" compression="zlib">
+   eJxjYKA/YMaDBzsg1Z1DxV/kAgAyiAAi
+  </data>
+ </layer>
+</map>

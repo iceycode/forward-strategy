@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="12" height="12" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="ripple earth dark to grass tileset" tilewidth="32" tileheight="32">
+  <image source="../Tile Sets/T_ripple_earth_dark/ripple earth dark to grass tileset.bmp" trans="68ff57" width="1024" height="1024"/>
+  <terraintypes>
+   <terrain name="sand" tile="262"/>
+   <terrain name="New Terrain" tile="262"/>
+  </terraintypes>
+  <tile id="262" terrain="0,0,0,0"/>
+ </tileset>
+ <tileset firstgid="1025" name="L1_Terrain028" tilewidth="32" tileheight="32">
+  <image source="../Tile Sets/Terrain/L1_Terrain028.PNG" width="54" height="54"/>
+ </tileset>
+ <tileset firstgid="1026" name="dg_edging332" tilewidth="32" tileheight="32">
+  <image source="../Tile Sets/AngbandTk/dg_edging332.gif" width="256" height="416"/>
+ </tileset>
+ <layer name="Ground" width="12" height="12">
+  <maps encoding="base64" compression="zlib">
+   eJxjZ2RgYMeDQQBGw9i4sCATAuNTh009MXqIUY8sjq4emx5C6tH1kKMeJkaMenzqCLkHXa8QAXPw+YWQXpg+AH40B4M=
+  </maps>
+ </layer>
+ <layer name="Fringe" width="12" height="12" opacity="0.62">
+  <maps encoding="base64" compression="zlib">
+   eJxjYKAv8GchToya9uAznxp2E2s+Lfw50AAAVQ0CmQ==
+  </maps>
+ </layer>
+ <layer name="Collisions" width="12" height="12" opacity="0.67">
+  <maps encoding="base64" compression="zlib">
+   eJxjYKAv4MQiNoEG9iCbic1OatqNzwxi3TFUAQCqbQLs
+  </maps>
+ </layer>
+</map>
