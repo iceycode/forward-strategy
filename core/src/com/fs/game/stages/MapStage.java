@@ -34,10 +34,10 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fs.game.data.GameData;
-import com.fs.game.maps.GameBoard;
 import com.fs.game.maps.MapActor;
 import com.fs.game.maps.Panel;
 import com.fs.game.units.Unit;
+import com.fs.game.unused_old_classes.GameBoard;
 import com.fs.game.utils.Constants;
 import com.fs.game.utils.GameManager;
 import com.fs.game.utils.MapUtils;
@@ -115,10 +115,9 @@ public class MapStage extends Stage implements ActionListener{
 		camera = new OrthographicCamera(Constants.SCREENHEIGHT, Constants.SCREENWIDTH);
 		camera.setToOrtho(false, 800, 500);
 		
-		//TODO: + NOTE : cannot figure out why positioning is off by that much
-		//tiled map lines up well with it
+ 		//tiled map lines up well with it
 		camera.position.set(GRID_X-16, GRID_Y+50, 0);
-         camera.update();	
+        camera.update();	
         
         viewport = new ScreenViewport();
 		viewport.setWorldHeight(Constants.SCREENHEIGHT); //sets the camera screen view dimensions
@@ -128,18 +127,28 @@ public class MapStage extends Stage implements ActionListener{
  	}
 	
 	public void setupGridElements(){
- 		MapUtils.setupGridElements(); //stores data in UnitData
+ 		MapUtils.setupPanels(); //stores data in UnitData
 		panelMatrix = GameData.gridMatrix;
-		setPanelArray(GameData.gridBoard);
-		gridTable = MapUtils.createGridTable(panelMatrix);
-		addActor(gridTable);
+		this.setPanelArray(GameData.gamePanels);
+		//gridTable = MapUtils.createPanelTable(panelMatrix);
+		//addActor(gridTable);
+		
+		
+		for (int x = 0; x < Constants.ROWS; x++)
+		{
+			for (int y = 0; y < Constants.COLS; y++) {
+				addActor(panelMatrix[x][y]);
+			}
+			
+		}
+ 
   	}
 	
 	public void createMapActors(){
 		//for-each loop thru all layers of map
 		for (MapLayer layer : tiledMap.getLayers()) {
 		    TiledMapTileLayer tiledLayer = (TiledMapTileLayer)layer;
-		    MapUtils.createActorsForLayer(tiledLayer, panelMatrix, this);
+		    MapUtils.createActorsForLayer(tiledLayer, GameData.gridMatrix, this);
 		    //Table tileTable = MapUtils.tableFromLayers(tiledLayer);
 		    //addActor(tileTable);
 		} //gets all the actors from all the layers
@@ -189,7 +198,6 @@ public class MapStage extends Stage implements ActionListener{
      *  */
     @Override
     public void act(float delta) {
-//    	
      	Array<Unit> allUnits = MapUtils.findAllUnits(getActors());
      	
      	if (currUnit!=null){
@@ -200,6 +208,8 @@ public class MapStage extends Stage implements ActionListener{
 	     	}
 	     	
 	     	if (currUnit.moving){
+	     		currUnit.setPosition(currUnit.getTargetPan().getX(), currUnit.getTargetPan().getY());
+	     		UnitUtils.unitDirection(currUnit, currUnit.getX(), currUnit.getY());
 	      	}
      	}
 //     	

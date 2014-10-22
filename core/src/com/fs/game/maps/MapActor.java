@@ -33,7 +33,7 @@ public class MapActor extends Actor {
 	TiledMapTileLayer tiledLayer; //the tile layer
 	TiledMapTileLayer.Cell cell; //will become an actor
 	
- 	public MapProperties property;
+ 	public MapProperties property; 
  	
  	//for unit movement selection
  	Texture panelUp;
@@ -55,9 +55,13 @@ public class MapActor extends Actor {
     protected InputListener inputListener;
     protected ClickListener clickListener;
     
+    //A* scores for pathfinding algorithm
+  	public float totalCost; //cost from start + heuristic
+  	public float costFromStart;//distance from start panel to current panel
+  	public float heuristic;//estimated distance from current panel to goal
     
     public MapActor(TiledMapTile tile, float actorX, float actorY) {
-  
+    	
      	this.setX(actorX);
     	this.setY(actorY);
      }
@@ -74,6 +78,10 @@ public class MapActor extends Actor {
         this.cell = cell;
         this.property = tiledLayer.getProperties();
         this.terrainType = tiledLayer.getName();
+        
+        if (this.terrainType.equals("panelUp")){
+        	
+        }
         
         this.skin = GameManager.gameSkin;
         this.panelUp = skin.get("panelUp", Texture.class);
@@ -93,7 +101,7 @@ public class MapActor extends Actor {
 		//render();		
 
     	super.draw(batch, alpha);
- 		//batch.draw(currentTexture, getX(), getY());
+ 		batch.draw(currentTexture, getX(), getY());
 
 //
 //    	if (moveableTo){
@@ -136,6 +144,7 @@ public class MapActor extends Actor {
 		
 	}
 	
+	
 
     public void addClickListener() {
     	clickListener = new ClickListener() {
@@ -143,6 +152,15 @@ public class MapActor extends Actor {
             public void clicked(InputEvent event, float x, float y) {
                 Gdx.app.log(LOG, ((MapActor)event.getTarget()).cell + " has been clicked.");
             }
+    		
+    		@Override
+    		public boolean isOver(Actor actor, float x, float y){
+    			
+    			
+    			
+    			return true;
+    		}
+    		
     	};
     	
         addListener(clickListener);

@@ -126,11 +126,12 @@ public class MapUtils {
 						Gdx.app.log("log: ", " tilemap actor clicked at " + x + y);
 					}
 				});
-				
+ 				
 				//add to table
 				layerTable.add(mapActor).width(32).height(32);
 				layerTable.addActor(mapActor);
 			}//get all the columns
+			
 			layerTable.row();
 		}//get all the rows
 		
@@ -171,9 +172,9 @@ public class MapUtils {
 	 * @param stage
 	 */
     public static void createActorsForLayer(TiledMapTileLayer tiledLayer, Panel[][] panelMatrix, MapStage stage) {
-        mapMatrix = new MapActor[11*3][11*3]; //11 by 11 tiles * 3 layers 
+        mapMatrix = new MapActor[11*3][11*3]; //11 by 11 tiles * 5 layers 
         GameData.mapActorArr = new Array<MapActor>();
-        GameData.gridBoard = new Array<Panel>();
+        GameData.gamePanels = new Array<Panel>();
         
 		String terrainType = tiledLayer.getName();
 
@@ -203,7 +204,7 @@ public class MapUtils {
  	                stage.addActor(panelMatrix[x][y]); //also adds the panel
 	 				
 	                GameData.gridMatrix[x][y].setTerrainType(terrainType); //set panel to terrain type of tile
- 	                GameData.gridBoard.add(GameData.gridMatrix[x][y]); //add to panel array
+ 	                GameData.gamePanels.add(GameData.gridMatrix[x][y]); //add to panel array
  	                GameData.mapActorArr.add(mapActor);	//add to a mapActor array TODO: create animation within tiled map
  				}
  
@@ -220,7 +221,7 @@ public class MapUtils {
     /*****Sets all the panels positions & actors in matrix
 	 * - sets all game board actors as arrays
 	 */
-	public static void setupGridElements() {
+	public static void setupPanels() {
 		
 		int rows = Constants.ROWS;
 		int columns = Constants.COLS;
@@ -257,7 +258,7 @@ public class MapUtils {
 				//panel to this terrain property 
 //				MapActor ma = mapActMatrix[x][y]; // <----these are seen in MapStage's TiledMap
 // 				panelActor.setTerrainType(ma.terrainType);
- 			
+				
 				//panelActor.toFront();
 				panelMatrix[x][y] = panelActor; //store in position matrix
 				panelsOnStage.add(panelActor);
@@ -268,7 +269,7 @@ public class MapUtils {
 		
 		
 		//set the elements which will be used on stage & by Unit actors
-		GameData.gridBoard = panelsOnStage;
+		GameData.gamePanels = panelsOnStage;
 		GameData.gridMatrix = panelMatrix;
  	}
 	
@@ -276,14 +277,15 @@ public class MapUtils {
 	 *  
 	 *  makes a Table which can be added to stage
 	 */
-	public static Table createGridTable(Panel[][] gridMatrix) {
+	public static Table createPanelTable(Panel[][] gridMatrix) {
 		Table table = new Table();	
 		table.setFillParent(false);
 		
-		for(int x = 0; x < Constants.ROWS; x++) 	{
+		for(int x = 0; x < Constants.ROWS; x++)  {
 			for (int y = 0; y < Constants.COLS; y++ ) {
 				// final Panel p = new Panel(stage, tiles, x, y);
 				Panel panelActor = gridMatrix[x][y];
+				//panelActor.addListener(MapUtils.createPanelListener(panelActor));
 				table.add(panelActor).width(panelActor.getWidth()).height(panelActor.getHeight());
 				table.addActor(panelActor);
 			}
@@ -314,8 +316,7 @@ public class MapUtils {
 		 */
 		//get & add player 1 units to board
 		for (Unit u : p1Units) {
- 			u.setPanelsPos(panelMatrix);
- 			u.setPlayer(1); 
+  			u.setPlayer(1); 
 		//	stage.addActor(u);	//add the actor
 			unitsOnStage.add(u);
   		}
@@ -325,8 +326,7 @@ public class MapUtils {
 		 */
 		//get & add player 2 units
 		for (Unit u : p2Units) {
- 			u.setPanelsPos(panelMatrix);
- 			u.setPlayer(2);
+  			u.setPlayer(2);
  			u.setLock(true);
   			u.setEnemyUnits(p1Units);
    		//	stage.addActor(u);	//add the actor
@@ -431,30 +431,7 @@ public class MapUtils {
 				}
 
 			}
-			
-			@Override
-			public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor){
-				Panel pan = (Panel)(event.getTarget());
-				pan.viewing = true;
-				
- 			}
-			
-			
-			@Override
-			public void exit(InputEvent event, float x, float y, int pointer, Actor fromActor){
-				Panel pan = (Panel)(event.getTarget());
-				pan.viewing = false;
-				
- 			}
-			
-			@Override
-			public boolean mouseMoved(InputEvent event, float x, float y){
-				Panel pan = (Panel)(event.getTarget());
-				
-				pan.viewing = true;
-				
-				return true;
- 			}
+			  
  		};
  		
  		return inputListener;

@@ -1,5 +1,10 @@
 package com.fs.game.android;
 
+/*
+ * 
+ */
+
+//NOTE: as of gdx version 1.4.1, added archive android-4.4.jar as referenced by gdx-backend-android 
 import android.os.Bundle;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;

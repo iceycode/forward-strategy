@@ -8,7 +8,10 @@ import java.util.Iterator;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Intersector;
@@ -27,11 +30,11 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.fs.game.data.GameData;
 import com.fs.game.enums.UnitState;
-import com.fs.game.maps.GameBoard;
 import com.fs.game.maps.Panel;
 import com.fs.game.stages.MapStage;
 import com.fs.game.units.Unit;
 import com.fs.game.units.UnitInfo;
+import com.fs.game.unused_old_classes.GameBoard;
 import com.fs.game.utils.pathfinder.PathFinder;
 
 
@@ -89,7 +92,7 @@ public class UnitUtils  {
 		am.getAssetNames(); //an array containing file name info
 		
  
-		GameData.gridBoard = panelsOnStage;
+		GameData.gamePanels = panelsOnStage;
 		GameData.gridMatrix = gridMatrix;
  		UnitUtils.panelMatrix = gridMatrix;
  
@@ -119,8 +122,7 @@ public class UnitUtils  {
  			if (id == u.getId()) {
 				Texture tex = am.get(unitPicPath, Texture.class);
 				uni = new Unit(tex, actorX, actorY, u);
-				uni.setPanelsPos(panelMatrix);
-			}
+ 			}
 		}
 		
 		return uni;
@@ -167,7 +169,6 @@ public class UnitUtils  {
 		for (int i = 0; i < unitInfoArr.size; i++) {
 			UnitInfo uniInfo = unitInfoArr.get(i);
 			//Gdx.app.log(LOG, " loading this units assets: " + uniInfo.getUnit());
- 
  			
 			if (uniInfo.getSize().equals("32x32") && uniInfo.getFaction().equals(faction) &&
 					smallCount > 0) {
@@ -185,8 +186,7 @@ public class UnitUtils  {
 					Panel pan = panelMatrix[posX][smallCount+7];
 					Unit uni = new Unit(tex, pan.getX(), pan.getY(), uniInfo);
 					uni.setArrayPosition(posX, smallCount+7 ); //position within the grid (ie x3y4)
-					uni.setPanelsPos(panelMatrix); //sets panelMatrix
-					uni.setPlayer(player); //sets the player
+ 					uni.setPlayer(player); //sets the player
 					
 					unitsOnBoard.add(uni);
 				}//adds two units to right side of board
@@ -195,8 +195,7 @@ public class UnitUtils  {
 					Panel pan = panelMatrix[posX][smallCount-1];
 					Unit uni = new Unit(tex, pan.getX(), pan.getY(), uniInfo);
 					uni.setArrayPosition(posX, smallCount-1);
-					uni.setPanelsPos(panelMatrix);
-					uni.setPlayer(player);   
+ 					uni.setPlayer(player);   
 					
 					unitsOnBoard.add(uni);
 				}//adds other two units to left side of board
@@ -213,7 +212,7 @@ public class UnitUtils  {
 				
 				if (flip && exists){
 					unitPicPath = uniInfo.getTexPaths().get(1);
-					adjPosX = posX -1; 
+					adjPosX = posX - 1; 
 				}
 				
 				Texture tex = am.get(unitPicPath, Texture.class);
@@ -222,8 +221,7 @@ public class UnitUtils  {
 					Panel pan = panelMatrix[adjPosX][medCount+6];
 					Unit uni = new Unit(tex, pan.getX(), pan.getY(), uniInfo);
 					uni.setArrayPosition(adjPosX, medCount+6);
-					uni.setPanelsPos(panelMatrix);
-					uni.setPlayer(player); 
+ 					uni.setPlayer(player); 
 					unitsOnBoard.add(uni);
 				}
 				else {
@@ -231,8 +229,7 @@ public class UnitUtils  {
 					Unit uni = new Unit(tex, pan.getX(), pan.getY(), uniInfo);
 					uni.setArrayPosition(adjPosX, medCount+1);
 					uni.setPlayer(player);
-					uni.setPanelsPos(panelMatrix);
-					unitsOnBoard.add(uni);
+ 					unitsOnBoard.add(uni);
 				}
 				medCount--;
 			}//add medium units to right & left of small ones
@@ -254,8 +251,7 @@ public class UnitUtils  {
 				Panel pan = panelMatrix[posX][largeCount+4];
 				Unit uni = new Unit(tex, pan.getX(), pan.getY(), uniInfo);
 				uni.setArrayPosition(posX, largeCount+4);
-				uni.setPanelsPos(panelMatrix);
-				uni.setPlayer(player);
+ 				uni.setPlayer(player);
 				unitsOnBoard.add(uni);
 				
 				largeCount--;
@@ -294,9 +290,7 @@ public class UnitUtils  {
  * 
  * 
  */
- 	
-	 
- 	
+
 	/** method for animating units
 	 * - based on unit size returns info about animation
 	 * - time determined based on how far unit moves
@@ -574,19 +568,23 @@ public class UnitUtils  {
 			offsets = offsets1;
 		}
 		
-		//this makes sure units are not out of bounds
+		//places correct panels based on offset into array
 		for (int[] o : offsets) {
+			//makes sure units are not out of bounds
 			if ((o[0] >= 0 && o[1] >= 0) && 
 					(o[0]<= 11 && o[1] <= 11)) {
 				panelArray.add(panelPos[o[0]][o[1]]);
 			}
 		}
-		
-		
-		/* ---------------At this point, need to check for obstacles & other units in the way------------------
-		 * TODO: Figure out what to do about the panels which are neighbors of 
-		 * 
-		 */
+ 
+		return panelArray;
+   	}
+	
+	/* ----------Method that checks for obstacles & other units in the way------------------
+	 * TODO: Figure out what to do about the panels which are neighbors of 
+	 * 
+	 */
+	public static Array<Panel> checkForCollisions(Unit uni, Array<Panel> panelArray){
 		MapStage stage = (MapStage)uni.getStage();
 		Array<Unit> allUnits = findAllUnits(stage.getActors());
 		
@@ -613,9 +611,9 @@ public class UnitUtils  {
 				}
   			}
   		}
- 
-		return panelArray;
-   	}
+ 		
+ 		return panelArray;
+	}
  
 	/** sets unit direction & as a result animation
 	 * 
@@ -965,5 +963,18 @@ public class UnitUtils  {
 			}
 		}
 	}
+	
+	
+	
+	public static Pixmap createPixmap(int width, int height, Color color) {
+		Pixmap pixmap = new Pixmap(width, height, Format.RGBA8888);
+
+		// pixmap.drawRectangle(200, 200, width, height);
+		pixmap.setColor(color);
+		pixmap.fill(); // fill with the color
+
+		return pixmap;
+	}
+
  
 }

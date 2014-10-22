@@ -149,8 +149,10 @@ public class Constants {
 	public static final String UNIT_DESELECT = "unit now not chosen"; 
 	
 	
-	/* these are all the grid vectors starting from bottom to right, then move up and repeat
-	 * 
+	/* these are all the 32x32 board positions 
+	 * starting from bottom to right, then move up and repeat
+	 * - NOTE: these can possibly be used as coordinates units can move to
+	 *  
 	 */
 	public static final double[][] GRID_SCREEN_VECTORS = 																				//column
 		{{208.0, 100.0}, {208.0, 132.0}, {208.0, 164.0}, {208.0, 196.0}, {208.0, 228.0}, {208.0, 260.0}, {208.0, 292.0}, {208.0, 324.0},  //1 
@@ -179,8 +181,7 @@ public class Constants {
 		{560.0, 356.0}, {560.0, 388.0}, {560.0, 420.0}, {560.0, 452.0}};
 	
 	
-	
-
+ 
 	/*------------Unit movement offsets when on grid------------
 	 * 
 	 * the offsets represent how much unit can move in certain direction

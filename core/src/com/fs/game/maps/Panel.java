@@ -1,9 +1,14 @@
 package com.fs.game.maps;
+/** Panel class
+ * a gameboard panel component that lies under the tiled map 
+ * guides the Unit's movements & lights up path it can take
+ * 
+ * @author Allen
+ */
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -12,7 +17,6 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
-import com.badlogic.gdx.utils.Array;
 import com.fs.game.units.Unit;
 import com.fs.game.utils.GameManager;
 import com.fs.game.utils.MapUtils;
@@ -22,6 +26,11 @@ public class Panel extends Actor{
 	final String LOG = "panel actor log : ";
 	ActorGestureListener unitListener;
 	EventListener eventListener;
+	
+	//A* scores for pathfinding algorithm
+	public float totalCost; //cost from start + heuristic
+	public float costFromStart;//distance from start panel to current panel
+	public float heuristic;//estimated distance from current panel to goal
    	
 	Texture panelUp; //regular panel texture
 	Texture panelDown ; //selected/viewing/moveableTo
@@ -60,10 +69,35 @@ public class Panel extends Actor{
 		setPosition(actorX, actorY);
 		setBounds(actorX, actorY, panelUp.getWidth(), panelUp.getHeight());
  
-		addListener(MapUtils.createPanelListener(this)); //method initiates listeners
 		 		
 		//this is for collision detection
 		panelBox = new Rectangle(actorX, actorY, this.getWidth(), this.getHeight());
+		
+		//addListener(MapUtils.createPanelListener(this)); //method initiates listeners
+		addListener(new InputListener(){
+			@Override
+			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+				clickCount++;
+
+				if (clickCount == 1) {
+					Gdx.app.log(LOG, "panel " +	getName() + " is now being viewed");
+ 
+					selected = true;
+ 				}
+				
+				return true;
+			}
+
+			@Override
+			public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+				if (clickCount == 2) {
+					selected = false;
+ 					clickCount = 0;
+				}
+
+			}
+			  
+ 		});
    	}
 
 	@Override
@@ -191,4 +225,29 @@ public class Panel extends Actor{
 	public Vector2 getLocation() {
 		return location;
 	}
+
+	public float getTotalCost() {
+		return totalCost;
+	}
+
+	public void setTotalCost(float totalCost) {
+		this.totalCost = totalCost;
+	}
+
+	public float getCostFromStart() {
+		return costFromStart;
+	}
+
+	public void setCostFromStart(float costFromStart) {
+		this.costFromStart = costFromStart;
+	}
+
+	public float getHeuristic() {
+		return heuristic;
+	}
+
+	public void setHeuristic(float heuristic) {
+		this.heuristic = heuristic;
+	}
+ 
 }

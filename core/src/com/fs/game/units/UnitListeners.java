@@ -82,19 +82,6 @@ public class UnitListeners {
 			 * 
 			 */
 			if (uni.moving) {
-				//Gdx.app.log(LOG, "unit is moving: " + moving);
-//				
-//				if (timeInterval > moveTime/panelPath.size){
-//					timeInterval = 0; //keeps track of actual time
-//	 				Vector2 nextPos = panelPath.pop(); //removes & returns next panel
-//	 				
-//					Gdx.app.log(LOG, "unit is moving right, left, up, down (enums): " + state.name().toString());
-//	 				UnitUtils.unitDirection(this, nextPos.x, nextPos.y); //sets the unit state
-//
-//					//addAction(UnitUtils.createMoveAction(this, nextPos.x, nextPos.y, moveTime));
-//					addAction(Actions.moveTo(nextPos.x, nextPos.y, .1f));
-//					updatePosition();
-//	  			}
 				
 				if (uni.getX() == uni.getTargetPan().getX() && uni.getY() == uni.getTargetPan().getY()){
 					uni.updateUnit();
@@ -129,8 +116,8 @@ public class UnitListeners {
 			Unit uni = ((Unit)event.getTarget());	
 			
 			
-			if (uni.chosen){
-				
+			if (!uni.chosen){
+				uni.hideMoves();
 			}
 			
 			if (uni.getX() != uni.getOriginX() || uni.getY() != uni.getOriginY()) {

@@ -20,13 +20,11 @@
   </tile>
   <tile id="1" terrain="0,0,0,0">
    <properties>
-    <property name="MoveCost" value="1"/>
     <property name="Panel" value="1"/>
    </properties>
   </tile>
   <tile id="2">
    <properties>
-    <property name="MoveCost" value="1"/>
     <property name="Panel" value="2"/>
    </properties>
   </tile>
@@ -41,7 +39,7 @@
    <property name="Terrain" value="ground"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJwrY2BgKCMR16JhdHlFBgTAph4fgKlHNg8GqoDYCIiN0dTjwlVIGAa0gFgbiJWg5sDMq8KBCcnDzMMljw50gFiTCHUwe4lVD3OLDQ71uPwGCwdi1GPDAF5OL/Q=
+   eJwrY2BgKCMR16JhdHlFBgTAph4fgKlHNg8GqoDYCIiN0dTjwlVIGASagFgLiLWBWAlqDsy8KhyYkDzMPFzy6EAHiDWJUAezl1j1MLfY4FCPy2+wcCBGPTYMAAsFMHY=
   </data>
  </layer>
  <layer name="water" width="12" height="12">
@@ -69,6 +67,11 @@
   </properties>
   <data encoding="base64" compression="zlib">
    eJxrZGBgaBzFo5hMDAA6LkiR
+  </data>
+ </layer>
+ <layer name="panels" width="12" height="12" opacity="0.48">
+  <data encoding="base64" compression="zlib">
+   eJxrYWBgaBnFo5hMDAAjrEpB
   </data>
  </layer>
 </map>

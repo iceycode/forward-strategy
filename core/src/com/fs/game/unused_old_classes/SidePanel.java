@@ -1,7 +1,8 @@
-/**
- * 
+/* Creates the side panel buttons, timer, etc for gameplay
+ *  
+ * @author Allen
  */
-package com.fs.game.hud;
+package com.fs.game.unused_old_classes;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -15,7 +16,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.fs.game.utils.Constants;
 import com.fs.game.utils.GameManager;
 
-/**
+/** @deprecated merged with the HUDUtils class
+ * 
  * @author Allen
  *
  */

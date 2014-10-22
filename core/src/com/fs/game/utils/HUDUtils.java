@@ -5,7 +5,7 @@
  * - level screen 
  */
 
-package com.fs.game.hud;
+package com.fs.game.utils;
 
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
@@ -33,9 +33,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.maps.Panel;
 import com.fs.game.units.Unit;
-import com.fs.game.utils.Constants;
-import com.fs.game.utils.GameManager;
-import com.fs.game.utils.TextureUtils;
+import com.fs.game.unused_old_classes.TextureUtils;
 
 
 public class HUDUtils {

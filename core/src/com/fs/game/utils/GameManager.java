@@ -21,6 +21,7 @@ import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.JsonValue.ValueType;
 import com.fs.game.units.UnitInfo;
+import com.fs.game.unused_old_classes.TextureUtils;
 
 /** GameManager
  * - holds gaims main assetmanager
@@ -99,7 +100,6 @@ public class GameManager {
  					String fullPath = uInfo.getUnitPath()+path;
    					if (Gdx.files.internal(fullPath).exists()){
  						unitTexPaths.add(fullPath);
- 						Gdx.app.log("GameManager LOG: ", " loaded path for " + unitInfo.getUnit() + ", tex: " + fullPath);
   						am.load(uInfo.getUnitPath()+path, Texture.class);
   					}
  				}
@@ -121,16 +121,7 @@ public class GameManager {
 
 		//the skin for the HUD
 		uiSkin = infoPanelSkin();
-		gameSkin = gameBoardSkin();
-
-		//this loop checks & shows damage lists
-//		for (UnitInfo ui : unitInfoArr) {
-//			Gdx.app.log("JSON log : ", " info arr for " + ui.getUnit() + ", contains damage lists : ");
-//			for (int i = 0; i < ui.getDamageList().length; i++) {
-//				Gdx.app.log("", " damage to " + unitInfoArr.get(i).getUnit() + " is " + ui.getDamageList()[i]);
-//			}
-//			
-//		}
+		gameSkin = panelSkin();
  
  		return am;
 	}
@@ -185,7 +176,7 @@ public class GameManager {
 	/** the skin for the game baord grid/panel/tile
 	 * 
 	 */
-	public static Skin gameBoardSkin(){
+	public static Skin panelSkin(){
 		Skin skin = new Skin();
 		
 		skin.add("panelDown", new Texture(Gdx.files.internal("maps/tiles/gridDown.png")));

@@ -29,13 +29,13 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.fs.game.data.GameData;
-import com.fs.game.hud.HUDUtils;
 import com.fs.game.main.MainGame;
-import com.fs.game.maps.GameBoard;
 import com.fs.game.maps.Panel;
 import com.fs.game.stages.MapStage;
 import com.fs.game.units.Unit;
+import com.fs.game.unused_old_classes.GameBoard;
 import com.fs.game.utils.Constants;
+import com.fs.game.utils.HUDUtils;
 import com.fs.game.utils.MapUtils;
 import com.fs.game.utils.MenuUtils;
 import com.fs.game.utils.UnitUtils;
@@ -414,17 +414,16 @@ public class LevelScreen implements Screen {
 		float delta = Gdx.graphics.getDeltaTime();
 		stageMap.act(delta);
      	stageMap.draw();
-		Table.drawDebug(stageMap);
 
      	//stage with the unit actors & UI on it
 		stage.act(delta);
 		stage.draw();	
-		Table.drawDebug(stage);                                                                       
+// removed in libgdx 1.4.1 -->Table.drawDebug(stage);                                                                       
         
 		timer.setText("" + (int)timerCount);
 		timer.act(delta); 
 		
-//		Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
+		Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
 		
 	  	if (Gdx.input.isTouched()) {
 	  		
