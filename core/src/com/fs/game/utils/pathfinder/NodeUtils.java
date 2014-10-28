@@ -48,10 +48,6 @@ public class NodeUtils {
 		
 		for (Panel p : panelArray){
  			GridNode node = new GridNode(p.location, start, end);
-
-			if (p.blocked || p.getLocation() == unit.getGridLocation()){
-				node.blocked = true; //skips if it is blocked
- 			}
  
 			gridNodeGraph.add(node);
 		}

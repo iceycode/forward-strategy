@@ -78,17 +78,7 @@ public class MapActor extends Actor {
         this.cell = cell;
         this.property = tiledLayer.getProperties();
         this.terrainType = tiledLayer.getName();
-        
-        if (this.terrainType.equals("panelUp")){
-        	
-        }
-        
-        this.skin = GameManager.gameSkin;
-        this.panelUp = skin.get("panelUp", Texture.class);
-        this.panelDown = skin.get("panelDown", Texture.class);
-        this.panelView = skin.get("panelView", Texture.class);
-        currentTexture = panelUp;
-        
+
         
          //adds a clicklistener
         addClickListener();
@@ -101,7 +91,7 @@ public class MapActor extends Actor {
 		//render();		
 
     	super.draw(batch, alpha);
- 		batch.draw(currentTexture, getX(), getY());
+ 		//batch.draw(currentTexture, getX(), getY());
 
 //
 //    	if (moveableTo){
@@ -116,35 +106,10 @@ public class MapActor extends Actor {
 	public void act(float delta){
 		super.act(delta);
 		
-		tileTextureChooser();
+		//tileTextureChooser();
 	}
 	
-	/** tileTextureChooser
-	 * 
-	 * the method which selects or deselects panels
-	 * 
-	 * NOTE: need to set texture
-	 * 
-	 */
-	public void tileTextureChooser() {
-		if (selected || moveableTo) {
-			// TODO: look more into this problem
-			//currTex = skin.get("panelDown", Texture.class);
-			//setTexture(currTex); //<--------- this does not change to this on stage NEED TO use skins
-			this.setTexture(panelDown);
- 		}//change to another texture
-		else if (!selected || !moveableTo ) {
-			//currTex = oriTex;
-			//setTexture(currTex); //<--------- this does not change to this on stage NEED TO use skins
-			this.setTexture(panelUp);
- 		}
-		else if (view){
-			this.setTexture(panelView);
-		}
-		
-	}
-	
-	
+	 
 
     public void addClickListener() {
     	clickListener = new ClickListener() {
@@ -184,7 +149,7 @@ public class MapActor extends Actor {
          		
          		return true;
          	}//touch down
-         
+        	
          	@Override
 			public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
          		Gdx.app.log(LOG, "touch done at (" + x + ", " + y + ")");

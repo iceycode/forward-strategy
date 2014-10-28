@@ -76,16 +76,7 @@ public class MapUtils {
 		
 		//creates a  stage
 		MapStage stage = new MapStage(tiledMap); //set the stage
-//		mapActorsArr = stage.mactArr;
-//		mapMatrix = stage.mapMatrix;  //in order to define whether panels are moveable to
-//		
-//		stage.camera.setToOrtho(false, 800, 500);
-//		
-//		//TODO: + NOTE : cannot figure out why positioning is off by that much
-//		//tiled map lines up well with it
-//		stage.camera.position.set(gridOriX-16, gridOriY+50, 0);
-//		stage.camera.update();
-//		
+
 		return stage;
 	}
 
@@ -186,7 +177,7 @@ public class MapUtils {
                 TiledMapTileLayer.Cell cell = tiledLayer.getCell(x, y);
                      
                 MapActor mapActor = new MapActor(tiledMap, tiledLayer, cell);
- 
+                
                 float posX = GRID_ORI_X + x*32;
                 float posY = GRID_ORI_Y + y*32;
                  
@@ -213,11 +204,11 @@ public class MapUtils {
     }
     
     
-    /*--------------------Grid Panels on Board----------------
-     * methods to create grid panels which show unit moves
-     * 
-     * 
-     */
+/*--------------------Grid Panels on Board----------------
+ * methods to create grid panels which show unit moves
+ * 
+ * 
+ */
     /*****Sets all the panels positions & actors in matrix
 	 * - sets all game board actors as arrays
 	 */

@@ -32,7 +32,7 @@ import com.fs.game.utils.Constants;
 import com.fs.game.utils.GameManager;
 import com.fs.game.utils.MapUtils;
 import com.fs.game.utils.UnitUtils;
-import com.fs.game.utils.pathfinder.Pathfinder2;
+import com.fs.game.utils.pathfinder.PathGenerator;
 
 public class Unit extends Actor {
 
@@ -77,7 +77,7 @@ public class Unit extends Actor {
 
 	Animation deathAnim;	//death sequence
       
-	float timeInterval = 0; //stores delta time for animations
+	float timeInterval = 0f; //stores delta time for animations
 	float aniTime = .1f; //stores data related to animation between panels
 	float attackTime = 0f;
 	public int actualMoves = 0; //the actual moves unit takes (may not be max necessarily)
@@ -126,13 +126,15 @@ public class Unit extends Actor {
 	//NOTE: trying something new with coordinate system instead of panel array
 	double[][] panelCoords = Constants.GRID_SCREEN_VECTORS; //coords of panels
 	Panel targetPan; //the target panel unit moves to
-	public Pathfinder2 pathGen; //class which generates the unit's possible move movements
- 
+	public PathGenerator pathGen; //class which generates the unit's possible move movements
+	public Array<Panel> movePath; 
+	public SequenceAction moveSequence;
+
 	//place to recycle allocated actions (max of 16) 
-	public Pool<MoveToAction> actionPool = new Pool<MoveToAction>(){
+	public Pool<SequenceAction> actionPool = new Pool<SequenceAction>(){
 		@Override
-		protected MoveToAction newObject(){
-			return new MoveToAction();
+		protected SequenceAction newObject(){
+			return new SequenceAction();
 		}
 	};
 	
@@ -181,15 +183,15 @@ public class Unit extends Actor {
  		this.oriX = getX();
 		this.oriY = getY();
 		this.setOrigin(oriX, oriY);
-		this.pathGen = new Pathfinder2(this, oriX, oriY);
-	
+		this.pathGen = new PathGenerator(this, oriX, oriY);
+		
 		setupAnimations();
 		
-		//this.addListener(UnitListeners.actorGestureListener);
-		this.addListener(UnitListeners.unitInputListener);
-		this.addListener(UnitListeners.unitChangeListener);
-		
-		panelArray = new Array<Panel>();
+		this.addListener(UnitListeners.actorGestureListener);
+		//this.addListener(UnitListeners.unitInputListener);
+		//this.addListener(UnitListeners.unitChangeListener);
+		this.moveSequence = new SequenceAction();
+		this.panelArray = new Array<Panel>();
   	}
  
 	public void setupInfo(){
@@ -357,10 +359,6 @@ public class Unit extends Actor {
 			//other units deselected
  		 	UnitUtils.deselectUnits(otherUnits);
 
- 		 	//NOTE: original method to get unit range never worked properly
- 		 	//panelArray = UnitUtils.getMoveRange(this, panelsPos); //possible move paths stored in panelArray
- 		 	//panelArray = UnitUtils.checkForCollisions(this, panelArray); //check for any collisions
-			
  		 	//only gets panel array doesn't contain any panels
  		 	if (!panelsFound){
  		 		panelArray = pathGen.findPaths();
@@ -378,23 +376,25 @@ public class Unit extends Actor {
 		 * TODO: get rid of the panelPath!=null exception & FIX IT!
 		 */
 		if (moving && panelPath!=null) {
-			//Gdx.app.log(LOG, "unit is moving: " + moving);
-			
-			if (timeInterval > moveTime/panelPath.size){
-				timeInterval = 0; //keeps track of actual time
- 				Vector2 nextPos = panelPath.pop(); //removes & returns next panel
- 				
-				Gdx.app.log(LOG, "unit is moving right, left, up, down (enums): " + state.name().toString());
- 				UnitUtils.unitDirection(this, nextPos.x, nextPos.y); //sets the unit state
-
-				//addAction(UnitUtils.createMoveAction(this, nextPos.x, nextPos.y, moveTime));
-				addAction(Actions.moveTo(nextPos.x, nextPos.y, .1f));
-				updatePosition();
-  			}
-			
-			if (getX() == getTargetPan().getX() && getY() == getTargetPan().getY()){
-				updateUnit();
+			moving = false;
+			if (moveSequence.getActions().size != panelPath.size){
+				for (Vector2 pos : panelPath){
+ 					MoveToAction moveAction = Actions.moveTo(pos.x, pos.y, 5f);
+					moveSequence.addAction(moveAction);
+					
+				}
 			}
+			
+			addAction(moveSequence);
+			actionPool.free(moveSequence);
+			actionPool.clear();
+				
+			Gdx.app.log(LOG, "unit is moving right, left, up, down (enums): " + state.name().toString());
+			UnitUtils.unitDirection(this, getX(), getY()); //sets the unit state
+				 
+			updatePosition();
+			updateUnit();
+ 
  		}
 		//NOTE: this is a temporary work-around
 		else if (moving && panelPath==null){
@@ -491,7 +491,7 @@ public class Unit extends Actor {
 		lock = true;
 		done = true;
 		
-		setOrigin(destX, destY);
+		//setOrigin(destX, destY);
 	 	pathGen.getUnitOrigin(getX(), getY());
 
 	 	panelsFound = false;
@@ -508,11 +508,12 @@ public class Unit extends Actor {
 		if (targetPan != null){
 			gridPosX = targetPan.gridPosX;
 			gridPosY = targetPan.gridPosY;
-			setPosition(targetPan.getX(), targetPan.getY());
+			//setPosition(targetPan.getX(), targetPan.getY());
 
 		}
- 
-		this.unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
+		
+		if (this.getX() == targetPan.getX() && this.getY() == targetPan.getY())
+			this.unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
 
 	}
 	
@@ -577,7 +578,8 @@ public class Unit extends Actor {
 		for (Panel p : panelArray) {
 			if ((p.selected && p.moveableTo)) {
 				targetPan = p;
-				
+				//movePath = pathGen.findBestPath(targetPan);
+								
 				moving = true;
 				standing = false;
 				chosen = false;

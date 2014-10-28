@@ -34,7 +34,7 @@ public class UnitListeners {
  
 
 			//some info about listeners
-			if (currUnit.clickCount == 1){
+			if (currUnit.clickCount < 2){
 				if (currUnit.otherUnits!=null)
 					UnitUtils.deselectUnits(currUnit.otherUnits);
 
@@ -57,51 +57,7 @@ public class UnitListeners {
 		}
 		
 		
-		@Override
-		public boolean handle(Event event) {
-			Unit uni = ((Unit)event.getTarget());	
-			
-			
-			/*the series of actions unit takes
-			 * if clicked on, then chosen
-			 *  then, if a panel is clicked while highlighted, unit moves there
-			 *  if there is a unit there, it attacks 
-			 */
-			if (uni.chosen && !uni.done && !uni.lock) {
-				//other units deselected
-	 		 	UnitUtils.deselectUnits(uni.otherUnits);
-	 		 	 		 	
-				uni.panelArray = UnitUtils.getMoveRange(uni, uni.panelsPos); //possible move paths based on panelArray
-	 			uni.showMoves(); //sets possible moves
-				uni.checkTargetPanel(); 
-				
-			}//show all possible moves/attacks/options unit has
-			
-			/*
-			 * unit now moves to destination if target panel found
-			 * 
-			 */
-			if (uni.moving) {
-				
-				if (uni.getX() == uni.getTargetPan().getX() && uni.getY() == uni.getTargetPan().getY()){
-					uni.updateUnit();
-				}
-	 		}
- 			 
- 			if (uni.getX() != uni.getOriginX() || uni.getY() != uni.getOriginY()) {
-				Gdx.app.log("UNIT log: ", " current pos : (" + uni.getX() + ", " + uni.getY() + ")");
- 				uni.updatePosition(); //updates unit position on board & stage
-				
- 				for (Unit u: uni.otherUnits){
- 					u.updateUnitDataArrays( uni.getStage().getActors());
- 				}
-				uni.clickCount = 0; //reset clickCount 
-				uni.chosen = false; //set unit as not chosen
-				uni.hideMoves();
- 			}
-			
-			return true;
-		}
+ 
 		
 	};
 	
@@ -157,6 +113,30 @@ public class UnitListeners {
    					currUnit.clickCount = 0; //reset clickCount
    				}
    			}
+   			
+   			@Override
+   			public boolean handle(Event event) {
+   				Unit uni = ((Unit)event.getTarget());	
+   				
+   				
+   				if (!uni.chosen){
+   					uni.hideMoves();
+   				}
+   				
+   				if (uni.getX() != uni.getOriginX() || uni.getY() != uni.getOriginY()) {
+   					Gdx.app.log("UNIT log: ", " current pos : (" + uni.getX() + ", " + uni.getY() + ")");
+   	 				uni.updatePosition(); //updates unit position on board & stage
+   					
+   	 				for (Unit u: uni.otherUnits){
+   	 					u.updateUnitDataArrays( uni.getStage().getActors());
+   	 				}
+   					uni.clickCount = 0; //reset clickCount 
+   					uni.chosen = false; //set unit as not chosen
+   					uni.hideMoves();
+   	 			}
+   				
+   				return true;
+   			}
 	};
 	
 
@@ -178,7 +158,6 @@ public class UnitListeners {
 				uni.clickCount++; //for tracking user interaction
  				System.out.println("selected unit");
 				uni.chosen = true; //sets unit as not chosen, seen in act method as false
- 
 
 				return true;
 			}// 

@@ -18,6 +18,7 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Contact;
@@ -29,6 +30,9 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -56,7 +60,7 @@ public class MapStage extends Stage implements ActionListener{
 	TiledMap tiledMap; 	//creates the actual map
  	Table gridTable; 	//the table that contains grid board
   	
- 	Array< Cell> waterCells;
+ 	Array<Cell> waterCells;
 	Array<Cell> obstacleCells;
 	Array<Cell> groundCells;
 	
@@ -72,7 +76,7 @@ public class MapStage extends Stage implements ActionListener{
 	Array<Panel> obstacles;
 
 	Panel[][] panelMatrix; //the grids on game board
- 
+
 	private Array<Panel> panelArray;
 	
 	//variables related to stage/screen placements
@@ -88,9 +92,10 @@ public class MapStage extends Stage implements ActionListener{
 	OrthographicCamera mapCam;
 	
 	Unit currUnit;	//the selected unit
+	SequenceAction moveSequence; //unit move sequence
 	
 	
-	Viewport viewport; // Scientific Discovery" by Hyperactive Vs. Killer Buds
+	Viewport viewport; // 
 	ScreenViewport viewportStage;
 	
 	/**
@@ -165,6 +170,10 @@ public class MapStage extends Stage implements ActionListener{
 		UnitUtils.testBoardSetup1(); //test setup b/w humans & reptoids
 		
 		MapUtils.unitsToStage(UnitUtils.playerUnits, panelMatrix, this);
+		
+		
+		//initialize unit move sequence action
+		moveSequence = new SequenceAction();
 	}
  
     /**renders the tiled map
@@ -173,8 +182,8 @@ public class MapStage extends Stage implements ActionListener{
     public void render() {
     	
     	//take these out possibly TODO:
-    	tiledMapRenderer.getSpriteBatch().setProjectionMatrix(camera.combined);
-    	tiledMapRenderer.setView(camera.combined, GRID_X, GRID_Y, 384, 384);
+    	//tiledMapRenderer.getSpriteBatch().setProjectionMatrix(camera.combined);
+    	//tiledMapRenderer.setView(camera.combined, GRID_X, GRID_Y, 384, 384);
 
     	camera.update();
  
@@ -200,32 +209,17 @@ public class MapStage extends Stage implements ActionListener{
     public void act(float delta) {
      	Array<Unit> allUnits = MapUtils.findAllUnits(getActors());
      	
-     	if (currUnit!=null){
-	     	for (Unit u : allUnits){
-	     		if (u.chosen){
-	     			this.currUnit = u;
-	     		}
-	     	}
-	     	
-	     	if (currUnit.moving){
-	     		currUnit.setPosition(currUnit.getTargetPan().getX(), currUnit.getTargetPan().getY());
-	     		UnitUtils.unitDirection(currUnit, currUnit.getX(), currUnit.getY());
-	      	}
+
+     	for (Unit u : allUnits){
+     		if (u.chosen){
+     			this.currUnit = u;
+     		}
      	}
-//     	
-//     	if (currUnit!= null){
-//	     	Array<Unit> otherUnits = UnitUtils.findOtherUnits(getActors(), currUnit);
-//	    	//this works in MapStage as an override of units panels
-//	    	for (Panel pan : currUnit.panelArray){
-//				for (Unit uni : otherUnits){
-//	 				//check to see that another unit is not occupying space
-//					if (uni.unitBox.overlaps(pan.panelBox)){
-//						pan.blocked = true;
-//	 				}				
-//	 			}
-//	  		}
-//     	}
-    	super.act(delta); 
+ 
+		
+		
+     	
+     	super.act(delta); 
 
     }
     

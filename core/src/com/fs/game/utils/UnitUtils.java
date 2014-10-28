@@ -626,7 +626,7 @@ public class UnitUtils  {
 		float oriY = uni.getOriginY();
 		
 		if (movingLeft(oriX, oriY, destX, destY)){
-			 uni.state = UnitState.MOVE_LEFT;
+			uni.state = UnitState.MOVE_LEFT;
 		}
 		else if (movingRight(oriX, oriY, destX, destY)){
 			uni.state = UnitState.MOVE_RIGHT;

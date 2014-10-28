@@ -43,6 +43,7 @@ public class Constants {
  * 
  */
 	public final static String MAP_3A = "maps/mapTemplate3a.tmx";
+	public final static String MAP_3B = "maps/mapTemplate3b.tmx";
 	
 /*---------------Image pathways in assets folder------
  * assets folder in android/assets
