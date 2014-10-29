@@ -369,14 +369,15 @@ public class Unit extends Actor {
  			
 			checkTargetPanel(); 
 			
-		} 
+		}
+	 
 		
 		/* if a panel was selected while unit chosen
 		 * unit now moves to destination if target panel found
 		 * TODO: get rid of the panelPath!=null exception & FIX IT!
 		 */
-		if (moving && panelPath!=null) {
-			moving = false;
+		if (moving ) {
+			//moving = false;
 			if (moveSequence.getActions().size != panelPath.size){
 				for (Vector2 pos : panelPath){
  					MoveToAction moveAction = Actions.moveTo(pos.x, pos.y, 5f);
@@ -386,22 +387,22 @@ public class Unit extends Actor {
 			}
 			
 			addAction(moveSequence);
-			actionPool.free(moveSequence);
-			actionPool.clear();
 				
 			Gdx.app.log(LOG, "unit is moving right, left, up, down (enums): " + state.name().toString());
 			UnitUtils.unitDirection(this, getX(), getY()); //sets the unit state
-				 
-			updatePosition();
-			updateUnit();
+			//moving = false;
+			//updatePosition();
+			
+			if (getX()==targetPan.getX() && getY()==targetPan.getY())
+				updateUnit();
  
  		}
-		//NOTE: this is a temporary work-around
-		else if (moving && panelPath==null){
-			this.chosen = false;
-			this.moving = false;
-		}
- 
+//		//NOTE: this is a temporary work-around
+//		else if (moving && panelPath==null){
+//			this.chosen = false;
+//			this.moving = false;
+//		}
+// 
 		
 		/* the state unit is in when no longer chosen/moving
 		 * 
@@ -497,6 +498,10 @@ public class Unit extends Actor {
 	 	panelsFound = false;
 		panelPath.clear();
 		panelArray.clear();
+		
+		moveSequence.reset();
+		actionPool.free(moveSequence);
+		actionPool.clear();
   	}
 	
 	/** updates unit position location variables on board

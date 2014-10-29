@@ -161,7 +161,7 @@ public class PathFinder {
  		//add neighbor nodes to list
 		for (GridNode node : gridNodeGraph){
  			//checks see if blocks are neighbors or obstacles, units, etc
- 			if (isNeighborNode(parent, node) && !node.blocked){
+ 			if (isNeighborNode(parent, node) ){
  				//if not in closed list already & cost of totalCost (F) of parent is greater then cost of node
 				if (!closedList.contains(node, false) && parent.getTotalCost() > node.getTotalCost()){
 					node.setParent(parent);
@@ -182,7 +182,7 @@ public class PathFinder {
 					node.calculateCostFromStart();
 					node.calculateCostToGoal();
 
-					openList.add(node);
+					//openList.add(node);
 					Gdx.app.log(LOG, " new cost (G) of node in open list is "+ node.getCostFromStart());
 				}
 				else if (!closedList.contains(node, false) && !openList.contains(node, false)){

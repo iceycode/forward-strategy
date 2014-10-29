@@ -207,17 +207,17 @@ public class MapStage extends Stage implements ActionListener{
      *  */
     @Override
     public void act(float delta) {
-     	Array<Unit> allUnits = MapUtils.findAllUnits(getActors());
-     	
-
-     	for (Unit u : allUnits){
-     		if (u.chosen){
-     			this.currUnit = u;
-     		}
-     	}
- 
-		
-		
+//     	Array<Unit> allUnits = MapUtils.findAllUnits(getActors());
+//     	
+//
+//     	for (Unit u : allUnits){
+//     		if (u.chosen){
+//     			this.currUnit = u;
+//     		}
+//     	}
+// 
+//		
+//		
      	
      	super.act(delta); 
 

@@ -135,9 +135,7 @@ public class PathGenerator {
 
 			if (temp.getCostFromStart() <= maxDistance){
 				findAdjacentPanels(temp); //find all adjacent panels
-				
- 
-				
+ 	
 				
 				Gdx.app.log(LOG, "added panel " + temp.getName()
 						+ "at location : (" + temp.getX() + ", " + temp.getY()+ ")");
@@ -159,15 +157,13 @@ public class PathGenerator {
 			if (isNeighborPanel(currPan, pan) && !isObstacle(pan) && !possibleMoves.contains(pan, false)) {
 				pan.setCostFromStart(calculateCostFromStart(currPan, pan));
  
- 
+				
 
 				Gdx.app.log(LOG, "Panel, " + pan.getName() + "cost from start = " + pan.getCostFromStart());
 				
 				openList.add(pan); //added to openList to find new nodes
-				possibleMoves.add(pan); //move options that will be returns
-
-					
- 
+				possibleMoves.add(pan);
+				
 			}
  
 		}
@@ -179,23 +175,30 @@ public class PathGenerator {
 	 * 
 	 */
 	private void checkForSpace(){
+		float tempValue = 0f;
+		for (Panel p : openList){
+			
+			if (unitSize.equals("64x32")){
+				if (p.panelLeft==null || p.panelRight ==null){
+					possibleMoves.removeValue(p, false);
+					tempValue = p.getCostFromStart();
+				}
+				
+				if (tempValue>=p.getCostFromStart() || tempValue<=p.getCostFromStart()){
+					possibleMoves.removeValue(p, false);
+				}
+				
+			}
+			else if (unitSize.equals("64x64")){
+				possibleMoves.removeValue(p, false);
+ 			}
+			else{
+				possibleMoves.add(p); //move options that will be returns	
+			}
+			
+			
+		}
 		
-		if (unitSize.equals("64x32")){
-			for (Panel p : possibleMoves){
-				if (p.panelLeft==null && p.panelRight ==null){
-					possibleMoves.removeValue(p, false);
-				}
-			}
-		}
-		else if (unitSize.equals("64x64")){
-			for (Panel p : possibleMoves){
-				if (p.panelLeft==null && p.panelRight ==null && 
-						p.panelAbove==null && p.panelBelow==null){
-					possibleMoves.removeValue(p, false);
-				}
- 
-			}
-		}
 			
 		
 	}
