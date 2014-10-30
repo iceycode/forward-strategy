@@ -111,7 +111,7 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
-        compile "com.badlogicgames.gdx:gdx-tests" //compile for testing using GdxTest class
+       // compile "com.badlogicgames.gdx:gdx-tests" //compile for testing using GdxTest class
 
     }
 }
