@@ -1,6 +1,23 @@
 Forward Strategy
 ==
 
+This will update after major changes or fixes pushed to branch1 & merged with master. 
+####*Change Log*:####
+--
+*10-29-14*
+- made a 16x12 board to change game mechanics
+- fixed path finding methods, still a bit buggy
+- unit movement work decently
+- TODO:
+	- implement 90 degree turning of medium units for upward movement
+	- add specials to factions & individual units
+	- add random "special" tiles to tiled map
+	- create & add music & soundboard
+	- perfect path finding algorithms
+
+--
+
+
 <small><small>
 #####*About this project*
 Currently a work in progress & mainly for self-learning purposes. Code is not very pretty at the moment, game runs but doesn't properly work only on desktop, and there still exist a lot of deprecated classes. I only recently started working on it after taking a small hiatus to pursue other unrelated projects. But I'm back and on top of it now, so more updates will come soon. </small></small>
