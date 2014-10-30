@@ -27,11 +27,12 @@ import com.fs.game.data.GameData;
 import com.fs.game.enums.UnitState;
 import com.fs.game.maps.Panel;
 import com.fs.game.stages.MapStage;
+import com.fs.game.unused_old_classes.TextureUtils;
 import com.fs.game.utils.Constants;
 import com.fs.game.utils.GameManager;
 import com.fs.game.utils.MapUtils;
-import com.fs.game.utils.TextureUtils;
 import com.fs.game.utils.UnitUtils;
+import com.fs.game.utils.pathfinder.PathGenerator;
 
 public class Unit extends Actor {
 
@@ -76,7 +77,7 @@ public class Unit extends Actor {
 
 	Animation deathAnim;	//death sequence
       
-	float timeInterval = 0; //stores delta time for animations
+	float timeInterval = 0.1f; //stores delta time for animations
 	float aniTime = .1f; //stores data related to animation between panels
 	float attackTime = 0f;
 	public int actualMoves = 0; //the actual moves unit takes (may not be max necessarily)
@@ -90,6 +91,8 @@ public class Unit extends Actor {
 	//store player & faction info
 	public int player = 0;
 	String faction; //
+	public boolean crossWater = false;
+	public boolean crossLand = false; 
  	
 	public float health = 4; //each unit has 4 health
 	public Pixmap pixHealthBar;		//the pixmap which changes based on damage taken
@@ -104,7 +107,8 @@ public class Unit extends Actor {
 	public boolean chosen = false; //if unit is chosen
  	public boolean attacking = false; //determines if attack animation necessary
 	public boolean done = false; //unit has finished moving/attacking
-	
+	boolean panelsFound = false;
+
 	public boolean rightSide = false;
 	public boolean leftSide = false;
 	
@@ -113,25 +117,30 @@ public class Unit extends Actor {
 
  	//related to unit moving on board
  	public SequenceAction moveUnit;	//actions performed by units in sequence
-	private float moveTime = 4f; //gets the move duration (shorter the further unit can move)
+	private float moveTime = 8f; //gets the move duration (shorter the further unit can move)
 	private int maxMoves; //maximum move distance of unit actor
 	private String unitSize; //size of unit in dimensions (can be 32x32, 64x32 or 64x64)
 
 	//for unit movements
 	Panel[][] panelsPos; //matrix for panel position
+	//NOTE: trying something new with coordinate system instead of panel array
+	double[][] panelCoords = Constants.GRID_SCREEN_VECTORS; //coords of panels
 	Panel targetPan; //the target panel unit moves to
-	Panel tempPan; //a panel the unit moves over
+	public PathGenerator pathGen; //class which generates the unit's possible move movements
+	public Array<Panel> movePath; 
+	public SequenceAction moveSequence;
 
 	//place to recycle allocated actions (max of 16) 
-	public Pool<MoveToAction> actionPool = new Pool<MoveToAction>(){
+	public Pool<SequenceAction> actionPool = new Pool<SequenceAction>(){
 		@Override
-		protected MoveToAction newObject(){
-			return new MoveToAction();
+		protected SequenceAction newObject(){
+			return new SequenceAction();
 		}
 	};
 	
 	/** default empty constructor
 	 *  - nearly empty, except for set lock
+	 *  - useful for testing pathfinder & various methods in other classes
 	 */
 	public Unit() { }//empty default constructor
 	
@@ -163,11 +172,10 @@ public class Unit extends Actor {
  		this.setBounds(actorX, actorY, getWidth(), getHeight());
 		this.unitBox = new Rectangle(getX(), getY(), this.getWidth(), this.getHeight());	
 		//creates the health bar (changes if damaged)
-		this.pixHealthBar = TextureUtils.createPixmap(Constants.HLTH_W, Constants.HLTH_H, Color.YELLOW);
+		this.pixHealthBar = UnitUtils.createPixmap(Constants.HLTH_W, Constants.HLTH_H, Color.YELLOW);
 		this.healthBar = new Texture(pixHealthBar);
  
- 		this.panelArray = new Array<Panel>(); //stores all possible panels actor can move to
-		this.otherUnits = new Array<Unit>(13); //all other units except this one
+ 		this.otherUnits = new Array<Unit>(13); //all other units except this one
 		this.enemyUnits = new Array<Unit>(7);	//all enemy units
 		
  		//original positions for determining where unit has moved
@@ -175,13 +183,15 @@ public class Unit extends Actor {
  		this.oriX = getX();
 		this.oriY = getY();
 		this.setOrigin(oriX, oriY);
-		//updateUnitDataArrays(this.getStage().getActors());
-	
+		this.pathGen = new PathGenerator(this, oriX, oriY);
+		
 		setupAnimations();
 		
-		//this.addListener(UnitListeners.actorGestureListener);
-		this.addListener(UnitListeners.unitInputListener);
-		this.addListener(UnitListeners.unitChangeListener);
+		this.addListener(UnitListeners.actorGestureListener);
+		//this.addListener(UnitListeners.unitInputListener);
+		//this.addListener(UnitListeners.unitChangeListener);
+		this.moveSequence = new SequenceAction();
+		this.panelArray = new Array<Panel>();
   	}
  
 	public void setupInfo(){
@@ -204,9 +214,18 @@ public class Unit extends Actor {
 			this.setWidth(64);
 			this.setHeight(64);
 		}
-		
   		setMaxMoves(unitInfo.getMaxMoves());
-
+		
+		
+		if (this.getUnitInfo().isCrossLandObst() == "Yes"){
+			this.crossLand = true;
+		}
+ 
+		if (this.getUnitInfo().isCrossWater().equals("Yes")){
+			this.crossWater = true;
+		}
+ 
+		
 	}
  
 	/**initially set to .01 (slow) TODO: get all animations
@@ -308,16 +327,23 @@ public class Unit extends Actor {
 		
 	}
  
+	
+	/**
+	 * 
+	 */
+	
 	/***** main acting method for units
 	 * - the main acting method for units
 	 * 
 	 */
-	public void unitActs() throws NullPointerException {
+	public void unitActs() {
 		
-		//update all the units Arrays which store info about current game state
- 		updateUnitDataArrays(this.getStage().getActors()); //important for Unit's knowledge of ohter units/objects
+		/*
+		 * update all the units Arrays which store info about current game state
+		 * important for Unit's knowledge of ohter units/objects
+		 */
+ 		updateUnitDataArrays(this.getStage().getActors()); 
 
- 
  		/*
  		 * if the unit finds nearby enemy, they attack
  		 * - while attack is true unit is damaged (constant damage)
@@ -332,37 +358,53 @@ public class Unit extends Actor {
 		if (chosen && !done && !lock) {
 			//other units deselected
  		 	UnitUtils.deselectUnits(otherUnits);
- 		 	 		 	
-			panelArray = UnitUtils.getMoveRange(this, panelsPos); //possible move paths based on panelArray
- 			showMoves(); //sets possible moves
+
+ 		 	//only gets panel array doesn't contain any panels
+ 		 	if (!panelsFound){
+ 		 		panelArray = pathGen.findPaths();
+ 		 		panelsFound = true;
+ 		 	}
+ 		 	
+ 			showMoves(); //shows possible moves
+ 			
 			checkTargetPanel(); 
 			
-		}//show all possible moves/attacks/options unit has
+		}
+	 
 		
-		/*
+		/* if a panel was selected while unit chosen
 		 * unit now moves to destination if target panel found
+		 * TODO: get rid of the panelPath!=null exception & FIX IT!
+		 */
+		if (moving ) {
+ 			if (moveSequence.getActions().size != panelPath.size){
+				for (Vector2 pos : panelPath){
+ 					MoveToAction moveAction = Actions.moveTo(pos.x, pos.y, 5f);
+					moveSequence.addAction(moveAction);
+					
+				}
+			}
+			
+			addAction(moveSequence);
+				
+			Gdx.app.log(LOG, "unit is moving right, left, up, down (enums): " + state.name().toString());
+			UnitUtils.unitDirection(this, getX(), getY()); //sets the unit state
+			//updatePosition();
+			
+			if (getX()==targetPan.getX() && getY()==targetPan.getY())
+				updateUnit();
+ 
+ 		}
+//		//NOTE: this is a temporary work-around
+//		else if (moving && panelPath==null){
+//			this.chosen = false;
+//			this.moving = false;
+//		}
+// 
+		
+		/* the state unit is in when no longer chosen/moving
 		 * 
 		 */
-		if (moving) {
-			//Gdx.app.log(LOG, "unit is moving: " + moving);
-			
-			if (timeInterval > moveTime/panelPath.size){
-				timeInterval = 0; //keeps track of actual time
- 				Vector2 nextPos = panelPath.pop(); //removes & returns next panel
- 				
-				Gdx.app.log(LOG, "unit is moving right, left, up, down (enums): " + state.name().toString());
- 				UnitUtils.unitDirection(this, nextPos.x, nextPos.y); //sets the unit state
-
-				//addAction(UnitUtils.createMoveAction(this, nextPos.x, nextPos.y, moveTime));
-				addAction(Actions.moveTo(nextPos.x, nextPos.y, .1f));
-				updatePosition();
-  			}
-			
-			if (getX() == getTargetPan().getX() && getY() == getTargetPan().getY()){
-				updateUnit();
-			}
- 		}
-		
 		if (standing){
 			state = UnitState.STILL;
 		}
@@ -381,6 +423,7 @@ public class Unit extends Actor {
 		
 		if (attacking){
 			unitAttacked();
+			attacking = false;
 		}
 	}
  
@@ -448,10 +491,16 @@ public class Unit extends Actor {
 		lock = true;
 		done = true;
 		
-		setOrigin(destX, destY);
+		//setOrigin(destX, destY);
+	 	pathGen.getUnitOrigin(getX(), getY());
 
+	 	panelsFound = false;
 		panelPath.clear();
 		panelArray.clear();
+		
+		moveSequence.reset(); //NOTE: this is required to reset sequence so it doesn't cause infinite loop
+		actionPool.free(moveSequence);
+		actionPool.clear();
   	}
 	
 	/** updates unit position location variables on board
@@ -463,11 +512,12 @@ public class Unit extends Actor {
 		if (targetPan != null){
 			gridPosX = targetPan.gridPosX;
 			gridPosY = targetPan.gridPosY;
-			setPosition(targetPan.getX(), targetPan.getY());
+			//setPosition(targetPan.getX(), targetPan.getY());
 
 		}
- 
-		this.unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
+		
+		if (this.getX() == targetPan.getX() && this.getY() == targetPan.getY())
+			this.unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
 
 	}
 	
@@ -495,12 +545,13 @@ public class Unit extends Actor {
 	 * adds the panels into an array
 	 * find relative position of panels to all possible moves
 	 * highlights all possible panels on board if unit is selected
- 
 	 */
 	public void showMoves() {
  		if (panelArray!=null){
 	 		for (Panel p : panelArray) {
+	 			
 				if (!p.moveableTo){
+					
 					p.moveableTo = true;
 				}
 			}
@@ -520,17 +571,19 @@ public class Unit extends Actor {
 				}
 			}
 		}
+		panelsFound = false;
 	}
 	
 	/** finds the targetPanel that the user selected 
 	 * 	unit to go to
 	 *
 	 */
-	public void checkTargetPanel() throws NullPointerException {
+	public void checkTargetPanel() {
 		for (Panel p : panelArray) {
 			if ((p.selected && p.moveableTo)) {
 				targetPan = p;
-				
+				//movePath = pathGen.findBestPath(targetPan);
+								
 				moving = true;
 				standing = false;
 				chosen = false;
@@ -598,17 +651,7 @@ public class Unit extends Actor {
 				
 		this.maxMoves = maxMoves;
 	}
-	
-	public Panel[][] getPanelsPos() {
-		return panelsPos;
-	}
-
-	/**
-	 * @param panelsPos the panelsPos to set
-	 */
-	public void setPanelsPos(Panel[][] panelsPos) {
-		this.panelsPos = panelsPos;
-	}
+	 
  
 	public void setArrayPosition(int arrPosX, int arrPosY) {
 		setArrayPosX(arrPosX);

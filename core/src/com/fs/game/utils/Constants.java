@@ -22,6 +22,15 @@ public class Constants {
 	public static final float SCREENWIDTH = 800;
 	
 	
+	public static final int ROWS_16 = 16;
+	public static final int COLS_16 = 16;
+	public static final float GRID_WIDTH_B = 512;
+	public static final float GRID_HEIGHT_B = 384;
+	
+	public static final float GAMEBOARD_X = 144f;
+	public static final float GAMEBOARD_Y = 100f;
+	
+	
 	//this text is used for debugging and log entries
 	public static final String LOG_MAIN = "LOG LevelScreen : ";
 	public static final String EXCEPTION = " exception : ";
@@ -43,6 +52,7 @@ public class Constants {
  * 
  */
 	public final static String MAP_3A = "maps/mapTemplate3a.tmx";
+	public final static String MAP_3B = "maps/mapTemplate3b.tmx";
 	
 /*---------------Image pathways in assets folder------
  * assets folder in android/assets
@@ -124,16 +134,16 @@ public class Constants {
 	public static final float MAX_TIME = 30f; //max game time
 	
 	//for the info panel below game board
-	public static final float INFO_X = GRID_X + TIMER_WIDTH; //
+	public static final float INFO_X = GAMEBOARD_X + TIMER_WIDTH; //
 	public static final float INFO_Y = 0;
-	public static final float INFO_W = 160; //<--(384-64)/2 
-	public static final float INFO_H = 100; //<--height of infopanel
+	public static final float INFO_W = 224f; //<--(512-64)/2 
+	public static final float INFO_H = 100f; //<--height of infopanel
  	
 	//for the side panel objects TODO: make these buttons BIGGER
 	public static final float SIDE_BUTTON_RADIUS = 50;
 	
-	public static final float BT1_X = 30f;
-	public static final float BT2_X = 800 - (SIDE_BUTTON_RADIUS + 30f); 
+	public static final float BT1_X = 15f;
+	public static final float BT2_X = 800 - (SIDE_BUTTON_RADIUS + 15f); 
 	public static final float BT_Y = 250; //screen height/2 (both buttons same height)
 	//the go button (might make it bigger)
 	public static final float GO_X = 120;
@@ -149,8 +159,10 @@ public class Constants {
 	public static final String UNIT_DESELECT = "unit now not chosen"; 
 	
 	
-	/* these are all the grid vectors starting from bottom to right, then move up and repeat
-	 * 
+	/* these are all the 32x32 board positions 
+	 * starting from bottom to right, then move up and repeat
+	 * - NOTE: these can possibly be used as coordinates units can move to
+	 *  
 	 */
 	public static final double[][] GRID_SCREEN_VECTORS = 																				//column
 		{{208.0, 100.0}, {208.0, 132.0}, {208.0, 164.0}, {208.0, 196.0}, {208.0, 228.0}, {208.0, 260.0}, {208.0, 292.0}, {208.0, 324.0},  //1 
@@ -179,8 +191,7 @@ public class Constants {
 		{560.0, 356.0}, {560.0, 388.0}, {560.0, 420.0}, {560.0, 452.0}};
 	
 	
-	
-
+ 
 	/*------------Unit movement offsets when on grid------------
 	 * 
 	 * the offsets represent how much unit can move in certain direction

@@ -18,6 +18,7 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Contact;
@@ -29,15 +30,19 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fs.game.data.GameData;
-import com.fs.game.maps.GameBoard;
 import com.fs.game.maps.MapActor;
 import com.fs.game.maps.Panel;
+import com.fs.game.tests.TestBoard;
 import com.fs.game.units.Unit;
+import com.fs.game.unused_old_classes.GameBoard;
 import com.fs.game.utils.Constants;
 import com.fs.game.utils.GameManager;
 import com.fs.game.utils.MapUtils;
@@ -56,7 +61,7 @@ public class MapStage extends Stage implements ActionListener{
 	TiledMap tiledMap; 	//creates the actual map
  	Table gridTable; 	//the table that contains grid board
   	
- 	Array< Cell> waterCells;
+ 	Array<Cell> waterCells;
 	Array<Cell> obstacleCells;
 	Array<Cell> groundCells;
 	
@@ -72,15 +77,16 @@ public class MapStage extends Stage implements ActionListener{
 	Array<Panel> obstacles;
 
 	Panel[][] panelMatrix; //the grids on game board
- 
+
 	private Array<Panel> panelArray;
 	
 	//variables related to stage/screen placements
 	final float SCREENWIDTH = Constants.SCREENWIDTH;
 	final float SCREENHEIGHT = Constants.SCREENHEIGHT;
-	final float GRID_WIDTH = Constants.GRID_WIDTH;
-	final float GRID_X = Constants.GRID_X;
-	float GRID_Y = Constants.GRID_Y;
+	final float GRID_WIDTH = Constants.GRID_WIDTH_B;
+	final float GRID_HEIGHT = Constants.GRID_HEIGHT_B;
+	final float GRID_X = Constants.GAMEBOARD_X;
+	float GRID_Y = Constants.GAMEBOARD_Y;
 	float scale = 1/32f;
 	
 	OrthogonalTiledMapRenderer tiledMapRenderer;
@@ -88,9 +94,10 @@ public class MapStage extends Stage implements ActionListener{
 	OrthographicCamera mapCam;
 	
 	Unit currUnit;	//the selected unit
+	SequenceAction moveSequence; //unit move sequence
 	
 	
-	Viewport viewport; // Scientific Discovery" by Hyperactive Vs. Killer Buds
+	Viewport viewport; // 
 	ScreenViewport viewportStage;
 	
 	/**
@@ -115,31 +122,47 @@ public class MapStage extends Stage implements ActionListener{
 		camera = new OrthographicCamera(Constants.SCREENHEIGHT, Constants.SCREENWIDTH);
 		camera.setToOrtho(false, 800, 500);
 		
-		//TODO: + NOTE : cannot figure out why positioning is off by that much
-		//tiled map lines up well with it
-		camera.position.set(GRID_X-16, GRID_Y+50, 0);
-         camera.update();	
+ 		//tiled map lines up well with this setup
+		//camera.position.set(GRID_X-16, GRID_Y+50, 0);
+        camera.position.set(GRID_X + 112, GRID_Y +50, 0);
+		camera.update();	
         
         viewport = new ScreenViewport();
-		viewport.setWorldHeight(Constants.SCREENHEIGHT); //sets the camera screen view dimensions
-		viewport.setWorldWidth(Constants.SCREENWIDTH);
+		viewport.setWorldHeight(SCREENHEIGHT); //sets the camera screen view dimensions
+		viewport.setWorldWidth(SCREENWIDTH);
 		viewport.setCamera(camera);
 		
  	}
 	
 	public void setupGridElements(){
- 		MapUtils.setupGridElements(); //stores data in UnitData
+// 		MapUtils.setupPanels12x12(); //stores data in UnitData
+//		panelMatrix = GameData.gridMatrix;
+//		this.setPanelArray(GameData.gamePanels);
+		
+		//2nd kind of setup
+		MapUtils.setupPanels16x12();
 		panelMatrix = GameData.gridMatrix;
-		setPanelArray(GameData.gridBoard);
-		gridTable = MapUtils.createGridTable(panelMatrix);
-		addActor(gridTable);
+		this.setPanelArray(GameData.gamePanels);
+		
+		//gridTable = MapUtils.createPanelTable(panelMatrix);
+		//addActor(gridTable);
+		
+		
+//		for (int x = 0; x < Constants.ROWS; x++)
+//		{
+//			for (int y = 0; y < Constants.COLS; y++) {
+//				addActor(panelMatrix[x][y]);
+//			}
+//			
+//		}
+ 
   	}
 	
 	public void createMapActors(){
 		//for-each loop thru all layers of map
 		for (MapLayer layer : tiledMap.getLayers()) {
 		    TiledMapTileLayer tiledLayer = (TiledMapTileLayer)layer;
-		    MapUtils.createActorsForLayer(tiledLayer, panelMatrix, this);
+		    MapUtils.createActorsForLayer(tiledLayer, GameData.gridMatrix, this);
 		    //Table tileTable = MapUtils.tableFromLayers(tiledLayer);
 		    //addActor(tileTable);
 		} //gets all the actors from all the layers
@@ -152,10 +175,18 @@ public class MapStage extends Stage implements ActionListener{
 	 *  
 	 */
 	public void createUnits() {
- 		UnitUtils.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
-		UnitUtils.testBoardSetup1(); //test setup b/w humans & reptoids
+		UnitUtils.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
+//		TestBoard.testBoardSetup1_12x12(); //test setup b/w humans & reptoids
 		
-		MapUtils.unitsToStage(UnitUtils.playerUnits, panelMatrix, this);
+		
+		//alternative setup - 16x16 board
+		TestBoard.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
+		TestBoard.testBoardSetup2_16x12(); //test setup b/w humans & reptoids
+		
+		
+		
+		MapUtils.unitsToStage(TestBoard.playerUnits, this);
+	 
 	}
  
     /**renders the tiled map
@@ -165,7 +196,7 @@ public class MapStage extends Stage implements ActionListener{
     	
     	//take these out possibly TODO:
     	tiledMapRenderer.getSpriteBatch().setProjectionMatrix(camera.combined);
-    	tiledMapRenderer.setView(camera.combined, GRID_X, GRID_Y, 384, 384);
+    	tiledMapRenderer.setView(camera.combined, GRID_X, GRID_Y, GRID_WIDTH, GRID_HEIGHT);
 
     	camera.update();
  
@@ -189,33 +220,9 @@ public class MapStage extends Stage implements ActionListener{
      *  */
     @Override
     public void act(float delta) {
-//    	
-     	Array<Unit> allUnits = MapUtils.findAllUnits(getActors());
+ 
      	
-     	if (currUnit!=null){
-	     	for (Unit u : allUnits){
-	     		if (u.chosen){
-	     			this.currUnit = u;
-	     		}
-	     	}
-	     	
-	     	if (currUnit.moving){
-	      	}
-     	}
-//     	
-//     	if (currUnit!= null){
-//	     	Array<Unit> otherUnits = UnitUtils.findOtherUnits(getActors(), currUnit);
-//	    	//this works in MapStage as an override of units panels
-//	    	for (Panel pan : currUnit.panelArray){
-//				for (Unit uni : otherUnits){
-//	 				//check to see that another unit is not occupying space
-//					if (uni.unitBox.overlaps(pan.panelBox)){
-//						pan.blocked = true;
-//	 				}				
-//	 			}
-//	  		}
-//     	}
-    	super.act(delta); 
+     	super.act(delta); 
 
     }
     

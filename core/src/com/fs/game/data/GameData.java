@@ -43,7 +43,7 @@ public class GameData {
 
  	//all these are related to basic board elements (grid tiles 32x32)
  	public static Panel[][] gridMatrix;	//the grid postiions
- 	public static Array<Panel> gridBoard; //the gridBoard array of Panels
+ 	public static Array<Panel> gamePanels; //the gridBoard array of Panels
 	public static Array<Panel> unitPanels; //each units panel position	
 	public static Table gridTable;  //the table of panels added to stage
 	

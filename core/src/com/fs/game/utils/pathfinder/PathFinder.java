@@ -78,11 +78,7 @@ public class PathFinder {
  		openList = new Array<GridNode>();
 		closedList = new Array<GridNode>();
 		
-		if (uni.unitInfo.getSize().equals("64x32") || uni.unitInfo.getSize().equals("64x64")){
-			maxX = 64;
-			//maxY = 64;
-		}
-	 
+		 
 		Vector2 startVec = new Vector2(unit.getX(), unit.getY());
 		Vector2 targetVec = target.getLocation();
 		
@@ -129,7 +125,7 @@ public class PathFinder {
  		}
 		
 		Gdx.app.log(LOG, "path was not completed!!!!!! currently contains " + shortestPath());
- 		return null; 
+ 		return shortestPath(); 
  	}
 	
  
@@ -165,7 +161,7 @@ public class PathFinder {
  		//add neighbor nodes to list
 		for (GridNode node : gridNodeGraph){
  			//checks see if blocks are neighbors or obstacles, units, etc
- 			if (isNeighborNode(parent, node) && !node.blocked){
+ 			if (isNeighborNode(parent, node) ){
  				//if not in closed list already & cost of totalCost (F) of parent is greater then cost of node
 				if (!closedList.contains(node, false) && parent.getTotalCost() > node.getTotalCost()){
 					node.setParent(parent);
@@ -186,7 +182,7 @@ public class PathFinder {
 					node.calculateCostFromStart();
 					node.calculateCostToGoal();
 
-					openList.add(node);
+					//openList.add(node);
 					Gdx.app.log(LOG, " new cost (G) of node in open list is "+ node.getCostFromStart());
 				}
 				else if (!closedList.contains(node, false) && !openList.contains(node, false)){
@@ -234,8 +230,7 @@ public class PathFinder {
  	 * @return
  	 */
 	public boolean horizNodeNeighbor(GridNode parent, GridNode node ){
-		//return Math.abs(n1.x-n2.x)==maxX && n1.y==n2.y;
- 		
+  		
 		return (parent.x == node.x + maxX || parent.x == node.x - maxX) && parent.y==node.y;
 	}
 	
@@ -265,10 +260,7 @@ public class PathFinder {
 			unitMovePath.add(node.location);
 			Gdx.app.log(LOG, "this node is on path: " + NodeUtils.getBoardPositions(node) );
 		}
-		
-		
-		//reversing order
-		//unitMovePath.reverse();
+ 
 		
 		Gdx.app.log(LOG, " unit move path is : " + unitMovePath.toString(","));
 		

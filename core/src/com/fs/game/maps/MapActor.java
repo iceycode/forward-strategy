@@ -33,15 +33,15 @@ public class MapActor extends Actor {
 	TiledMapTileLayer tiledLayer; //the tile layer
 	TiledMapTileLayer.Cell cell; //will become an actor
 	
- 	public MapProperties property;
+ 	public MapProperties property; 
  	
  	//for unit movement selection
  	Texture panelUp;
  	Texture panelDown;
  	Texture panelView;
  	
- 	Texture currentTexture; //current tile state
- 	Skin skin;
+ 	Texture panelTexture; //current tile Panel texture (changes)
+ 	Texture mapTexture;	//current map texture
  	
  	public boolean selected = false;
 	public boolean moveableTo = false;
@@ -55,9 +55,13 @@ public class MapActor extends Actor {
     protected InputListener inputListener;
     protected ClickListener clickListener;
     
+    //A* scores for pathfinding algorithm
+  	public float totalCost; //cost from start + heuristic
+  	public float costFromStart;//distance from start panel to current panel
+  	public float heuristic;//estimated distance from current panel to goal
     
     public MapActor(TiledMapTile tile, float actorX, float actorY) {
-  
+    	
      	this.setX(actorX);
     	this.setY(actorY);
      }
@@ -75,12 +79,16 @@ public class MapActor extends Actor {
         this.property = tiledLayer.getProperties();
         this.terrainType = tiledLayer.getName();
         
-        this.skin = GameManager.gameSkin;
-        this.panelUp = skin.get("panelUp", Texture.class);
-        this.panelDown = skin.get("panelDown", Texture.class);
-        this.panelView = skin.get("panelView", Texture.class);
-        currentTexture = panelUp;
         
+        if (cell!=null){
+	        if (terrainType.equals("panels")){
+	        	panelTexture = cell.getTile().getTextureRegion().getTexture();
+	        }
+	        else{
+	            mapTexture = cell.getTile().getTextureRegion().getTexture();
+	        }
+        
+        }
         
          //adds a clicklistener
         addClickListener();
@@ -93,49 +101,20 @@ public class MapActor extends Actor {
 		//render();		
 
     	super.draw(batch, alpha);
- 		//batch.draw(currentTexture, getX(), getY());
+    	
+//    	if (!terrainType.equals("panels"))
+//    		batch.draw(mapTexture, getX(), getY());
 
-//
-//    	if (moveableTo){
-//    		batch.draw(panelDown, getX(), getY());
-//    	}
-//    	else if (view){
-//    		batch.draw(panelView, getX(), getY());
-//     	}
      }
 
 	@Override
 	public void act(float delta){
 		super.act(delta);
 		
-		tileTextureChooser();
+		//tileTextureChooser();
 	}
 	
-	/** tileTextureChooser
-	 * 
-	 * the method which selects or deselects panels
-	 * 
-	 * NOTE: need to set texture
-	 * 
-	 */
-	public void tileTextureChooser() {
-		if (selected || moveableTo) {
-			// TODO: look more into this problem
-			//currTex = skin.get("panelDown", Texture.class);
-			//setTexture(currTex); //<--------- this does not change to this on stage NEED TO use skins
-			this.setTexture(panelDown);
- 		}//change to another texture
-		else if (!selected || !moveableTo ) {
-			//currTex = oriTex;
-			//setTexture(currTex); //<--------- this does not change to this on stage NEED TO use skins
-			this.setTexture(panelUp);
- 		}
-		else if (view){
-			this.setTexture(panelView);
-		}
-		
-	}
-	
+	 
 
     public void addClickListener() {
     	clickListener = new ClickListener() {
@@ -143,6 +122,15 @@ public class MapActor extends Actor {
             public void clicked(InputEvent event, float x, float y) {
                 Gdx.app.log(LOG, ((MapActor)event.getTarget()).cell + " has been clicked.");
             }
+    		
+    		@Override
+    		public boolean isOver(Actor actor, float x, float y){
+    			
+    			
+    			
+    			return true;
+    		}
+    		
     	};
     	
         addListener(clickListener);
@@ -166,7 +154,7 @@ public class MapActor extends Actor {
          		
          		return true;
          	}//touch down
-         
+        	
          	@Override
 			public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
          		Gdx.app.log(LOG, "touch done at (" + x + ", " + y + ")");

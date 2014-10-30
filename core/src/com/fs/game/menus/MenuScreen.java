@@ -150,7 +150,7 @@ public class MenuScreen implements Screen{
  
 		stage.act(delta);
 		stage.draw();
-		Table.drawDebug(stage);
+		//Table.drawDebug(stage); //removed in libgdx 1.4.1
 		
 		Gdx.input.setInputProcessor(stage);
 		

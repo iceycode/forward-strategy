@@ -20,11 +20,13 @@
   </tile>
   <tile id="1" terrain="0,0,0,0">
    <properties>
+    <property name="MoveCost" value="1"/>
     <property name="Panel" value="1"/>
    </properties>
   </tile>
   <tile id="2">
    <properties>
+    <property name="MoveCost" value="1"/>
     <property name="Panel" value="2"/>
    </properties>
   </tile>
@@ -34,16 +36,6 @@
    </properties>
   </tile>
  </tileset>
- <layer name="panels1" width="12" height="12" opacity="0.39">
-  <data encoding="base64" compression="zlib">
-   eJxrZGBgaITiJhJxIxX00ttOUvWMYvwYAMcWSRU=
-  </data>
- </layer>
- <layer name="panels2" width="12" height="12" opacity="0.42">
-  <data encoding="base64" compression="zlib">
-   eJxrZmBgaB7Fo5hMDACAfUmx
-  </data>
- </layer>
  <layer name="grass" width="12" height="12">
   <properties>
    <property name="Terrain" value="ground"/>

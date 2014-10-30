@@ -29,13 +29,13 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.fs.game.data.GameData;
-import com.fs.game.hud.HUDUtils;
 import com.fs.game.main.MainGame;
-import com.fs.game.maps.GameBoard;
 import com.fs.game.maps.Panel;
 import com.fs.game.stages.MapStage;
 import com.fs.game.units.Unit;
+import com.fs.game.unused_old_classes.GameBoard;
 import com.fs.game.utils.Constants;
+import com.fs.game.utils.HUDUtils;
 import com.fs.game.utils.MapUtils;
 import com.fs.game.utils.MenuUtils;
 import com.fs.game.utils.UnitUtils;
@@ -63,9 +63,11 @@ public class LevelScreen implements Screen {
  
 	final float VIEWPORTWIDTH = Constants.SCREENWIDTH;
 	final float VIEWPORTHEIGHT = Constants.SCREENHEIGHT;
-	final float gridSide = Constants.GRIDSIDE; 
-	final float gridOriX = Constants.GRID_X;
-	final float gridOriY = Constants.GRID_Y;
+	final float GRID_WIDTH = Constants.GRID_WIDTH_B;
+	final float GRID_HEIGHT = Constants.GRID_HEIGHT_B;
+	
+	final float GRID_ORI_X = Constants.GAMEBOARD_X;
+	final float GRID_ORI_Y = Constants.GAMEBOARD_Y;
 	final String LOG = "LevelScreen log: ";
 	
 	//utilities for unit's user interface
@@ -177,7 +179,7 @@ public class LevelScreen implements Screen {
 		//stage.setViewport(viewport);
 		
 		/** stageMap : contains tile map & actors associated with it ****/
-		stageMap = MapUtils.createMap(3); //creates the TiledMap with Tiles as actorsOnStage
+		stageMap = MapUtils.createMap(4); //creates the TiledMap with Tiles as actorsOnStage
 		stageMap.setViewport(scalingViewPort); //sets viewport (renderer must have same )
 		
 		/** pause stage*/
@@ -391,12 +393,6 @@ public class LevelScreen implements Screen {
 	public void show() {
 		Gdx.input.setInputProcessor(in); //set input processor in show method
 
-		//glClearColor takes 3 RGB float values & alpha
-		//Gdx.graphics.getGL20().glClearColor(0,0,0,1); //sets the color of clear screen
-		//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);	
- 		//makes sure that unit positions are up to date
-		//GameInfo.currUnits = findAllUnits();
-		
 		timerCount += Gdx.graphics.getDeltaTime();
 		nextPlayerGo(); //checks to see if next player will go
 		
@@ -414,17 +410,16 @@ public class LevelScreen implements Screen {
 		float delta = Gdx.graphics.getDeltaTime();
 		stageMap.act(delta);
      	stageMap.draw();
-		Table.drawDebug(stageMap);
 
      	//stage with the unit actors & UI on it
 		stage.act(delta);
 		stage.draw();	
-		Table.drawDebug(stage);                                                                       
+		// removed in libgdx 1.4.1 -->Table.drawDebug(stage);                                                                       
         
 		timer.setText("" + (int)timerCount);
 		timer.act(delta); 
 		
-//		Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
+		Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
 		
 	  	if (Gdx.input.isTouched()) {
 	  		
