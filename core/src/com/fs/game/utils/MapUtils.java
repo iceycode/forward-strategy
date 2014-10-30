@@ -45,8 +45,8 @@ public class MapUtils {
 
 	static float SCREENWIDTH = Constants.SCREENWIDTH;
 	static float SCREENHEIGHT = Constants.SCREENHEIGHT;
-	static float GRID_ORI_X = Constants.GRID_X;
-	static float GRID_ORI_Y = Constants.GRID_Y;
+	static float GRID_ORI_X = Constants.GAMEBOARD_X;
+	static float GRID_ORI_Y = Constants.GAMEBOARD_Y;
 	
 	private static TiledMap tiledMap;
 	private static MapActor mapActor;
@@ -70,33 +70,16 @@ public class MapUtils {
 		else if (id == 3)
 			tiledMap = new TmxMapLoader().load("maps/map3.tmx");
 		else if (id == 4)
-			tiledMap = new TmxMapLoader().load(Constants.MAP_3A);
+			tiledMap = new TmxMapLoader().load(Constants.MAP_3B);
 		
-		tiledMap.getProperties();
+		//tiledMap.getProperties();
 		
 		//creates a  stage
 		MapStage stage = new MapStage(tiledMap); //set the stage
 
 		return stage;
 	}
-
-	/**
-	 * creates a table out of actors on stage
-	 * @return
-	 */
-	public static Table createTable() {
-		Table table = new Table();
-	    table.setFillParent(true);
-
-		for (MapLayer layer : tiledMap.getLayers()) {
-			TiledMapTileLayer tiledLayer = (TiledMapTileLayer)layer;
-			Table tableLayer = tableFromLayers(tiledLayer);//obtain table for layer
-			table.add(tableLayer).width(384).height(384); //add to root table
-			table.addActor(tableLayer);
-		} //gets all the tiles as actors in table format 
-		
-		return table;
-	}
+ 
 
 	public static Table tableFromLayers(TiledMapTileLayer tiledLayer) {
 		Table layerTable = new Table();
@@ -163,19 +146,20 @@ public class MapUtils {
 	 * @param stage
 	 */
     public static void createActorsForLayer(TiledMapTileLayer tiledLayer, Panel[][] panelMatrix, MapStage stage) {
-        mapMatrix = new MapActor[11*3][11*3]; //11 by 11 tiles * 5 layers 
+        mapMatrix = new MapActor[15*3][11*3]; //16x12 tiles  
         GameData.mapActorArr = new Array<MapActor>();
         GameData.gamePanels = new Array<Panel>();
         
 		String terrainType = tiledLayer.getName();
 
-        int rows = tiledLayer.getWidth();
+        int rows = tiledLayer.getWidth(); //layers width IN TILES
         int cols = tiledLayer.getHeight();
  
         for (int x = 0; x < rows; x++) {
             for (int y = 0; y < cols; y++) {
+            	
                 TiledMapTileLayer.Cell cell = tiledLayer.getCell(x, y);
-                     
+               
                 MapActor mapActor = new MapActor(tiledMap, tiledLayer, cell);
                 
                 float posX = GRID_ORI_X + x*32;
@@ -186,16 +170,19 @@ public class MapUtils {
                 Gdx.app.log(LOG, "position of mapactor when created is (" + mapActor.getX() + ", " + mapActor.getY() + ")");
 
 				Gdx.app.log(LOG, " layer's name is "+ tiledLayer.getName());
-				//Gdx.app.log(LOG, " layer property value is " + mapActor.property.get("Terrain"));
+				
 
-				if (cell!= null) {
+				if (cell!= null && (!terrainType.equals("panels") && !terrainType.equals("grid"))) {
+					//Gdx.app.log(LOG, " layer property value is " + mapActor.property.get("Terrain"));
 	 				mapMatrix[x][y] = mapActor;
 	 				
 	 				stage.addActor(mapActor);
  	                stage.addActor(panelMatrix[x][y]); //also adds the panel
 	 				
-	                GameData.gridMatrix[x][y].setTerrainType(terrainType); //set panel to terrain type of tile
+ 
+                	GameData.gridMatrix[x][y].setTerrainType(terrainType); //set panel to terrain type of tile
  	                GameData.gamePanels.add(GameData.gridMatrix[x][y]); //add to panel array
+ 	                
  	                GameData.mapActorArr.add(mapActor);	//add to a mapActor array TODO: create animation within tiled map
  				}
  
@@ -212,10 +199,10 @@ public class MapUtils {
     /*****Sets all the panels positions & actors in matrix
 	 * - sets all game board actors as arrays
 	 */
-	public static void setupPanels() {
+	public static void setupPanels12x12() {
 		
-		int rows = Constants.ROWS;
-		int columns = Constants.COLS;
+		int rows = 12;
+		int columns = 12;
 		float width = Constants.GRID_TILE_WIDTH;
 		float height = Constants.GRID_TILE_HEIGHT;
 		
@@ -244,12 +231,6 @@ public class MapUtils {
 				panelActor.setMatrixPosX(x);
 				panelActor.setMatrixPosY(y);
 				
-				
-				//this simply gets the map terrain & sets terraintype field in
-				//panel to this terrain property 
-//				MapActor ma = mapActMatrix[x][y]; // <----these are seen in MapStage's TiledMap
-// 				panelActor.setTerrainType(ma.terrainType);
-				
 				//panelActor.toFront();
 				panelMatrix[x][y] = panelActor; //store in position matrix
 				panelsOnStage.add(panelActor);
@@ -264,27 +245,124 @@ public class MapUtils {
 		GameData.gridMatrix = panelMatrix;
  	}
 	
-	/*************TABLE GRID******w************
-	 *  
-	 *  makes a Table which can be added to stage
+	
+	
+    /*****Sets all the panels positions & actors in matrix
+	 * - sets all game board actors as arrays
 	 */
-	public static Table createPanelTable(Panel[][] gridMatrix) {
-		Table table = new Table();	
-		table.setFillParent(false);
+	public static void setupPanels16x12() {
 		
-		for(int x = 0; x < Constants.ROWS; x++)  {
-			for (int y = 0; y < Constants.COLS; y++ ) {
-				// final Panel p = new Panel(stage, tiles, x, y);
-				Panel panelActor = gridMatrix[x][y];
-				//panelActor.addListener(MapUtils.createPanelListener(panelActor));
-				table.add(panelActor).width(panelActor.getWidth()).height(panelActor.getHeight());
-				table.addActor(panelActor);
+		int rows = 16;
+		int columns = 12;
+		float width = 32;
+		float height = 32;
+		
+		Array<Panel> panelsOnStage = new Array<Panel>(rows*columns); //<----not using now  
+		Panel[][] panelMatrix = new Panel[rows][columns];
+		
+		
+		for (int x = 0; x < rows; x ++) 	{
+			String panelName = "x"+x;
+	 		if (x%2==0){
+	 			System.out.println(); 
+	 		}
+			for (int y = 0; y < columns; y++) 	 {
+				float stagePosX = x*width + GRID_ORI_X;
+				float stagePosY = y*height + GRID_ORI_Y;
+
+				//String gridPos = "{" + x + ", " + y + "}, ";
+				String screenPos = "{" + stagePosX + ", " + stagePosY+ "}, ";
+ 
+		 		System.out.print(screenPos);
+		 		//System.out.print(gridPos);
+
+
+				Panel panelActor = new Panel(stagePosX, stagePosY);
+				panelActor.setName(panelName.concat("y"+y)); //used for id
+				panelActor.setMatrixPosX(x);
+				panelActor.setMatrixPosY(y);
+				
+				//panelActor.toFront();
+				panelMatrix[x][y] = panelActor; //store in position matrix
+				panelsOnStage.add(panelActor);
 			}
-			table.row(); //creates a row out of the actors
-		}	
+		}
 		
-		return table;
+		//setup the game board = stored in constants for pathfinding 
+		//set the elements which will be used on stage & by Unit actors
+		GameData.gamePanels = panelsOnStage;
+		GameData.gridMatrix = panelMatrix;
  	}
+	
+	
+	
+	/** checks to see if neighbor left or right
+	 * - doubly links together parent & child
+	 * 
+	 * @param parent
+	 * @param child
+	 * @param incrY
+	 * @return
+	 */
+ 	public static boolean vertNeighbor(Panel parent, Panel child){
+		//return Math.abs(n1.y-n2.y)==maxY && n1.x==n2.x;
+// 		Gdx.app.log(LOG, "parent is at : " + "(" + parent.getX() + ", " + parent.getY() +")");
+// 		Gdx.app.log(LOG, "child is at : " + "(" + child.getX() + ", " + child.getY() +")");
+ 		
+ 		boolean verticalNeighbor = false;
+ 		
+ 		if ((parent.getY() == child.getY() + 32)  && parent.getX()==child.getX() ) {
+ 			child.panelAbove = parent;
+ 			parent.panelBelow = child;
+ 			parent.neighbor = child;
+ 			child.neighbor = parent;
+ 			
+ 			verticalNeighbor = true;
+ 		}
+ 		else if ((parent.getY() == child.getY() - 32) && parent.getX()==child.getX() ){
+ 			parent.panelAbove = child;
+ 			child.panelBelow = parent;
+ 			parent.neighbor = child;
+ 			child.neighbor = parent;
+ 			
+ 			verticalNeighbor = true;
+ 		}
+ 		
+ 		
+		return verticalNeighbor;
+	}
+	
+ 	/** checks neighbors above or below
+ 	 * 
+ 	 * @param parent
+ 	 * @param child : next node
+ 	 * @return
+ 	 */
+	public static boolean horizNeighbor(Panel parent, Panel child){
+		boolean horizNeighbor = false;
+		
+		if ((parent.getX() == child.getX() + 32) && parent.getY()==child.getY()){
+			child.panelLeft = parent;
+			parent.panelRight = child;
+			parent.neighbor = child;
+			child.neighbor = parent;
+			
+			horizNeighbor = true;
+			
+		}
+		else if ((parent.getX() == child.getX() - 32) && parent.getY()==child.getY()){
+			child.panelRight = parent;
+			parent.panelLeft = child;
+			child.neighbor = parent;
+			parent.neighbor = child;
+			
+			horizNeighbor = true;
+		}
+		
+		
+		return horizNeighbor;
+	}
+
  
 /*--------------Units on stage-----------------
  * 
@@ -297,7 +375,7 @@ public class MapUtils {
 	 * @param allUnits
 	 * @param stage
 	 */
-	public static void unitsToStage(Array<Array<Unit>> allUnits,  Panel[][] panelMatrix, Stage stage){
+	public static void unitsToStage(Array<Array<Unit>> allUnits, Stage stage){
 		//get each player's units from a encapsulated array
 		Array<Unit> p1Units = allUnits.get(0);
 		Array<Unit> p2Units = allUnits.get(1);
@@ -308,7 +386,6 @@ public class MapUtils {
 		//get & add player 1 units to board
 		for (Unit u : p1Units) {
   			u.setPlayer(1); 
-		//	stage.addActor(u);	//add the actor
 			unitsOnStage.add(u);
   		}
 		
@@ -320,7 +397,6 @@ public class MapUtils {
   			u.setPlayer(2);
  			u.setLock(true);
   			u.setEnemyUnits(p1Units);
-   		//	stage.addActor(u);	//add the actor
 			unitsOnStage.add(u);
   		}
  
@@ -550,4 +626,33 @@ public static void createMapCam() {
 
 	setViewport(viewport);//sets this stage viewport
 
-}*/
+}
+
+
+
+	
+//*************TABLE GRID******w************
+makes a Table which can be added to stage	 
+	public static Table createPanelTable(Panel[][] gridMatrix) {
+		Table table = new Table();	
+		table.setFillParent(false);
+		
+		for(int x = 0; x < Constants.ROWS; x++)  {
+			for (int y = 0; y < Constants.COLS; y++ ) {
+				// final Panel p = new Panel(stage, tiles, x, y);
+				Panel panelActor = gridMatrix[x][y];
+				//panelActor.addListener(MapUtils.createPanelListener(panelActor));
+				table.add(panelActor).width(panelActor.getWidth()).height(panelActor.getHeight());
+				table.addActor(panelActor);
+			}
+			table.row(); //creates a row out of the actors
+		}	
+		
+		return table;
+ 	}
+*
+*
+*
+*
+*
+*/

@@ -32,13 +32,13 @@ public class Panel extends Actor{
 	public float costFromStart;//distance from start panel to current panel
 	public float heuristic;//estimated distance from current panel to goal
 	
-	//pointers to other panels - used in unit path generation
-	public Panel neighbor; //a neighbor panel 
-	public Panel panelLeft; //the panel the exists horizontally behind
-	public Panel panelRight;	//panel which is horizontally in front
-	public Panel panelBelow; //panel which is vertically below
-	public Panel panelAbove; //panel which is vertically on top
-   	
+	public Panel neighbor;
+	public Panel panelAbove;
+	public Panel panelBelow;
+	public Panel panelRight;
+	public Panel panelLeft;
+	public float panelCost = 32f;
+	
 	Texture panelUp; //regular panel texture
 	Texture panelDown ; //selected/viewing/moveableTo
 	Texture panelView; //when map info being viewed

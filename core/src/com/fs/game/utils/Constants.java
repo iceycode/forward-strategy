@@ -22,6 +22,15 @@ public class Constants {
 	public static final float SCREENWIDTH = 800;
 	
 	
+	public static final int ROWS_16 = 16;
+	public static final int COLS_16 = 16;
+	public static final float GRID_WIDTH_B = 512;
+	public static final float GRID_HEIGHT_B = 384;
+	
+	public static final float GAMEBOARD_X = 144f;
+	public static final float GAMEBOARD_Y = 100f;
+	
+	
 	//this text is used for debugging and log entries
 	public static final String LOG_MAIN = "LOG LevelScreen : ";
 	public static final String EXCEPTION = " exception : ";
@@ -125,16 +134,16 @@ public class Constants {
 	public static final float MAX_TIME = 30f; //max game time
 	
 	//for the info panel below game board
-	public static final float INFO_X = GRID_X + TIMER_WIDTH; //
+	public static final float INFO_X = GAMEBOARD_X + TIMER_WIDTH; //
 	public static final float INFO_Y = 0;
-	public static final float INFO_W = 160; //<--(384-64)/2 
-	public static final float INFO_H = 100; //<--height of infopanel
+	public static final float INFO_W = 224f; //<--(512-64)/2 
+	public static final float INFO_H = 100f; //<--height of infopanel
  	
 	//for the side panel objects TODO: make these buttons BIGGER
 	public static final float SIDE_BUTTON_RADIUS = 50;
 	
-	public static final float BT1_X = 30f;
-	public static final float BT2_X = 800 - (SIDE_BUTTON_RADIUS + 30f); 
+	public static final float BT1_X = 15f;
+	public static final float BT2_X = 800 - (SIDE_BUTTON_RADIUS + 15f); 
 	public static final float BT_Y = 250; //screen height/2 (both buttons same height)
 	//the go button (might make it bigger)
 	public static final float GO_X = 120;

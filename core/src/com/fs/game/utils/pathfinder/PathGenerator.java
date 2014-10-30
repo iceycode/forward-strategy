@@ -153,6 +153,10 @@ public class PathGenerator {
 	
 	public void findAdjacentPanels(Panel currPan){
 		for (Panel pan : allPanels){
+			
+			
+			Gdx.app.log(LOG, "Panel name is " + pan.getName() + "panel terrain type is " + pan.getTerrainType());
+			
 			//check for 3 requirements for adding to the open list
 			if (isNeighborPanel(currPan, pan) && !isObstacle(pan) && !possibleMoves.contains(pan, false)) {
 				pan.setCostFromStart(calculateCostFromStart(currPan, pan));

@@ -48,7 +48,6 @@ public class NodeUtils {
 		
 		for (Panel p : panelArray){
  			GridNode node = new GridNode(p.location, start, end);
- 
 			gridNodeGraph.add(node);
 		}
 		

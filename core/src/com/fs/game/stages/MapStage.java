@@ -40,6 +40,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fs.game.data.GameData;
 import com.fs.game.maps.MapActor;
 import com.fs.game.maps.Panel;
+import com.fs.game.tests.TestBoard;
 import com.fs.game.units.Unit;
 import com.fs.game.unused_old_classes.GameBoard;
 import com.fs.game.utils.Constants;
@@ -82,9 +83,10 @@ public class MapStage extends Stage implements ActionListener{
 	//variables related to stage/screen placements
 	final float SCREENWIDTH = Constants.SCREENWIDTH;
 	final float SCREENHEIGHT = Constants.SCREENHEIGHT;
-	final float GRID_WIDTH = Constants.GRID_WIDTH;
-	final float GRID_X = Constants.GRID_X;
-	float GRID_Y = Constants.GRID_Y;
+	final float GRID_WIDTH = Constants.GRID_WIDTH_B;
+	final float GRID_HEIGHT = Constants.GRID_HEIGHT_B;
+	final float GRID_X = Constants.GAMEBOARD_X;
+	float GRID_Y = Constants.GAMEBOARD_Y;
 	float scale = 1/32f;
 	
 	OrthogonalTiledMapRenderer tiledMapRenderer;
@@ -120,32 +122,39 @@ public class MapStage extends Stage implements ActionListener{
 		camera = new OrthographicCamera(Constants.SCREENHEIGHT, Constants.SCREENWIDTH);
 		camera.setToOrtho(false, 800, 500);
 		
- 		//tiled map lines up well with it
-		camera.position.set(GRID_X-16, GRID_Y+50, 0);
-        camera.update();	
+ 		//tiled map lines up well with this setup
+		//camera.position.set(GRID_X-16, GRID_Y+50, 0);
+        camera.position.set(GRID_X + 112, GRID_Y +50, 0);
+		camera.update();	
         
         viewport = new ScreenViewport();
-		viewport.setWorldHeight(Constants.SCREENHEIGHT); //sets the camera screen view dimensions
-		viewport.setWorldWidth(Constants.SCREENWIDTH);
+		viewport.setWorldHeight(SCREENHEIGHT); //sets the camera screen view dimensions
+		viewport.setWorldWidth(SCREENWIDTH);
 		viewport.setCamera(camera);
 		
  	}
 	
 	public void setupGridElements(){
- 		MapUtils.setupPanels(); //stores data in UnitData
+// 		MapUtils.setupPanels12x12(); //stores data in UnitData
+//		panelMatrix = GameData.gridMatrix;
+//		this.setPanelArray(GameData.gamePanels);
+		
+		//2nd kind of setup
+		MapUtils.setupPanels16x12();
 		panelMatrix = GameData.gridMatrix;
 		this.setPanelArray(GameData.gamePanels);
+		
 		//gridTable = MapUtils.createPanelTable(panelMatrix);
 		//addActor(gridTable);
 		
 		
-		for (int x = 0; x < Constants.ROWS; x++)
-		{
-			for (int y = 0; y < Constants.COLS; y++) {
-				addActor(panelMatrix[x][y]);
-			}
-			
-		}
+//		for (int x = 0; x < Constants.ROWS; x++)
+//		{
+//			for (int y = 0; y < Constants.COLS; y++) {
+//				addActor(panelMatrix[x][y]);
+//			}
+//			
+//		}
  
   	}
 	
@@ -166,14 +175,18 @@ public class MapStage extends Stage implements ActionListener{
 	 *  
 	 */
 	public void createUnits() {
- 		UnitUtils.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
-		UnitUtils.testBoardSetup1(); //test setup b/w humans & reptoids
-		
-		MapUtils.unitsToStage(UnitUtils.playerUnits, panelMatrix, this);
+		UnitUtils.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
+//		TestBoard.testBoardSetup1_12x12(); //test setup b/w humans & reptoids
 		
 		
-		//initialize unit move sequence action
-		moveSequence = new SequenceAction();
+		//alternative setup - 16x16 board
+		TestBoard.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
+		TestBoard.testBoardSetup2_16x12(); //test setup b/w humans & reptoids
+		
+		
+		
+		MapUtils.unitsToStage(TestBoard.playerUnits, this);
+	 
 	}
  
     /**renders the tiled map
@@ -182,8 +195,8 @@ public class MapStage extends Stage implements ActionListener{
     public void render() {
     	
     	//take these out possibly TODO:
-    	//tiledMapRenderer.getSpriteBatch().setProjectionMatrix(camera.combined);
-    	//tiledMapRenderer.setView(camera.combined, GRID_X, GRID_Y, 384, 384);
+    	tiledMapRenderer.getSpriteBatch().setProjectionMatrix(camera.combined);
+    	tiledMapRenderer.setView(camera.combined, GRID_X, GRID_Y, GRID_WIDTH, GRID_HEIGHT);
 
     	camera.update();
  
@@ -207,17 +220,7 @@ public class MapStage extends Stage implements ActionListener{
      *  */
     @Override
     public void act(float delta) {
-//     	Array<Unit> allUnits = MapUtils.findAllUnits(getActors());
-//     	
-//
-//     	for (Unit u : allUnits){
-//     		if (u.chosen){
-//     			this.currUnit = u;
-//     		}
-//     	}
-// 
-//		
-//		
+ 
      	
      	super.act(delta); 
 

@@ -73,7 +73,7 @@ public class UnitUtils  {
 	protected String jsonPath; 
 	protected String jsonAsString;
 	protected static AssetManager am;
-	protected static Panel[][] panelMatrix;
+	public static Panel[][] panelMatrix;
  	
 	//arrays of newly created unit-related objs
 	public static Array<Unit> arrayUnits;
@@ -144,6 +144,23 @@ public class UnitUtils  {
 		playerUnits.add(reptoidUni);
 		
 	}
+	
+	/** testSetup1
+	 * Humans vs Reptoids
+	 * 
+	 */
+	public static void testBoardSetup2() {
+ 		String faction1 = "Human";
+		String faction2 = "Reptoid";
+		String faction3 = "Arthroid";
+		
+		Array<Unit> humanUni = setUniPositions(faction1, 0, false, 1);
+		Array<Unit> reptoidUni = setUniPositions(faction3, 11, true, 2);
+		
+		playerUnits.add(humanUni);
+		playerUnits.add(reptoidUni);
+		
+	}
 
 	/** gets the units positions on stage
 	 * - uses flip as way to determine whether actor needs to be rotated
@@ -164,6 +181,9 @@ public class UnitUtils  {
 		int smallCount = 4;
 		int medCount = 2;
 		int largeCount = 1;
+		
+		//float posX = 208f; //original x position
+		float posY = 100f; //original y position
  
  		//set unit actor positions on board
 		for (int i = 0; i < unitInfoArr.size; i++) {
@@ -184,7 +204,7 @@ public class UnitUtils  {
 				Texture tex = am.get(unitPicPath, Texture.class);
 				if (smallCount >= 3) {
 					Panel pan = panelMatrix[posX][smallCount+7];
-					Unit uni = new Unit(tex, pan.getX(), pan.getY(), uniInfo);
+					Unit uni = new Unit(tex, posX*32, posX*32, uniInfo);
 					uni.setArrayPosition(posX, smallCount+7 ); //position within the grid (ie x3y4)
  					uni.setPlayer(player); //sets the player
 					
@@ -765,7 +785,7 @@ public class UnitUtils  {
 	 */
 	public static SequenceAction unitDeathAction(Unit uni, float duration){
 		SequenceAction unitDeath = Actions.sequence(Actions.fadeOut(duration), 
-				Actions.delay(duration, Actions.removeActor()));
+			Actions.delay(duration, Actions.removeActor()));
 		
 		//unitDeath.setPool(uni.actionPool); //<---for recycling (if unit were to come back to life)
 		
@@ -818,14 +838,14 @@ public class UnitUtils  {
 		for (int i = 0; i < damageList.length; i++){
 			//find unit which is being fought
 			if (unit.getUnitID() == i+1){
-				//damage = damageList[i]; 				
+				damage = -damageList[i]; 				
  				Gdx.app.log(Constants.LOG_UNIT_UTILS, "Unit " + unit.getName() + " health is at " + unit.health);
  
  			}
 			
 		}
 		
-		return damageTest; //TODO: get actual damage list
+		return damage; //TODO: get actual damage list
 	}
 	
 /*---------------Getting Units from Stage---------------
@@ -976,5 +996,116 @@ public class UnitUtils  {
 		return pixmap;
 	}
 
+	
+	
+	
+	
+	
+	public static Array<Unit> setUniPositions16x16 (String faction, float posX, boolean flip, int player){
+		Array<Unit> unitsOnBoard = new Array<Unit>(); //array for units per faction
+		Array<UnitInfo> unitInfoArr = GameManager.unitInfoArr;
+		
+ 		//counters to see how many to place on board
+		int smallCount = 4;
+		int medCount = 2;
+		int largeCount = 1;
+		
+		float posYB = 100f; //bottom y position
+		float posYT = 452f; //top y position
+ 
+ 		//set unit actor positions on board
+		for (int i = 0; i < unitInfoArr.size; i++) {
+			UnitInfo uniInfo = unitInfoArr.get(i);
+			//Gdx.app.log(LOG, " loading this units assets: " + uniInfo.getUnit());
+ 			
+			if (uniInfo.getSize().equals("32x32") && uniInfo.getFaction().equals(faction) &&
+					smallCount > 0) {
+				String unitPicPath = uniInfo.getTexPaths().get(0);
+				
+				//NOTE: all units have a stillLeft.png file path
+				boolean exists = Gdx.files.internal(unitPicPath).exists();
+				
+				if (flip && exists){
+					unitPicPath = uniInfo.getTexPaths().get(1);
+				}
+			 
+				Texture tex = am.get(unitPicPath, Texture.class);
+				if (smallCount >= 3) {
+					
+					Unit uni = new Unit(tex, posX, posYT, uniInfo);
+ 					uni.setPlayer(player); //sets the player				
+					unitsOnBoard.add(uni);
+					posYT-=32;
+				}//adds two units to right side of board
+				else {
+					//Panel pan = panelMatrix[smallCount-1][posY]; 
+					Unit uni = new Unit(tex, posX, posYB, uniInfo);
+ 					uni.setPlayer(player);   
+					unitsOnBoard.add(uni);
+					posYB+=32;
+				}//adds other two units to left side of board
+				
+				smallCount--;
+			}//places units on sides of board
+			else if (uniInfo.getSize().equals("64x32") && uniInfo.getFaction().equals(faction) &&
+					medCount > 0) {
+ 				String unitPicPath = uniInfo.getTexPaths().get(0);
+				
+				//NOTE: all units have a stillLeft.png file path
+				boolean exists = Gdx.files.internal(unitPicPath).exists();
+				
+				if (flip && exists){
+					unitPicPath = uniInfo.getTexPaths().get(1);
+					posX = posX - 32; //since the unit's position is actually 1 panel left of end
+				}
+				
+				Texture tex = am.get(unitPicPath, Texture.class);
+ 
+				if (medCount == 2) {
+					Unit uni = new Unit(tex, posX, posYT, uniInfo);
+ 					uni.setPlayer(player); 
+					unitsOnBoard.add(uni);
+				}
+				else {
+					Unit uni = new Unit(tex, posX, posYB, uniInfo);
+					uni.setPlayer(player);
+ 					unitsOnBoard.add(uni);
+				}
+				medCount--;
+			}//add medium units to right & left of small ones
+			else if (uniInfo.getSize().equals("64x64") && uniInfo.getFaction().equals(faction) && 
+					largeCount > 0) {
+				
+				String unitPicPath = uniInfo.getTexPaths().get(0);
+				
+				//NOTE: all units have a stillLeft.png file path
+				boolean exists = Gdx.files.internal(unitPicPath).exists();
+				if (flip && exists){
+					unitPicPath = uniInfo.getTexPaths().get(1);
+				}
+			 
+				posYB += 64;
+				Texture tex = am.get(unitPicPath, Texture.class);				
+				Unit uni = new Unit(tex, posX, posYB, uniInfo);
+ 				uni.setPlayer(player);
+				unitsOnBoard.add(uni);
+				
+				largeCount--;
+			}//add large unit in middle of board
+ 
+		}
+		
+		return unitsOnBoard; //returns an array containing 2 arrays of units
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
  
 }

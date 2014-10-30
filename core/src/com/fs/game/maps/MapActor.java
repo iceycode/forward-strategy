@@ -40,8 +40,8 @@ public class MapActor extends Actor {
  	Texture panelDown;
  	Texture panelView;
  	
- 	Texture currentTexture; //current tile state
- 	Skin skin;
+ 	Texture panelTexture; //current tile Panel texture (changes)
+ 	Texture mapTexture;	//current map texture
  	
  	public boolean selected = false;
 	public boolean moveableTo = false;
@@ -78,7 +78,17 @@ public class MapActor extends Actor {
         this.cell = cell;
         this.property = tiledLayer.getProperties();
         this.terrainType = tiledLayer.getName();
-
+        
+        
+        if (cell!=null){
+	        if (terrainType.equals("panels")){
+	        	panelTexture = cell.getTile().getTextureRegion().getTexture();
+	        }
+	        else{
+	            mapTexture = cell.getTile().getTextureRegion().getTexture();
+	        }
+        
+        }
         
          //adds a clicklistener
         addClickListener();
@@ -91,15 +101,10 @@ public class MapActor extends Actor {
 		//render();		
 
     	super.draw(batch, alpha);
- 		//batch.draw(currentTexture, getX(), getY());
+    	
+//    	if (!terrainType.equals("panels"))
+//    		batch.draw(mapTexture, getX(), getY());
 
-//
-//    	if (moveableTo){
-//    		batch.draw(panelDown, getX(), getY());
-//    	}
-//    	else if (view){
-//    		batch.draw(panelView, getX(), getY());
-//     	}
      }
 
 	@Override

@@ -63,9 +63,11 @@ public class LevelScreen implements Screen {
  
 	final float VIEWPORTWIDTH = Constants.SCREENWIDTH;
 	final float VIEWPORTHEIGHT = Constants.SCREENHEIGHT;
-	final float gridSide = Constants.GRIDSIDE; 
-	final float gridOriX = Constants.GRID_X;
-	final float gridOriY = Constants.GRID_Y;
+	final float GRID_WIDTH = Constants.GRID_WIDTH_B;
+	final float GRID_HEIGHT = Constants.GRID_HEIGHT_B;
+	
+	final float GRID_ORI_X = Constants.GAMEBOARD_X;
+	final float GRID_ORI_Y = Constants.GAMEBOARD_Y;
 	final String LOG = "LevelScreen log: ";
 	
 	//utilities for unit's user interface
@@ -177,7 +179,7 @@ public class LevelScreen implements Screen {
 		//stage.setViewport(viewport);
 		
 		/** stageMap : contains tile map & actors associated with it ****/
-		stageMap = MapUtils.createMap(3); //creates the TiledMap with Tiles as actorsOnStage
+		stageMap = MapUtils.createMap(4); //creates the TiledMap with Tiles as actorsOnStage
 		stageMap.setViewport(scalingViewPort); //sets viewport (renderer must have same )
 		
 		/** pause stage*/
@@ -391,12 +393,6 @@ public class LevelScreen implements Screen {
 	public void show() {
 		Gdx.input.setInputProcessor(in); //set input processor in show method
 
-		//glClearColor takes 3 RGB float values & alpha
-		//Gdx.graphics.getGL20().glClearColor(0,0,0,1); //sets the color of clear screen
-		//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);	
- 		//makes sure that unit positions are up to date
-		//GameInfo.currUnits = findAllUnits();
-		
 		timerCount += Gdx.graphics.getDeltaTime();
 		nextPlayerGo(); //checks to see if next player will go
 		
@@ -418,7 +414,7 @@ public class LevelScreen implements Screen {
      	//stage with the unit actors & UI on it
 		stage.act(delta);
 		stage.draw();	
-// removed in libgdx 1.4.1 -->Table.drawDebug(stage);                                                                       
+		// removed in libgdx 1.4.1 -->Table.drawDebug(stage);                                                                       
         
 		timer.setText("" + (int)timerCount);
 		timer.act(delta); 

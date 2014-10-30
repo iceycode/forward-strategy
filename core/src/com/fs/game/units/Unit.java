@@ -77,7 +77,7 @@ public class Unit extends Actor {
 
 	Animation deathAnim;	//death sequence
       
-	float timeInterval = 0f; //stores delta time for animations
+	float timeInterval = 0.1f; //stores delta time for animations
 	float aniTime = .1f; //stores data related to animation between panels
 	float attackTime = 0f;
 	public int actualMoves = 0; //the actual moves unit takes (may not be max necessarily)
@@ -172,7 +172,7 @@ public class Unit extends Actor {
  		this.setBounds(actorX, actorY, getWidth(), getHeight());
 		this.unitBox = new Rectangle(getX(), getY(), this.getWidth(), this.getHeight());	
 		//creates the health bar (changes if damaged)
-		this.pixHealthBar = TextureUtils.createPixmap(Constants.HLTH_W, Constants.HLTH_H, Color.YELLOW);
+		this.pixHealthBar = UnitUtils.createPixmap(Constants.HLTH_W, Constants.HLTH_H, Color.YELLOW);
 		this.healthBar = new Texture(pixHealthBar);
  
  		this.otherUnits = new Array<Unit>(13); //all other units except this one
@@ -377,8 +377,7 @@ public class Unit extends Actor {
 		 * TODO: get rid of the panelPath!=null exception & FIX IT!
 		 */
 		if (moving ) {
-			//moving = false;
-			if (moveSequence.getActions().size != panelPath.size){
+ 			if (moveSequence.getActions().size != panelPath.size){
 				for (Vector2 pos : panelPath){
  					MoveToAction moveAction = Actions.moveTo(pos.x, pos.y, 5f);
 					moveSequence.addAction(moveAction);
@@ -390,7 +389,6 @@ public class Unit extends Actor {
 				
 			Gdx.app.log(LOG, "unit is moving right, left, up, down (enums): " + state.name().toString());
 			UnitUtils.unitDirection(this, getX(), getY()); //sets the unit state
-			//moving = false;
 			//updatePosition();
 			
 			if (getX()==targetPan.getX() && getY()==targetPan.getY())
@@ -425,6 +423,7 @@ public class Unit extends Actor {
 		
 		if (attacking){
 			unitAttacked();
+			attacking = false;
 		}
 	}
  
@@ -499,7 +498,7 @@ public class Unit extends Actor {
 		panelPath.clear();
 		panelArray.clear();
 		
-		moveSequence.reset();
+		moveSequence.reset(); //NOTE: this is required to reset sequence so it doesn't cause infinite loop
 		actionPool.free(moveSequence);
 		actionPool.clear();
   	}

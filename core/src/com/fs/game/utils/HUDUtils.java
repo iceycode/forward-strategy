@@ -53,7 +53,7 @@ public class HUDUtils {
 	Vector2 vec2 = new Vector2(400, 100);
 	
 	static int rectHeight = 100;
-	static int rectWidth = (int) Constants.GRIDSIDE;
+	static int rectWidth = (int) Constants.GRID_WIDTH_B;
  
     
 	//the various widgets, actors, etc used for UI
@@ -112,7 +112,7 @@ public class HUDUtils {
 		win.add(pane).fill().expand();
 		win.addActor(pane);
  		//+/- 64 accounts for timer width (64 pix)
-		win.setBounds(Constants.GRID_X+64, 0, width-64, height);
+		win.setBounds(Constants.GAMEBOARD_X, 0, width-64, height);
 		win.setFillParent(false);
 		
 		return win;
@@ -182,7 +182,7 @@ public class HUDUtils {
 				
 		//initialize the timer to 0
 		Label timer = new Label(Float.toString(0), timerStyle); 
-		timer.setBounds(Constants.GRID_X, 0, Constants.TIMER_WIDTH, Constants.TIMER_HEIGHT);
+		timer.setBounds(Constants.GAMEBOARD_X, 0, Constants.TIMER_WIDTH, Constants.TIMER_HEIGHT);
 		timer.setAlignment(Align.center);
  		timer.setWrap(true);
 		
