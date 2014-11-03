@@ -58,3 +58,4 @@ nb-configuration.xml
 
 .gradle
 build/
+/bin/

@@ -36,7 +36,8 @@ public class MainScreen implements Screen{
         game.batch.begin();
         game.font.draw(game.batch, "Welcome to the Game!!! ", 111, 150);
         game.font.draw(game.batch, "Tap anywhere to begin!", 100, 100);
-        game.font.draw(game.batch, "(TEST: press enter to see Human vs Retpoid board setup)", 50, 50);
+        game.font.draw(game.batch, "For TEST setup, press enter ", 75, 80);
+        game.font.draw(game.batch, "(For NORMAL setup, press left-alt to see Human vs Retpoid board setup)", 75, 50);
         game.batch.end();
 
         /*
@@ -53,9 +54,16 @@ public class MainScreen implements Screen{
             game.setScreen(game.menuScreen);
             hide();
         }		
-        
-         if (Gdx.input.isKeyPressed(Keys.ENTER)) {
-        	game.setScreen(new LevelScreen(game));
+
+        //a regular setup of what map stage will look like normally
+        if (Gdx.input.isKeyPressed(Keys.ALT_LEFT)){
+            game.setScreen(new LevelScreen(game, false));
+        }
+
+
+        //a special test setup
+        if (Gdx.input.isKeyPressed(Keys.ENTER)) {
+        	game.setScreen(new LevelScreen(game, true));
         	hide();
         }
 	}

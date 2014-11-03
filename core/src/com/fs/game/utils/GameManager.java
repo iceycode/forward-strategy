@@ -1,11 +1,26 @@
-/**
- * 
+/** GameManager
+ * - holds gaims main assetmanager
+ * - creates a UnitInfo array
+ *   - also has method to create damage lists
+ *   	damage lists : how much each unit damages all other
+ *
+ *  TODO: figure out if damageLists should be a seperate JSON
+ *
+ *
+ *
+ *  FILES NEEDED:
+ *   sky_serpant still pic
+ *
+ *
+ * @author Allen Jagoda
+ *
  */
 package com.fs.game.utils;
 
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -23,23 +38,7 @@ import com.badlogic.gdx.utils.JsonValue.ValueType;
 import com.fs.game.units.UnitInfo;
 import com.fs.game.unused_old_classes.TextureUtils;
 
-/** GameManager
- * - holds gaims main assetmanager
- * - creates a UnitInfo array
- *   - also has method to create damage lists
- *   	damage lists : how much each unit damages all other
- *   
- *  TODO: figure out if damageLists should be a seperate JSON
- *  
- *  
- *  
- *  FILES NEEDED:
- *   sky_serpant still pic
- *   
- *   
- * @author Allen Jagoda
- *
- */
+
 public class GameManager {
 	
 	//values held in GameManager can be accessed without new instance
@@ -112,7 +111,8 @@ public class GameManager {
  		//loading the textures for grids on game board
 		am.load(Constants.GRID_DOWN_PATH, Texture.class);
 		am.load(Constants.GRID_PATH, Texture.class);
-		
+
+
 		GameManager.setAm(am);
  		
 		//creates info about units
@@ -122,20 +122,19 @@ public class GameManager {
 		//the skin for the HUD
 		uiSkin = infoPanelSkin();
 		gameSkin = panelSkin();
- 
- 		return am;
+        loadAudio(); //loads the audio into asset manager
+        //GameManager.setAm(am);
+        return am;
 	}
- 	
-	
-	/** takes in an object and adds to the assetmanager
-	 * 
-	 * @param obj
-	 */
-	public static void updateManager(Object obj) {
-		if (obj instanceof LabelStyle) {
-			
-		}
-	}
+
+
+    /** loads all the audio (sound effects, unit sounds, music, etc)
+     * into the asset manager
+     *
+     */
+    public static void loadAudio(){
+         am.load(Constants.music1, Music.class);
+    }
 	
 	
 	/** returns the damage list as array of integers

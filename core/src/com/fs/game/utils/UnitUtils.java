@@ -81,27 +81,7 @@ public class UnitUtils  {
 	static Array<Panel> panelArr;
 	public static Array<UnitInfo> arrayUnitInfo;
 	public static UnitInfo uniInfo;
-  
-	/** initializes unit creation, taking into account game board info
-	 * 
-	 * @param gb
-	 */
-	public static void initializeUnits(Array<Panel> panelsOnStage, Panel[][] gridMatrix) {
-		am = GameManager.am;
-		
-		am.getAssetNames(); //an array containing file name info
-		
- 
-		GameData.gamePanels = panelsOnStage;
-		GameData.gridMatrix = gridMatrix;
- 		UnitUtils.panelMatrix = gridMatrix;
- 
-		playerUnits = new Array<Array<Unit>>(2); //holds both players arrays of units
- 		arrayUnits = new Array<Unit>(30); //array that stores all units
-		
-		//get the array unit info from unit textures
- 		arrayUnitInfo = GameManager.unitInfoArr;
- 	}
+
 
  
 	/** createUnit method
@@ -117,7 +97,7 @@ public class UnitUtils  {
 		Unit uni = new Unit();
 
 		//loops through unit info & finds right units
-		for (UnitInfo u: arrayUnitInfo) {
+		for (UnitInfo u: GameManager.unitInfoArr) {
 			String unitPicPath = u.getUnitPath().concat("still"); //get still pic of unit
  			if (id == u.getId()) {
 				Texture tex = am.get(unitPicPath, Texture.class);
@@ -167,7 +147,7 @@ public class UnitUtils  {
 	 * before being placed on board
 	 * 
 	 * @param faction : The String designating faction
-	 * @param posY
+	 * @param posX
 	 * @param flip
 	 * @param player
 	 * 	
@@ -176,7 +156,8 @@ public class UnitUtils  {
 	public static Array<Unit> setUniPositions (String faction, int posX, boolean flip, int player){
 		Array<Unit> unitsOnBoard = new Array<Unit>(); //array for units per faction
 		Array<UnitInfo> unitInfoArr = GameManager.unitInfoArr;
-		
+        am = GameManager.am;
+
  		//counters to see how many to place on board
 		int smallCount = 4;
 		int medCount = 2;
@@ -318,7 +299,7 @@ public class UnitUtils  {
 	 * 
 	 * @param time : for time split between frames
 	 * @param frameSheet : Texture to be split for animation
-	 * @param unitInfo : info mainly for unit size 
+	 * @param uni
 	 */
 	public static Animation animateUnit(float time, Texture frameSheet, Unit uni) {
 		TextureRegion[] walkFrames;
@@ -442,8 +423,7 @@ public class UnitUtils  {
 	 * 
 	 * @param panelArray
 	 * @param uni
-	 * @param stage
-	 * @return pathMoves
+ 	 * @return pathMoves
 	 */
 	public static Array<Vector2> getMovePath(Array<Panel> panelArray, Unit uni, Panel target) throws NullPointerException{
 		Array<Vector2> gridPaths = new Array<Vector2>();
@@ -466,7 +446,8 @@ public class UnitUtils  {
 	/** returns all possible moves 
 	 * - gets the offset based on the max moves & unit position
 	 * 
-	 * @param maxmoves
+	 * @param uni
+     * @param panelPos
 	 */
 	public static Array<Panel> getMoveRange(Unit uni, Panel[][] panelPos) {
  		int maxMoves = uni.getMaxMoves(); //need to get from unit (constructor adjusts for larger units)
@@ -605,15 +586,16 @@ public class UnitUtils  {
 	 * 
 	 */
 	public static Array<Panel> checkForCollisions(Unit uni, Array<Panel> panelArray){
-		MapStage stage = (MapStage)uni.getStage();
-		Array<Unit> allUnits = findAllUnits(stage.getActors());
+		//MapStage stage = (MapStage)uni.getStage();
+		Stage stage = uni.getStage();
+        Array<Unit> allUnits = findAllUnits(stage.getActors());
 		
 		String w = uni.unitInfo.isCrossWater(); 
 		String o = uni.unitInfo.isCrossLandObst();
 		
 		//Gdx.app.log(LOG, " panel coordinates:/n" );
 		//check to see if there is anything blocking
- 		for (Panel p : stage.getPanelArray()){
+ 		for (Panel p : GameData.gamePanels){
 			if( ((w.equals("No") && p.terrainType.equals("water")) ||
 					(o.equals("No") && p.terrainType.equals("obstacles")))){
 				p.blocked = true;
@@ -798,21 +780,15 @@ public class UnitUtils  {
 	 * @param uni2
 	 */
 	public static void unitAttacks(Unit uni1, Unit uni2){
- 
-		
-		if ((uni1.getX()==uni2.getX() && uni1.getY()+uni1.getHeight()==uni2.getY()) ||  	//check right & up
-				(uni1.getX() + uni1.getWidth()==uni2.getX() && uni1.getY()==uni2.getY()) 
-				||
-				(uni1.getX()==uni2.getX() && uni1.getY()-uni1.getHeight()==uni2.getY()) //check left & down
-				|| (uni1.getX()-uni1.getWidth()==uni2.getX() && uni1.getY()==uni2.getY())) 
-			//TODO: figure out new attack alternatives
-		{
-			uni2.damage = getUnitDamage(uni1);
-			uni1.damage = getUnitDamage(uni2);
-			
-			uni2.attacking = true;
-			uni1.attacking = true;
+        //TODO: figure out new attack alternatives
+
+		if (unitAdjacent(uni1, uni2)) {
+            uni2.attacking = true;
+            uni1.attacking = true;
+            uni2.damage = getUnitDamage(uni1);
+            uni1.damage = getUnitDamage(uni2);
   		}
+
 	
  	}
 	
@@ -827,23 +803,22 @@ public class UnitUtils  {
 	/** returns the damage unit inflicts (or takes, if negative)
 	 * 
 	 * @param unit
-	 * @param damageList
-	 * @return
+ 	 * @return
 	 */
 	public static float getUnitDamage(Unit unit){
 		float damage = 0;
 		float damageTest = -1; //for testing damage of units (don't have current damage list)
 		int[] damageList = unit.unitInfo.getDamageList();
-		
-		for (int i = 0; i < damageList.length; i++){
-			//find unit which is being fought
-			if (unit.getUnitID() == i+1){
-				damage = -damageList[i]; 				
- 				Gdx.app.log(Constants.LOG_UNIT_UTILS, "Unit " + unit.getName() + " health is at " + unit.health);
- 
- 			}
-			
-		}
+
+        for (int i = 0; i < damageList.length; i++) {
+            //find unit which is being fought
+            if (unit.getUnitID() == i + 1) {
+                damage = damageList[i];
+                Gdx.app.log(Constants.LOG_UNIT_UTILS, "Unit " + unit.getName() + " health is at " + unit.health);
+                System.out.println("damage is " + damage);
+            }
+
+        }
 		
 		return damage; //TODO: get actual damage list
 	}
@@ -858,7 +833,7 @@ public class UnitUtils  {
 	
 	/** finds all units on the stage
 	 * 
-	 * @param stageUnits
+	 * @param actorsOnStage
 	 * @return
 	 */
 	public static Array<Unit> findAllUnits(Array<Actor> actorsOnStage){
@@ -877,7 +852,7 @@ public class UnitUtils  {
 	/** finds all units of certain player
 	 * - finds all units of a certain player
 	 * 
-	 * @param int player
+	 * @param player
 	 */
 	public static Array<Unit> findPlayerUnits(int player, Array<Unit> allUnits){
 		Array<Unit> playerUnits = new Array<Unit>();
@@ -916,7 +891,7 @@ public class UnitUtils  {
 	 * - this needs to be reset every time units change positions
 	 * 
 	 */
-	public static Array<Unit> findEnemyUnits(Unit unit, MapStage stage){
+	public static Array<Unit> findEnemyUnits(Unit unit, Stage stage){
 		Array<Unit> enemyUnits = new Array<Unit>();
 		Array<Unit> otherUnits = findOtherUnits(stage.getActors(), unit);
 		
@@ -1001,10 +976,11 @@ public class UnitUtils  {
 	
 	
 	
-	public static Array<Unit> setUniPositions16x16 (String faction, float posX, boolean flip, int player){
+	public static Array<Unit> setUniPositions16x12 (String faction, float posX, boolean flip, int player){
 		Array<Unit> unitsOnBoard = new Array<Unit>(); //array for units per faction
 		Array<UnitInfo> unitInfoArr = GameManager.unitInfoArr;
-		
+        am = GameManager.am;
+
  		//counters to see how many to place on board
 		int smallCount = 4;
 		int medCount = 2;
@@ -1097,13 +1073,21 @@ public class UnitUtils  {
 		
 		return unitsOnBoard; //returns an array containing 2 arrays of units
 	}
-	
-	
-	
-	
-	
-	
-	
+
+
+    /** checks whether units are adjacent
+     *
+     * @param uni1
+     * @param uni2
+     * @return
+     */
+	public static boolean unitAdjacent(Unit uni1, Unit uni2){
+        return (uni1.getX()==uni2.getX() && uni1.getY()+uni1.getHeight()==uni2.getY()) ||  	//check right & up
+                (uni1.getX() + uni1.getWidth()==uni2.getX() && uni1.getY()==uni2.getY())
+                ||
+                (uni1.getX()==uni2.getX() && uni1.getY()-uni1.getHeight()==uni2.getY()) //check left & down
+                || (uni1.getX()-uni1.getWidth()==uni2.getX() && uni1.getY()==uni2.getY());
+    }
 	
 	
 	

@@ -5,33 +5,17 @@ package com.fs.game.stages;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Iterator;
 import java.util.Map;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapTile;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
-import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.ContactImpulse;
-import com.badlogic.gdx.physics.box2d.ContactListener;
-import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
@@ -40,11 +24,9 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fs.game.data.GameData;
 import com.fs.game.maps.MapActor;
 import com.fs.game.maps.Panel;
-import com.fs.game.tests.TestBoard;
+import com.fs.game.tests.TestUtils;
 import com.fs.game.units.Unit;
-import com.fs.game.unused_old_classes.GameBoard;
 import com.fs.game.utils.Constants;
-import com.fs.game.utils.GameManager;
 import com.fs.game.utils.MapUtils;
 import com.fs.game.utils.UnitUtils;
 
@@ -59,10 +41,10 @@ public class MapStage extends Stage implements ActionListener{
 	final String LOG = "MapStage log: ";
 
 	TiledMap tiledMap; 	//creates the actual map
+    boolean test; //determines use of test methods (alternative ATM)
  	Table gridTable; 	//the table that contains grid board
-  	
- 	Array<Cell> waterCells;
-	Array<Cell> obstacleCells;
+
+  	Array<Cell> obstacleCells;
 	Array<Cell> groundCells;
 	
 	Map<String, Cell> waterTiles;
@@ -95,20 +77,20 @@ public class MapStage extends Stage implements ActionListener{
 	
 	Unit currUnit;	//the selected unit
 	SequenceAction moveSequence; //unit move sequence
-	
-	
+
 	Viewport viewport; // 
 	ScreenViewport viewportStage;
 	
 	/**
 	 * instantiated by MapsFactory
 	 */
-	public MapStage(TiledMap tiledMap) {
+	public MapStage(TiledMap tiledMap, boolean test) {
 //		super(new ScalingViewport(Scaling.stretch, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
 //        new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)));		
 //
 		//sets up the tiled map & renderer
-        this.tiledMap = tiledMap; 
+        this.tiledMap = tiledMap;
+        this.test = test;
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         
         setupCamera();//sets up the camera
@@ -144,27 +126,19 @@ public class MapStage extends Stage implements ActionListener{
 		panelMatrix = GameData.gridMatrix;
 		this.setPanelArray(GameData.gamePanels);
 		
-		//gridTable = MapUtils.createPanelTable(panelMatrix);
-		//addActor(gridTable);
-		
-		
-//		for (int x = 0; x < Constants.ROWS; x++)
-//		{
-//			for (int y = 0; y < Constants.COLS; y++) {
-//				addActor(panelMatrix[x][y]);
-//			}
-//			
-//		}
+
  
   	}
-	
+
+    /** these map actors are touchable tiled map cells
+     *
+     */
 	public void createMapActors(){
 		//for-each loop thru all layers of map
 		for (MapLayer layer : tiledMap.getLayers()) {
 		    TiledMapTileLayer tiledLayer = (TiledMapTileLayer)layer;
 		    MapUtils.createActorsForLayer(tiledLayer, GameData.gridMatrix, this);
-		    //Table tileTable = MapUtils.tableFromLayers(tiledLayer);
-		    //addActor(tileTable);
+
 		} //gets all the actors from all the layers
 	}
 	
@@ -175,18 +149,22 @@ public class MapStage extends Stage implements ActionListener{
 	 *  
 	 */
 	public void createUnits() {
-		UnitUtils.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
-//		TestBoard.testBoardSetup1_12x12(); //test setup b/w humans & reptoids
-		
-		
+//		TestUtils.testBoardSetup1_12x12(); //test setup b/w humans & reptoids
+
 		//alternative setup - 16x16 board
-		TestBoard.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
-		TestBoard.testBoardSetup2_16x12(); //test setup b/w humans & reptoids
-		
-		
-		
-		MapUtils.unitsToStage(TestBoard.playerUnits, this);
-	 
+		TestUtils.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
+
+        if (test) {
+            TestUtils.testTwoUnits();
+        }
+		else{
+
+            //TestUtils.testTwoUnits();
+            TestUtils.testBoardSetup2_16x12(); //test setup b/w humans & reptoids
+        }
+
+        MapUtils.unitsToStage(TestUtils.playerUnits, this);
+
 	}
  
     /**renders the tiled map
@@ -220,7 +198,6 @@ public class MapStage extends Stage implements ActionListener{
      *  */
     @Override
     public void act(float delta) {
- 
      	
      	super.act(delta); 
 
@@ -331,8 +308,7 @@ public class MapStage extends Stage implements ActionListener{
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		
+
 	}
  
 }

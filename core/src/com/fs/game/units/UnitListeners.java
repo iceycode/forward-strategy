@@ -20,10 +20,11 @@ public class UnitListeners {
 	
 	
 	/* some listeners which are or are not being used
-     * - currently (07/29) using only unitListener
+     * - currently (11/02) using only this listener
      * 
      */
    	public static ActorGestureListener actorGestureListener = new ActorGestureListener() {
+
 		@Override
 		public void touchDown(InputEvent event, float x, float y, int pointer, int button){
 			Unit currUnit = ((Unit)event.getTarget());
@@ -33,7 +34,6 @@ public class UnitListeners {
 						"(" + currUnit.getUnitBox().x + ", " + currUnit.getUnitBox().y + ")");
  
 
-			//some info about listeners
 			if (currUnit.clickCount < 2){
 				if (currUnit.otherUnits!=null)
 					UnitUtils.deselectUnits(currUnit.otherUnits);
@@ -41,6 +41,12 @@ public class UnitListeners {
 				currUnit.chosen = true;
 				Gdx.app.log(LOG, Constants.UNIT_CHOSE);
  			}
+            else{
+                currUnit.chosen = false;
+                //currUnit.hideMoves();
+                Gdx.app.log(LOG, Constants.UNIT_DESELECT);
+                currUnit.clickCount = 0; //reset clickCount
+            }
  		}
 		
 		@Override
@@ -49,18 +55,63 @@ public class UnitListeners {
 
 			if (currUnit.clickCount == 2 && !currUnit.lock) {
  				currUnit.chosen = false;
-				currUnit.hideMoves();
+				//currUnit.hideMoves();
 				Gdx.app.log(LOG, Constants.UNIT_DESELECT);
 				currUnit.clickCount = 0; //reset clickCount
 			}
 			
 		}
-		
-		
- 
-		
+
 	};
-	
+
+
+    /* some listeners which are or are not being used
+ * - currently (11/02) using only this listener OR actorGenstureListener (original)
+ *
+ */
+    public static ActorGestureListener actorGestureListener1 = new ActorGestureListener() {
+
+        int clickCount = 0;
+
+        @Override
+        public void touchDown(InputEvent event, float x, float y, int pointer, int button){
+            Unit currUnit = ((Unit)event.getTarget());
+            clickCount++;
+
+            Gdx.app.log(LOG, " unit rectangle position is: " +
+                    "(" + currUnit.getUnitBox().x + ", " + currUnit.getUnitBox().y + ")");
+
+
+            if (clickCount < 2){
+                if (currUnit.otherUnits!=null)
+                    UnitUtils.deselectUnits(currUnit.otherUnits);
+
+                currUnit.chosen = true;
+                Gdx.app.log(LOG, Constants.UNIT_CHOSE);
+            }
+            else{
+                currUnit.chosen = false;
+                //currUnit.hideMoves();
+                Gdx.app.log(LOG, Constants.UNIT_DESELECT);
+                currUnit.clickCount = 0; //reset clickCount
+            }
+        }
+
+        @Override
+        public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+            Unit currUnit = ((Unit)event.getTarget());
+
+            if (currUnit.clickCount == 2 && !currUnit.lock &&!currUnit.done) {
+                currUnit.chosen = false;
+                //currUnit.hideMoves();
+                Gdx.app.log(LOG, Constants.UNIT_DESELECT);
+                currUnit.clickCount = 0; //reset clickCount
+            }
+
+        }
+
+    };
+
 		
 	/*******CHANGELISTENER********
 	 * listens to changes in unit

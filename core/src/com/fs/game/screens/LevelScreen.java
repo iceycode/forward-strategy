@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -32,13 +33,10 @@ import com.fs.game.data.GameData;
 import com.fs.game.main.MainGame;
 import com.fs.game.maps.Panel;
 import com.fs.game.stages.MapStage;
+import com.fs.game.tests.TestStage;
 import com.fs.game.units.Unit;
 import com.fs.game.unused_old_classes.GameBoard;
-import com.fs.game.utils.Constants;
-import com.fs.game.utils.HUDUtils;
-import com.fs.game.utils.MapUtils;
-import com.fs.game.utils.MenuUtils;
-import com.fs.game.utils.UnitUtils;
+import com.fs.game.utils.*;
 
 /** Holds the string representation of levelScreen
  *  - also holds the background
@@ -84,9 +82,13 @@ public class LevelScreen implements Screen {
 	InputMultiplexer in; //handles input events for stage
  
   	//The stages
+    public boolean test ; //determines whether test stage is used
 	MapStage stageMap; //all the units, tiles go here
+    TestStage testStage; //a stage for testing
 	Stage stage; 	//this shows unit info, timer, player turn, etc. (HUD)
 	Stage pauseStage; //pause menu options
+
+    Music music; //music that plays during screen
 
 	Unit[][] unitArr; //stores units as actors
 	Panel[][] panelMatrix;//stores positions of panels as matrix
@@ -95,6 +97,7 @@ public class LevelScreen implements Screen {
 	final float maxTime = Constants.MAX_TIME; //45 seconds for each player
 	float timerCount = 0; //keeps track of hte time
 	public boolean letsGo = false; //if true, switch players
+
 
 	/*********widgets, skins, textures for stage********
 	 * NOTE - get rid of some not being used
@@ -118,7 +121,7 @@ public class LevelScreen implements Screen {
 	//cameras 
 	OrthographicCamera camera; //main stage cam
  
-	protected Vector2 screenCoord;
+	//protected Vector2 screenCoord;
 
 	//Arrays  for actors, panels, units, processors
 	Array<InputProcessor> processors;
@@ -136,16 +139,20 @@ public class LevelScreen implements Screen {
 	protected InputListener stageUnitListener;
  
 	/** the main screen for game play
-	 * 
+	 * test determines whether a test stage will pop up
+     *
+     * @param test
 	 * @param game
 	 */
-	public LevelScreen(final MainGame game) {
+	public LevelScreen(final MainGame game, boolean test) {
 		
 		this.game = game;
+        this.test = test;
  
 		setupCamera();
 		createStages(); //creates a stage for units & map tiles
- 		
+        createMusic(); //music which is playing
+
 		//all the processors targets created & combined
 		in = new InputMultiplexer(); //inputmultiplexer allows for multiple inputs 
 		processors = new Array<InputProcessor>();
@@ -177,19 +184,26 @@ public class LevelScreen implements Screen {
 		/** stage : create the stage for HUD */
 		stage = new Stage(scalingViewPort); //has its own batch
 		//stage.setViewport(viewport);
-		
-		/** stageMap : contains tile map & actors associated with it ****/
-		stageMap = MapUtils.createMap(4); //creates the TiledMap with Tiles as actorsOnStage
-		stageMap.setViewport(scalingViewPort); //sets viewport (renderer must have same )
-		
+
+
+        //either create test stage or normal stage
+        if (test){
+            stageMap = MapUtils.createMap(11, test);
+        }
+        else{
+            /** stageMap : contains tile map & actors associated with it ****/
+            stageMap = MapUtils.createMap(4, test); //creates the TiledMap with Tiles as actorsOnStage
+        }
+        stageMap.setViewport(scalingViewPort); //sets viewport (renderer must have same )
+
 		/** pause stage*/
 		pauseStage = new Stage(scalingViewPort);
 		Window pauseWin = MenuUtils.pauseWindow();
 		pauseStage.addActor(pauseWin);
 
 		createHUD(); //the info panels during game
-  	}
 
+  	}
 
 	/** creates the info panel
 	 * 
@@ -199,7 +213,17 @@ public class LevelScreen implements Screen {
  		createInfoHUD();
  		createSideButtons();
  	}
-	
+
+    /**
+     * TODO: create & add more music
+     * ...currently only 1 track
+     */
+    public void createMusic(){
+        music = AudioUtils.createMapMusic(0);
+        music.setLooping(true); //loops the track
+    }
+
+
 	/** the main info panel that shows unit information
 	 * 
 	 */
@@ -260,7 +284,7 @@ public class LevelScreen implements Screen {
  				letsGo = true;  //player is manually finished turn (timer did not reset)
  				clearBoard();	//clears board of selected panels
  				timerCount = 0;
-  			}
+  	        		}
  		});
 		
  		//add the actors
@@ -288,8 +312,8 @@ public class LevelScreen implements Screen {
 	/** update player turn
 	 * - int value to determine which player's units to lock
 	 * 
-	 * @param int player
 	 *
+	 * @param player
 	 */
 	public void lockPlayerUnits(int player) {
  		Unit u = new Unit(); //initialize constructor
@@ -330,7 +354,6 @@ public class LevelScreen implements Screen {
 	
 	/** this method checks to see if player time is up or is done
 	 * 
-	 * @param letsGo
 	 */
 	public void nextPlayerGo() {
 		int temp = player; //temp value for player when checking
@@ -391,6 +414,7 @@ public class LevelScreen implements Screen {
 
 	@Override
 	public void show() {
+        music.play();
 		Gdx.input.setInputProcessor(in); //set input processor in show method
 
 		timerCount += Gdx.graphics.getDeltaTime();
@@ -447,13 +471,11 @@ public class LevelScreen implements Screen {
 
 	@Override
 	public void hide() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void pause() {
-		// TODO Auto-generated method stub
 		Gdx.input.setInputProcessor(pauseStage);
 		
 		pauseStage.act();
@@ -468,13 +490,12 @@ public class LevelScreen implements Screen {
 
 	@Override
 	public void resume() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
+        music.dispose();
         stage.dispose();
         stageMap.dispose();
 	}

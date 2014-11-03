@@ -97,7 +97,7 @@ public class UnitInfo {
 		return crossWater;
 	}
 	/**
-	 * @param crossrivers the crossrivers to set
+	 * @param crosswater the crossrivers to set
 	 */
 	public void setCrossWater(String crosswater) {
 		this.crossWater = crosswater;
@@ -121,7 +121,7 @@ public class UnitInfo {
 		return maxMoves;
 	}
 	/**
-	 * @param maxmoves the maxmoves to set
+	 * @param maxMoves the maxmoves to set
 	 */
 	public void setMaxMoves(int maxMoves) {
 		this.maxMoves = maxMoves;
@@ -157,7 +157,7 @@ public class UnitInfo {
 		return "units/"+unitPath;
 	}
 	/**
-	 * @param unitpics the unitpics to set
+	 * @param unitPath the unitpics to set
 	 */
 	public void setUnitPath(String unitPath) {
 		this.unitPath = unitPath;

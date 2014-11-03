@@ -370,6 +370,10 @@ public class Unit extends Actor {
 			checkTargetPanel(); 
 			
 		}
+
+        if (!chosen && panelsFound){
+            hideMoves();
+        }
 	 
 		
 		/* if a panel was selected while unit chosen
@@ -419,35 +423,36 @@ public class Unit extends Actor {
 	public void findAttackers(){
 		for (Unit u : enemyUnits){
 			UnitUtils.unitAttacks(this, u);
+            this.damage = u.damage;
 		}
 		
 		if (attacking){
 			unitAttacked();
-			attacking = false;
-		}
+ 		}
 	}
  
-	/** returns true if unit attacks
-	 * 
-	 * @param uni1
-	 * @param uni2
-	 * @return
+	/** when unit is attacked, damage dealt
+     * if unit health < 4, it disappears
+     *
+	 *
 	 */
 	public void unitAttacked(){
 		attackTime += timeInterval;
 
- 		if (standing && attackTime > 1.5f){
+ 		/*if (standing || lock){
  			this.attacking = false;
- 			this.health += damage;
+
 			attackTime = 0;
-   		}
-		
+   		}*/
+
+        attacking = false;
+        this.health -= damage;
  		if (health <= 4){
 			if (health <= 0){
 				UnitUtils.unitDeathAction(this, 2f);
 				this.remove(); 
 			}
-		}		
+		}
 
  	}
  
@@ -524,7 +529,7 @@ public class Unit extends Actor {
 	/** updates all other units this unit sees on board
 	 * takes in this.getStage().getActors() to see everything on board
 	 * 
-	 * @param Array<Actor> allActors
+	 * @param  allActors
 	 */
 	public void updateUnitDataArrays(Array<Actor> allActors){
 		//arrays which update the other units on stage so this unit knows about them
@@ -641,7 +646,7 @@ public class Unit extends Actor {
 	}
 
 	/**
-	 * @param maxmoves the maxmoves to set
+	 * @param maxMoves the maxmoves to set
 	 */
 	public void setMaxMoves(int maxMoves) {
 		//need to add extra move to large & medium units

@@ -53,6 +53,9 @@ public class Constants {
  */
 	public final static String MAP_3A = "maps/mapTemplate3a.tmx";
 	public final static String MAP_3B = "maps/mapTemplate3b.tmx";
+
+    //test maps
+    public final static String TEST_MAP1 = "maps/testMap1.tmx";
 	
 /*---------------Image pathways in assets folder------
  * assets folder in android/assets
@@ -234,5 +237,11 @@ public class Constants {
  
  	};
  	
- 	
+
+
+    /*--------------Audio File Paths------------
+     */
+    public static final String music1 = "audio/music/FS-music1.mp3";
+
+
  }

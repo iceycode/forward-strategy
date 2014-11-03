@@ -61,7 +61,7 @@ public class MapUtils {
 	private static ClickListener clickListener;
 
  
-	public static MapStage createMap(int id ) {
+	public static MapStage createMap(int id, boolean test) {
 		//select the .tmx map to load
 		if (id == 1)
 			tiledMap = new TmxMapLoader().load("maps/justGrass.tmx");
@@ -71,11 +71,14 @@ public class MapUtils {
 			tiledMap = new TmxMapLoader().load("maps/map3.tmx");
 		else if (id == 4)
 			tiledMap = new TmxMapLoader().load(Constants.MAP_3B);
-		
+        //if test
+        else if (id == 11)
+            tiledMap = new TmxMapLoader().load(Constants.TEST_MAP1);
+
 		//tiledMap.getProperties();
 		
 		//creates a  stage
-		MapStage stage = new MapStage(tiledMap); //set the stage
+		MapStage stage = new MapStage(tiledMap, test); //set the stage
 
 		return stage;
 	}
@@ -289,7 +292,7 @@ public class MapUtils {
 		}
 		
 		//setup the game board = stored in constants for pathfinding 
-		//set the elements which will be used on stage & by Unit actors
+		//set the elements which will be used on MapStage by Units
 		GameData.gamePanels = panelsOnStage;
 		GameData.gridMatrix = panelMatrix;
  	}
