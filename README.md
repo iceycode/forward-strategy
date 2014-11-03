@@ -4,6 +4,12 @@ Forward Strategy
 This will update after major changes or fixes pushed to branch1 & merged with master. 
 ####*Change Log*:####
 --
+*11-02-14*
+- created a music track & added to LevelScreen
+- method for testing 2 units only added to TestUtils
+- added a new TiledMap for testing
+- cleaned up unit attack behavior a bit 
+
 *10-29-14*
 - made a 16x12 board to change game mechanics
 - fixed path finding methods, still a bit buggy
