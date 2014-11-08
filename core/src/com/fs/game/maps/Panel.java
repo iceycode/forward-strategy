@@ -9,6 +9,7 @@ package com.fs.game.maps;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -43,15 +44,14 @@ public class Panel extends Actor{
 	Texture panelDown ; //selected/viewing/moveableTo
 	Texture panelView; //when map info being viewed
 	Texture currentTex; //current texture
-	
+
 	public Vector2 location; //the location on the grid from (0,0) to (11,11)
 	
  	public String terrainType;
-	Unit targetUnit;
 	Skin skin;
 	
-	//used to surround this actor and detect collision
-	public Rectangle panelBox; 
+
+	public Rectangle panelBox;
 	
 	public int gridPosX = 0; 
 	public int gridPosY = 0;
@@ -112,7 +112,9 @@ public class Panel extends Actor{
 	public void draw(Batch batch, float alpha){
 
 		super.draw(batch, alpha); 
- 		
+
+        //draws a certain way, tinting color to change
+
  		batch.draw(this.getTexture(), getX(), getY());
 
  	}

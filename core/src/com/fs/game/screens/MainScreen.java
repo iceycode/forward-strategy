@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.fs.game.main.MainGame;
+import com.fs.game.menus.MenuScreen;
 
 public class MainScreen implements Screen{
 	
@@ -34,9 +35,11 @@ public class MainScreen implements Screen{
         game.batch.setProjectionMatrix(camera.combined);
 
         game.batch.begin();
-        game.font.draw(game.batch, "Welcome to the Game!!! ", 111, 150);
-        game.font.draw(game.batch, "Tap anywhere to begin!", 100, 100);
-        game.font.draw(game.batch, "(TEST: press enter to see Human vs Retpoid board setup)", 50, 50);
+        game.font.draw(game.batch, "Welcome to the Game!!! ", 100, 400);
+        game.font.draw(game.batch, "Tap anywhere (or press enter) to get to first menu!", 100, 350);
+        game.font.draw(game.batch, "For TEST setup 1 (two units only), press Control-Left + 1 ", 75, 200);
+        game.font.draw(game.batch, "For TEST setup 2 (4 units, 2 medium, 2 small), press Control-Left + 2", 75, 170);
+        game.font.draw(game.batch, "For TEST setup (Human vs Retpoid), press Alt-left, 75, 140)", 75, 100);
         game.batch.end();
 
         /*
@@ -45,19 +48,24 @@ public class MainScreen implements Screen{
          * Will have no effect on the desktop.
          */
         Gdx.input.setCatchBackKey(true);
- 
+
         /*
          * method for setting a new screen
          */
-        if (Gdx.input.isTouched()) {
-            game.setScreen(game.menuScreen);
+        if (Gdx.input.isTouched() || Gdx.input.isKeyPressed(Keys.ENTER)) {
+            game.setScreen(new MenuScreen(game));
             hide();
         }		
-        
-         if (Gdx.input.isKeyPressed(Keys.ENTER)) {
-        	game.setScreen(new LevelScreen(game));
-        	hide();
+
+        //a regular setup of what map stage will look like normally
+        if (Gdx.input.isKeyPressed(Keys.NUM_1)) {
+            //the default test setup; how game play will look with full array of units for both players
+            game.setScreen(new LevelScreen(game, 1));
+
         }
+
+        if (Gdx.input.isKeyPressed(Keys.NUM_2))
+            game.setScreen(new LevelScreen(game, 2));
 	}
 
 	@Override

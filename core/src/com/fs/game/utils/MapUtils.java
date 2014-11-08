@@ -43,8 +43,8 @@ public class MapUtils {
 	//variables related to stage/screen placements
 	final static private String LOG = "MapUtils log: ";
 
-	static float SCREENWIDTH = Constants.SCREENWIDTH;
-	static float SCREENHEIGHT = Constants.SCREENHEIGHT;
+//	static float SCREENWIDTH = Constants.SCREENWIDTH;
+//	static float SCREENHEIGHT = Constants.SCREENHEIGHT;
 	static float GRID_ORI_X = Constants.GAMEBOARD_X;
 	static float GRID_ORI_Y = Constants.GAMEBOARD_Y;
 	
@@ -52,16 +52,20 @@ public class MapUtils {
 	private static MapActor mapActor;
 	protected static MapStage stage;
 	private static Table table; //creates a the table that stores layers
-
-	static Array<MapActor> mapActorsArr;	
+//	static Array<MapActor> mapActorsArr;
 	public static MapActor[][] mapMatrix; //how maps appear on board in matrix form
 
 	
 	int id = 0; //id for the map
-	private static ClickListener clickListener;
 
- 
-	public static MapStage createMap(int id ) {
+    /** creates the map based on id
+     *  configuration based on test (default 0; regular test/map)
+     *
+     * @param id
+     * @param test
+     * @return
+     */
+	public static MapStage createMap(int id, int test) {
 		//select the .tmx map to load
 		if (id == 1)
 			tiledMap = new TmxMapLoader().load("maps/justGrass.tmx");
@@ -71,72 +75,21 @@ public class MapUtils {
 			tiledMap = new TmxMapLoader().load("maps/map3.tmx");
 		else if (id == 4)
 			tiledMap = new TmxMapLoader().load(Constants.MAP_3B);
-		
+        //if test
+        else if (id==11)
+            tiledMap = new TmxMapLoader().load(Constants.TEST_MAP1);
+        else if (id == 12)
+            tiledMap = new TmxMapLoader().load(Constants.TEST_MAP1);
+
 		//tiledMap.getProperties();
 		
 		//creates a  stage
-		MapStage stage = new MapStage(tiledMap); //set the stage
+		MapStage stage = new MapStage(tiledMap, test); //set the stage
 
 		return stage;
 	}
  
 
-	public static Table tableFromLayers(TiledMapTileLayer tiledLayer) {
-		Table layerTable = new Table();
-		layerTable.setFillParent(true);
-
-		for (int x = 0; x < tiledLayer.getWidth(); x++) {
-			for (int y = 0; y < tiledLayer.getHeight(); y++) {
-				TiledMapTileLayer.Cell cell = tiledLayer.getCell(x, y);
-				
-				MapActor mapActor = new MapActor(tiledMap, tiledLayer, cell);
- 				
-				mapActor.setBounds(x * tiledLayer.getTileWidth(), y * tiledLayer.getTileHeight(), tiledLayer.getTileWidth(),
-						tiledLayer.getTileHeight());
-				mapActor.setPosition(GRID_ORI_X+x*mapActor.getWidth(), GRID_ORI_Y+y*mapActor.getHeight());
- 				mapActor.addListener(new ClickListener() {
-					@Override
-					public void clicked(InputEvent event, float x, float y) {
-						Gdx.app.log("log: ", " tilemap actor clicked at " + x + y);
-					}
-				});
- 				
-				//add to table
-				layerTable.add(mapActor).width(32).height(32);
-				layerTable.addActor(mapActor);
-			}//get all the columns
-			
-			layerTable.row();
-		}//get all the rows
-		
-		return layerTable;
-	}
-
-	public static void addClickListener() {
-
-		clickListener = new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				System.out.println(((MapActor)event.getTarget()).getCell() + " has been clicked.");
-			}
-		};
-
-	}
-
-	/** creates actors from the TiledMapTileSet
-	 * 
-	 * @param tileset
-	 */
-	public static void createActorsFromTileSets(TiledMapTileSet tileset, MapStage stage) {
-		for (TiledMapTile tile : tileset) {
-			Object property = tile.getProperties().get("Water");
-			
-			if (property != null) {
-				MapActor mapActor = new MapActor(tile, GRID_ORI_X, GRID_ORI_X);
- 				stage.addActor(mapActor);
-			}
-		}
-	}
 
 	/** creates actors on the layers
 	 * also sets the unit data
@@ -167,9 +120,8 @@ public class MapUtils {
                  
                 mapActor.setBounds(posX, posY, 32, 32);
                 mapActor.setPosition(posX, posY);
-                Gdx.app.log(LOG, "position of mapactor when created is (" + mapActor.getX() + ", " + mapActor.getY() + ")");
-
-				Gdx.app.log(LOG, " layer's name is "+ tiledLayer.getName());
+//                Gdx.app.log(LOG, "position of mapactor when created is (" + mapActor.getX() + ", " + mapActor.getY() + ")");
+//				Gdx.app.log(LOG, " layer's name is "+ tiledLayer.getName());
 				
 
 				if (cell!= null && (!terrainType.equals("panels") && !terrainType.equals("grid"))) {
@@ -191,59 +143,7 @@ public class MapUtils {
     }
     
     
-/*--------------------Grid Panels on Board----------------
- * methods to create grid panels which show unit moves
- * 
- * 
- */
-    /*****Sets all the panels positions & actors in matrix
-	 * - sets all game board actors as arrays
-	 */
-	public static void setupPanels12x12() {
-		
-		int rows = 12;
-		int columns = 12;
-		float width = Constants.GRID_TILE_WIDTH;
-		float height = Constants.GRID_TILE_HEIGHT;
-		
-		Array<Panel> panelsOnStage = new Array<Panel>(rows*columns); //<----not using now  
-		Panel[][] panelMatrix = new Panel[rows][columns];
-		
-		
-		for (int x = 0; x < rows; x ++) 	{
-			String panelName = "x"+x;
-	 		if (x%2==0){
-	 			System.out.println(); 
-	 		}
-			for (int y = 0; y < columns; y++) 	 {
-				float stagePosX = x*width + GRID_ORI_X;
-				float stagePosY = y*height + GRID_ORI_Y;
 
-				//String gridPos = "{" + x + ", " + y + "}, ";
-				String screenPos = "{" + stagePosX + ", " + stagePosY+ "}, ";
- 
-		 		System.out.print(screenPos);
-		 		//System.out.print(gridPos);
-
-
-				Panel panelActor = new Panel(stagePosX, stagePosY);
-				panelActor.setName(panelName.concat("y"+y)); //used for id
-				panelActor.setMatrixPosX(x);
-				panelActor.setMatrixPosY(y);
-				
-				//panelActor.toFront();
-				panelMatrix[x][y] = panelActor; //store in position matrix
-				panelsOnStage.add(panelActor);
-			}
-		}
-		
-		//setup the game board = stored in constants for pathfinding
-		
-		
-		//set the elements which will be used on stage & by Unit actors
-		GameData.gamePanels = panelsOnStage;
-		GameData.gridMatrix = panelMatrix;
- 	}
 	
 	
 	
@@ -289,79 +189,12 @@ public class MapUtils {
 		}
 		
 		//setup the game board = stored in constants for pathfinding 
-		//set the elements which will be used on stage & by Unit actors
+		//set the elements which will be used on MapStage by Units
 		GameData.gamePanels = panelsOnStage;
 		GameData.gridMatrix = panelMatrix;
  	}
 	
 	
-	
-	/** checks to see if neighbor left or right
-	 * - doubly links together parent & child
-	 * 
-	 * @param parent
-	 * @param child
-	 * @param incrY
-	 * @return
-	 */
- 	public static boolean vertNeighbor(Panel parent, Panel child){
-		//return Math.abs(n1.y-n2.y)==maxY && n1.x==n2.x;
-// 		Gdx.app.log(LOG, "parent is at : " + "(" + parent.getX() + ", " + parent.getY() +")");
-// 		Gdx.app.log(LOG, "child is at : " + "(" + child.getX() + ", " + child.getY() +")");
- 		
- 		boolean verticalNeighbor = false;
- 		
- 		if ((parent.getY() == child.getY() + 32)  && parent.getX()==child.getX() ) {
- 			child.panelAbove = parent;
- 			parent.panelBelow = child;
- 			parent.neighbor = child;
- 			child.neighbor = parent;
- 			
- 			verticalNeighbor = true;
- 		}
- 		else if ((parent.getY() == child.getY() - 32) && parent.getX()==child.getX() ){
- 			parent.panelAbove = child;
- 			child.panelBelow = parent;
- 			parent.neighbor = child;
- 			child.neighbor = parent;
- 			
- 			verticalNeighbor = true;
- 		}
- 		
- 		
-		return verticalNeighbor;
-	}
-	
- 	/** checks neighbors above or below
- 	 * 
- 	 * @param parent
- 	 * @param child : next node
- 	 * @return
- 	 */
-	public static boolean horizNeighbor(Panel parent, Panel child){
-		boolean horizNeighbor = false;
-		
-		if ((parent.getX() == child.getX() + 32) && parent.getY()==child.getY()){
-			child.panelLeft = parent;
-			parent.panelRight = child;
-			parent.neighbor = child;
-			child.neighbor = parent;
-			
-			horizNeighbor = true;
-			
-		}
-		else if ((parent.getX() == child.getX() - 32) && parent.getY()==child.getY()){
-			child.panelRight = parent;
-			parent.panelLeft = child;
-			child.neighbor = parent;
-			parent.neighbor = child;
-			
-			horizNeighbor = true;
-		}
-		
-		
-		return horizNeighbor;
-	}
 
  
 /*--------------Units on stage-----------------
@@ -370,50 +203,50 @@ public class MapUtils {
  * 
  * 
  */
-	/**
-	 * 
-	 * @param allUnits
-	 * @param stage
-	 */
-	public static void unitsToStage(Array<Array<Unit>> allUnits, Stage stage){
-		//get each player's units from a encapsulated array
-		Array<Unit> p1Units = allUnits.get(0);
-		Array<Unit> p2Units = allUnits.get(1);
-		Array<Unit> unitsOnStage = new Array<Unit>();
- 
-		/* Player 1 units created
-		 */
-		//get & add player 1 units to board
-		for (Unit u : p1Units) {
-  			u.setPlayer(1); 
-			unitsOnStage.add(u);
-  		}
-		
-		/* Player 2 units on board
-		 * 
-		 */
-		//get & add player 2 units
-		for (Unit u : p2Units) {
-  			u.setPlayer(2);
- 			u.setLock(true);
-  			u.setEnemyUnits(p1Units);
-			unitsOnStage.add(u);
-  		}
- 
-		//sets other units that placed on stage
-		for (Unit u : unitsOnStage) {
-			//sets 1st player's enemy units
-			if (u.getPlayer() == 1) 
-				u.setEnemyUnits(p2Units);
- 
-			stage.addActor(u);	//add the actor
- 		}
-	}
+//	/**
+//	 *
+//	 * @param p1Units
+//	 * @param stage
+//	 */
+//	public static void unitsToStage(Array<Unit> p1Units, Stage stage){
+//		//get each player's units from a encapsulated array
+//		Array<Unit> unitsOnStage = new Array<Unit>();
+//
+//		/* Player 1 units created
+//		 */
+//		//get & add player 1 units to board
+//		for (Unit u : unitsOnStage) {
+//  			if (u.player == 2) {
+//                u.setLock(true);
+//            }
+//
+//			unitsOnStage.add(u);
+//  		}
+//
+//		/* Player 2 units on board
+//		 *
+//		 */
+//		//get & add player 2 units
+//		for (Unit u : p2Units) {
+//  			u.setPlayer(2);
+// 			u.setLock(true);
+//  			u.setEnemyUnits(p1Units);
+//			unitsOnStage.add(u);
+//  		}
+//
+//		//sets other units that placed on stage
+//		for (Unit u : unitsOnStage) {
+//			//sets 1st player's enemy units
+//			if (u.getPlayer() == 1)
+//				u.setEnemyUnits(p2Units);
+//
+//			stage.addActor(u);	//add the actor
+// 		}
+//	}
 	
 	
 	/** finds all units on the stage
 	 * 
-	 * @param stageUnits
 	 * @return
 	 */
 	public static Array<Unit> findAllUnits(Array<Actor> actorsOnStage){
@@ -440,8 +273,9 @@ public class MapUtils {
 	
 	/** finds all units of certain player
 	 * - finds all units of a certain player
-	 * 
-	 * @param int player
+	 *
+     * @param unitArr
+	 * @param player
 	 */
 	public static Array<Unit> findPlayerUnits(Array<Unit> unitArr, int player){
 		Array<Unit> playerUnits = new Array<Unit>();
@@ -454,9 +288,92 @@ public class MapUtils {
 		
 		return playerUnits;
 	}
-	
-	
-	/** returns positions in grid based on actors screen coordinates
+
+    /** finds the enemy units on board
+     * - this needs to be reset every time units change positions
+     *
+     */
+    public static Array<Unit> findEnemyUnits(Unit unit, Stage stage){
+        Array<Unit> enemyUnits = new Array<Unit>();
+        Array<Unit> otherUnits = otherUnits(findAllUnits(stage.getActors()), unit);
+
+        //look through other units
+        // if does not equal to this player, then it is enemy
+        for (Unit u : otherUnits) {
+            if (u.player != unit.player) {
+                enemyUnits.add(u);
+            }
+        }
+
+        return enemyUnits;
+
+    }
+
+
+
+    /** update player turn
+     * - int value to determine which player's units to lock
+     *
+     *
+     * @param player
+     */
+    public static void lockPlayerUnits(int player, MapStage stage) {
+        Unit u = new Unit(); //initialize constructor
+        Array<Unit> allUnits = MapUtils.findAllUnits(stage.getActors());
+
+        //look through all units to see if certain ones locked or not
+        for (int i = 0; i < allUnits.size; i++) {
+            u = allUnits.get(i);
+
+            //lock all units of this player
+            if (!u.isLock() && u.player == player) {
+                u.lock = true;
+                u.done = true;
+                u.chosen = false;
+            }
+        }
+    }
+
+
+    /**
+     *
+     * @param player
+     */
+    public static void unlockPlayerUnits(int player, MapStage stage) {
+        Unit u = new Unit(); //initialize constructor
+        Array<Unit> allUnits = MapUtils.findAllUnits(stage.getActors());
+
+        //look through all units to see if certain ones locked or not
+        for (int i = 0; i < allUnits.size; i++) {
+            u = allUnits.get(i);
+            //unlock if this is not player being locked
+            if (u.isLock() && u.player == player) {
+                if (u.underattack)
+                    u.underattack = false;
+                u.lock = false;
+                u.done = false;
+                u.standing = true;
+            }
+        }
+    }
+
+
+    /** clears the stage of any active (selected) panels
+     *
+     */
+    public static void clearBoard(MapStage stage){
+        for (Panel p : stage.getPanelArray()){
+            if (p.selected || p.moveableTo){
+                p.selected = false;
+                p.moveableTo = false;
+                p.viewing = false;
+            }
+        }
+    }
+
+
+
+    /** returns positions in grid based on actors screen coordinates
 	 *  
 	 * @param x
 	 * @param y
@@ -472,7 +389,7 @@ public class MapUtils {
 	
 	/** creates and returns a clickListener for panel
 	 * 
-	 * @param pan
+	 * @param panel
 	 * @return
 	 */
 	public static InputListener createPanelListener(final Panel panel){
@@ -592,67 +509,3 @@ public class MapUtils {
 }
 
 
-/*  *//** creates a camera for the map
- * TODO: figure out whether this needs to be used eventually (mainly for zooming)
- *//*
-public static void createMapCam() {
-	*//*****camera for tiled map*****//*
-	float width = 12 * (screenWidth/screenHeight); //width aspect ratio corrected for
-	float height = 12; //the height, fills to top
-	
-	camera = new OrthographicCamera();
-	camera.setToOrtho(false, 800, 500 ); //sets scale of units for rendered
-	
-	//set screen viewport
-	viewport = new ScreenViewport();
-	viewport.setWorldWidth(screenWidth);
-	viewport.setWorldHeight(screenHeight); 
-	viewport.setCamera(camera);
-
-    mapCam = new OrthographicCamera(width, height);
-		mapCam.setToOrtho(false, 800, 500);
-	
-	vecPos = new Vector3(gridOriX, gridOriY, 1);
-	camera.project(vecPos); //project the stage camera
-	mapCam.unproject(vecPos); //unproject to return position of map camera
-
-	vecPos.x = gridOriX; 
-	vecPos.y = gridOriY;
-		
-	mapCam.position.set(vecPos);
-	camera.position.set(gridOriX, gridOriY, 0);
-    
-	viewport.setCamera(camera);
-
-	setViewport(viewport);//sets this stage viewport
-
-}
-
-
-
-	
-//*************TABLE GRID******w************
-makes a Table which can be added to stage	 
-	public static Table createPanelTable(Panel[][] gridMatrix) {
-		Table table = new Table();	
-		table.setFillParent(false);
-		
-		for(int x = 0; x < Constants.ROWS; x++)  {
-			for (int y = 0; y < Constants.COLS; y++ ) {
-				// final Panel p = new Panel(stage, tiles, x, y);
-				Panel panelActor = gridMatrix[x][y];
-				//panelActor.addListener(MapUtils.createPanelListener(panelActor));
-				table.add(panelActor).width(panelActor.getWidth()).height(panelActor.getHeight());
-				table.addActor(panelActor);
-			}
-			table.row(); //creates a row out of the actors
-		}	
-		
-		return table;
- 	}
-*
-*
-*
-*
-*
-*/

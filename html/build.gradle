@@ -56,7 +56,7 @@ sourceCompatibility = 1.6
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.compileClasspath += files(project(':core').sourceSets.main.allJava.srcDirs)
 
-
-eclipse.project {
-    name = appName + "-html"
-}
+//
+//eclipse.project {
+//    name = appName + "-html"
+//}

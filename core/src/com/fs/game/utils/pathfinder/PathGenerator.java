@@ -36,7 +36,6 @@ package com.fs.game.utils.pathfinder;
  */
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.data.GameData;
 import com.fs.game.maps.Panel;
@@ -47,7 +46,7 @@ import com.fs.game.utils.UnitUtils;
 
 public class PathGenerator {
 	
-	final String LOG = "PathFinder2 LOG : ";
+	final String LOG = "PathGenerator LOG : ";
 	
 	Unit unit; //the unit that is looking for possible move paths
  
@@ -71,8 +70,8 @@ public class PathGenerator {
 
 	/** 
 	 * 
-	 * @param unit
-	 * @param oriX
+	 * @param unit : unit whose path is being generated
+	 * @param oriX : origin of that unit
 	 * @param oriY
 	 */
 	public PathGenerator(Unit unit, float oriX, float oriY) {
@@ -82,23 +81,8 @@ public class PathGenerator {
 		Gdx.app.log(LOG, "unit size = " + unitSize);
 		this.crossWater = unit.crossWater;
 		this.crossLand = unit.crossLand;
-		getUnitOrigin(oriX, oriY);
-		
-//		if (unitSize.equals("32x32")){
-//			this.incrX = 32;
-//			this.incrY = 32;
-//			
-//		}
-//		else if (unitSize.equals("64x32")){
-//			this.incrX = 64;
-//			this.incrY = 32;
-//		}
-//		else if (unitSize.equals("64x64")){
-//			this.incrX = 64;
-//			this.incrY = 64;
-//		}
-//		
-//		
+		getOriginPanel(oriX, oriY);
+
  	}
 	
 	/** finds the panel the unit is standing on
@@ -106,7 +90,7 @@ public class PathGenerator {
 	 * @param panX
 	 * @param panY
 	 */
-	public void getUnitOrigin(float panX, float panY){
+	public void getOriginPanel(float panX, float panY){
 		for (Panel p : allPanels){
 			if (p.getX() == panX && p.getY() == panY){
 				this.origin = p;
@@ -117,10 +101,8 @@ public class PathGenerator {
 	
 	
 	/** returns all eligible paths b
-	 * 
-	 * @param incrX : 1 unit of movement in X direction
-	 * @param incrY : 1 unit of movement in Y direction
-	 * @return
+	 *
+	 * @return possibleMoves
 	 */
 	public Array<Panel> findPaths(){
 		origin.setCostFromStart(0);
@@ -135,10 +117,8 @@ public class PathGenerator {
 
 			if (temp.getCostFromStart() <= maxDistance){
 				findAdjacentPanels(temp); //find all adjacent panels
- 	
 				
-				Gdx.app.log(LOG, "added panel " + temp.getName()
-						+ "at location : (" + temp.getX() + ", " + temp.getY()+ ")");
+				//Gdx.app.log(LOG, "added panel " + temp.getName() + "; pos: (" + temp.getX() + ", " + temp.getY()+ ")");
 				
  			}
 			
@@ -155,15 +135,13 @@ public class PathGenerator {
 		for (Panel pan : allPanels){
 			
 			
-			Gdx.app.log(LOG, "Panel name is " + pan.getName() + "panel terrain type is " + pan.getTerrainType());
+			//Gdx.app.log(LOG, "Panel name is " + pan.getName() + "panel terrain type is " + pan.getTerrainType());
 			
 			//check for 3 requirements for adding to the open list
 			if (isNeighborPanel(currPan, pan) && !isObstacle(pan) && !possibleMoves.contains(pan, false)) {
 				pan.setCostFromStart(calculateCostFromStart(currPan, pan));
- 
-				
 
-				Gdx.app.log(LOG, "Panel, " + pan.getName() + "cost from start = " + pan.getCostFromStart());
+				//Gdx.app.log(LOG, "Panel, " + pan.getName() + "cost from start = " + pan.getCostFromStart());
 				
 				openList.add(pan); //added to openList to find new nodes
 				possibleMoves.add(pan);
@@ -183,7 +161,7 @@ public class PathGenerator {
 		for (Panel p : openList){
 			
 			if (unitSize.equals("64x32")){
-				if (p.panelLeft==null || p.panelRight ==null){
+				if (p.panelLeft==null || p.panelRight ==null || isObstacle(p.panelRight) || isObstacle(p.panelLeft)){
 					possibleMoves.removeValue(p, false);
 					tempValue = p.getCostFromStart();
 				}
@@ -225,7 +203,6 @@ public class PathGenerator {
 	 * 
 	 * @param parent
 	 * @param child
-	 * @param incrY
 	 * @return
 	 */
  	public boolean vertNeighbor(Panel parent, Panel child){
@@ -341,83 +318,81 @@ public class PathGenerator {
 		return unitObstacle || mapObstacle;
 	}
 	
-	/** method for finding the shortest path
-	 * - uses A* algorithm to find best path 
-	 * - since distance from start is already set, heuristic only set
-	 * 
-	 * @param moveOptions
-	 * @param goal
-	 * @param start
-	 * @return
-	 */
-	public Array<Panel> findBestPath(Panel goal){
-		movePath = new Array<Panel>(); //stores the panels unit will move along
-		Panel parent = origin; //set panel to origin
-		
-		openList.add(parent); //initialize the open list
-		movePath.add(parent);
-		
-		//calculate the Heuristics for all Panels in openList
-		for (Panel pan : openList){
-			pan.setHeuristic(calculateHeuristic(pan, goal));
-		}
-		
-		while (openList.size > 0){
-			
-			addNeighborPanels(parent, goal);
- 			
-			parent = findBestPanel(parent);
-			movePath.add(parent);
-			
-			if (goal.getX() == parent.getX() && goal.getY() == parent.getY()){    
- 				return movePath;
-			}
-			
-		}
-		
-		return null;
-	}
-	
-	
-	private void addNeighborPanels(Panel current, Panel goal){
-		
- 		//add neighbor nodes to list
-		for (Panel pan : possibleMoves){
- 			//checks see if blocks are neighbors or obstacles, units, etc
- 			if (isNeighborPanel(current, pan)){
- 				//if not in closed list already & cost of totalCost (F) of parent is greater then cost of node
-				if (!movePath.contains(pan, false) && current.getTotalCost() > pan.getTotalCost()){
-					pan.neighbor = current;			
- 					openList.add(pan);
-					
-					Gdx.app.log(LOG, "Open list contains values : " + openList.toString(", "));
- 				}
-				else if (!movePath.contains(pan, false) && !openList.contains(pan, false)){
-					pan.neighbor = current;
- 
-					
-					openList.add(pan);
-				}
-  			}
- 		}
- 	}
-	
-	public Panel findBestPanel(Panel parent){
-		int lowestCostIndex = 0;
-		float cost = parent.getTotalCost(); //current parent
-		
-		for(int index = 1; index < openList.size; index++){
-			Panel pan = openList.get(index);
-			if(pan.getTotalCost() < cost){
-				cost = pan.getTotalCost();
-				lowestCostIndex = index;
-			}	
- 
-		}
-		
-		Panel next = openList.removeIndex(lowestCostIndex); //remove from openList
-		
-		
-		return next;
-	}
+//	/** method for finding the shortest path NOTE: using a seperate class for shortest path finding
+//	 * - uses A* algorithm to find best path
+//	 * - since distance from start is already set, heuristic only set
+//	 *
+//	 * @param goal
+//	 * @return
+//	 */
+//	public Array<Panel> findBestPath(Panel goal){
+//		movePath = new Array<Panel>(); //stores the panels unit will move along
+//		Panel parent = origin; //set panel to origin
+//
+//		openList.add(parent); //initialize the open list
+//		movePath.add(parent);
+//
+//		//calculate the Heuristics for all Panels in openList
+//		for (Panel pan : openList){
+//			pan.setHeuristic(calculateHeuristic(pan, goal));
+//		}
+//
+//		while (openList.size > 0){
+//
+//			addNeighborPanels(parent, goal);
+//
+//			parent = findBestPanel(parent);
+//			movePath.add(parent);
+//
+//			if (goal.getX() == parent.getX() && goal.getY() == parent.getY()){
+// 				return movePath;
+//			}
+//
+//		}
+//
+//		return null;
+//	}
+//
+//
+//	private void addNeighborPanels(Panel current, Panel goal){
+//
+// 		//add neighbor nodes to list
+//		for (Panel pan : possibleMoves){
+// 			//checks see if blocks are neighbors or obstacles, units, etc
+// 			if (isNeighborPanel(current, pan)){
+// 				//if not in closed list already & cost of totalCost (F) of parent is greater then cost of node
+//				if (!movePath.contains(pan, false) && current.getTotalCost() > pan.getTotalCost()){
+//					pan.neighbor = current;
+// 					openList.add(pan);
+//
+//					Gdx.app.log(LOG, "Open list contains values : " + openList.toString(", "));
+// 				}
+//				else if (!movePath.contains(pan, false) && !openList.contains(pan, false)){
+//					pan.neighbor = current;
+//
+//
+//					openList.add(pan);
+//				}
+//  			}
+// 		}
+// 	}
+//
+//	public Panel findBestPanel(Panel parent){
+//		int lowestCostIndex = 0;
+//		float cost = parent.getTotalCost(); //current parent
+//
+//		for(int index = 1; index < openList.size; index++){
+//			Panel pan = openList.get(index);
+//			if(pan.getTotalCost() < cost){
+//				cost = pan.getTotalCost();
+//				lowestCostIndex = index;
+//			}
+//
+//		}
+//
+//		Panel next = openList.removeIndex(lowestCostIndex); //remove from openList
+//
+//
+//		return next;
+//	}
 }

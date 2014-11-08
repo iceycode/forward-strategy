@@ -45,7 +45,7 @@ public class GridNode extends Vector2 {
 		//for calculating G, or move cost from start
  		if (parent!= null){
 			this.costFromStart = parent.getCostFromStart() + calculateCostFromStart();
- 			Gdx.app.log("LOG", " initial G (movement) " + this + " is " + costFromStart);
+ 			//Gdx.app.log("LOG", " initial G (movement) " + this + " is " + costFromStart);
 
 		}
  		else 
@@ -54,7 +54,7 @@ public class GridNode extends Vector2 {
  		//for calculating H, or heuristic
  		if (goal!=null){
  			this.costToGoal = calculateCostToGoal(); //this gets more accurate costs\
- 			Gdx.app.log("LOG", " initial heuristic (H) of node " + this + " is " + costToGoal);
+ 			//Gdx.app.log("LOG", " initial heuristic (H) of node " + this + " is " + costToGoal);
 		}
  		else 
  			this.costToGoal =  0;

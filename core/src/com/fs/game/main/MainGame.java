@@ -10,8 +10,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.fs.game.menus.FactionScreen;
 import com.fs.game.menus.MapScreen;
 import com.fs.game.menus.MenuScreen;
-import com.fs.game.menus.UnitsScreen;
-import com.fs.game.screens.LevelScreen;
 import com.fs.game.screens.MainScreen;
 import com.fs.game.utils.Constants;
 import com.fs.game.utils.GameManager;
@@ -22,7 +20,6 @@ public class MainGame extends Game{
 	public SpriteBatch batch;
 	public BitmapFont font;
 	
-	//asset managers TODO:  put all assets into one
  	public AssetManager manager; //manages assets game
  	
 	/*All the screens that will be used*/
@@ -38,8 +35,8 @@ public class MainGame extends Game{
  
 	@Override
 	public void create() {
-		//TODO: add menu assets to manager
-		manager = GameManager.createAssetManager();
+        GameManager.initializeAssets();
+		manager = GameManager.assetManager;
  		
 		//the splash screen while assets load
  		splashTitle = new TextureRegion(new Texture(Gdx.files.internal(Constants.TITLE_PATH)));
