@@ -10,7 +10,7 @@ import com.badlogic.gdx.audio.Music;
 
 public class AudioUtils {
 
-    public static AssetManager am = GameManager.getAm();
+    public static AssetManager am = GameManager.getAssetManager();
 
     /** returns a music track for map (during gameplay)
      *

@@ -22,6 +22,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fs.game.data.GameData;
+import com.fs.game.enums.UnitState;
 import com.fs.game.maps.MapActor;
 import com.fs.game.maps.Panel;
 import com.fs.game.tests.TestUtils;
@@ -41,25 +42,9 @@ public class MapStage extends Stage implements ActionListener{
 	final String LOG = "MapStage log: ";
 
 	TiledMap tiledMap; 	//creates the actual map
-    boolean test; //determines use of test methods (alternative ATM)
- 	Table gridTable; 	//the table that contains grid board
-
-  	Array<Cell> obstacleCells;
-	Array<Cell> groundCells;
-	
-	Map<String, Cell> waterTiles;
-	Map<String, Cell> obstaclesInScene;
-	Map<String, Cell> groundTiles;
-	
-	World world; //the box2d world
-	Body mapBody; //the body into which actors go
-	MapActor[][] mapMatrix; //how maps appear on board in matrix form
-	
-	public Array<MapActor> mapActorArr; //array of MapActor
-	Array<Panel> obstacles;
+    int test; //determines use of test methods (alternative ATM)
 
 	Panel[][] panelMatrix; //the grids on game board
-
 	private Array<Panel> panelArray;
 	
 	//variables related to stage/screen placements
@@ -74,9 +59,6 @@ public class MapStage extends Stage implements ActionListener{
 	OrthogonalTiledMapRenderer tiledMapRenderer;
 	OrthographicCamera camera;
 	OrthographicCamera mapCam;
-	
-	Unit currUnit;	//the selected unit
-	SequenceAction moveSequence; //unit move sequence
 
 	Viewport viewport; // 
 	ScreenViewport viewportStage;
@@ -84,7 +66,7 @@ public class MapStage extends Stage implements ActionListener{
 	/**
 	 * instantiated by MapsFactory
 	 */
-	public MapStage(TiledMap tiledMap, boolean test) {
+	public MapStage(TiledMap tiledMap, int test) {
 //		super(new ScalingViewport(Scaling.stretch, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
 //        new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)));		
 //
@@ -152,18 +134,17 @@ public class MapStage extends Stage implements ActionListener{
 //		TestUtils.testBoardSetup1_12x12(); //test setup b/w humans & reptoids
 
 		//alternative setup - 16x16 board
-		TestUtils.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
+		//TestUtils.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
 
-        if (test) {
-            TestUtils.testTwoUnits();
+        if (test==1) {
+            TestUtils.test2Units(this);
         }
-		else{
-
-            //TestUtils.testTwoUnits();
-            TestUtils.testBoardSetup2_16x12(); //test setup b/w humans & reptoids
+		else if (test == 2){
+            TestUtils.testBoardSetup2_16x12(this); //test setup b/w humans & reptoids
         }
-
-        MapUtils.unitsToStage(TestUtils.playerUnits, this);
+        else{
+            TestUtils.testBoardSetup2_16x12(this); //test setup b/w humans & reptoids
+        }
 
 	}
  
@@ -198,38 +179,16 @@ public class MapStage extends Stage implements ActionListener{
      *  */
     @Override
     public void act(float delta) {
-     	
-     	super.act(delta); 
+
+        for (Unit u : UnitUtils.findAllUnits(getActors())){
+            if (u.state== UnitState.DEAD)
+                u.remove();
+        }
+
+
+     	super.act(delta);
 
     }
-    
-	/**
-	 * @return the tiledMap
-	 */
-	public TiledMap getTiledMap() {
-		return tiledMap;
-	}
-
-	/**
-	 * @param tiledMap the tiledMap to set
-	 */
-	public void setTiledMap(TiledMap tiledMap) {
-		this.tiledMap = tiledMap;
-	}
-
-	/**
-	 * @return the tiledMapRenderer
-	 */
-	public OrthogonalTiledMapRenderer getTiledMapRenderer() {
-		return tiledMapRenderer;
-	}
-
-	/**
-	 * @param tiledMapRenderer the tiledMapRenderer to set
-	 */
-	public void setTiledMapRenderer(OrthogonalTiledMapRenderer tiledMapRenderer) {
-		this.tiledMapRenderer = tiledMapRenderer;
-	}
 
 	/**
 	 * @return the camera
@@ -237,27 +196,6 @@ public class MapStage extends Stage implements ActionListener{
 	@Override
 	public OrthographicCamera getCamera() {
 		return camera;
-	}
-
-	/**
-	 * @param camera the camera to set
-	 */
-	public void setCamera(OrthographicCamera camera) {
-		this.camera = camera;
-	}
-
-	/**
-	 * @return the mapCam
-	 */
-	public OrthographicCamera getMapCam() {
-		return mapCam;
-	}
-
-	/**
-	 * @param mapCam the mapCam to set
-	 */
-	public void setMapCam(OrthographicCamera mapCam) {
-		this.mapCam = mapCam;
 	}
 
 	/**
@@ -276,19 +214,6 @@ public class MapStage extends Stage implements ActionListener{
 		this.viewport = viewport;
 	}
 
-	/**
-	 * @return the viewportStage
-	 */
-	public ScreenViewport getViewportStage() {
-		return viewportStage;
-	}
-
-	/**
-	 * @param viewportStage the viewportStage to set
-	 */
-	public void setViewportStage(ScreenViewport viewportStage) {
-		this.viewportStage = viewportStage;
-	}
 
 	public Array<Panel> getPanelArray() {
 		return panelArray;
@@ -298,13 +223,6 @@ public class MapStage extends Stage implements ActionListener{
 		this.panelArray = panelArray;
 	}
 
-	public Unit getCurrUnit() {
-		return currUnit;
-	}
-
-	public void setCurrUnit(Unit currUnit) {
-		this.currUnit = currUnit;
-	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {

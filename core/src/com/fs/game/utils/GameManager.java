@@ -17,14 +17,12 @@
  */
 package com.fs.game.utils;
 
-import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
@@ -34,7 +32,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
-import com.badlogic.gdx.utils.JsonValue.ValueType;
 import com.fs.game.units.UnitInfo;
 import com.fs.game.unused_old_classes.TextureUtils;
 
@@ -42,7 +39,7 @@ import com.fs.game.unused_old_classes.TextureUtils;
 public class GameManager {
 	
 	//values held in GameManager can be accessed without new instance
-	public static AssetManager am; //asset manager for easy access
+	public static AssetManager assetManager; //asset manager for easy access
 	public static Array<UnitInfo> unitInfoArr; //for access to unit info
 	public static Array<int[]> damageLists;
 	
@@ -55,8 +52,8 @@ public class GameManager {
  	 * 
 	 * @return
 	 */
-	public static AssetManager createAssetManager(){
-		AssetManager am = new AssetManager();
+	public static void initializeAssets(){
+		assetManager = new AssetManager();
 		
 		
 		//gets the gamplay skins
@@ -99,7 +96,7 @@ public class GameManager {
  					String fullPath = uInfo.getUnitPath()+path;
    					if (Gdx.files.internal(fullPath).exists()){
  						unitTexPaths.add(fullPath);
-  						am.load(uInfo.getUnitPath()+path, Texture.class);
+                        assetManager.load(uInfo.getUnitPath()+path, Texture.class);
   					}
  				}
  				
@@ -109,23 +106,20 @@ public class GameManager {
 		}//maps jsonvalue as array to string, then to object UnitInfo, which is stored in array
 		
  		//loading the textures for grids on game board
-		am.load(Constants.GRID_DOWN_PATH, Texture.class);
-		am.load(Constants.GRID_PATH, Texture.class);
+        assetManager.load(Constants.GRID_DOWN_PATH, Texture.class);
+        assetManager.load(Constants.GRID_PATH, Texture.class);
 
-
-		GameManager.setAm(am);
- 		
 		//creates info about units
 		damageLists = createDamageList(); //creates & adds damage lists to current array
 		unitInfoArr = addDamageInfo(damageLists, arrayUnitInfo); //adds that info the array list;
 
-		//the skin for the HUD
-		uiSkin = infoPanelSkin();
-		gameSkin = panelSkin();
         loadAudio(); //loads the audio into asset manager
-        //GameManager.setAm(am);
-        return am;
-	}
+
+		//the skins
+		uiSkin = createUISkin(); //for menus
+		gameSkin = panelSkin();     //for game board
+        //GameManager.setAssetManager(assetManager);
+ 	}
 
 
     /** loads all the audio (sound effects, unit sounds, music, etc)
@@ -133,7 +127,7 @@ public class GameManager {
      *
      */
     public static void loadAudio(){
-         am.load(Constants.music1, Music.class);
+         assetManager.load(Constants.music1, Music.class);
     }
 	
 	
@@ -182,7 +176,7 @@ public class GameManager {
  		skin.add("panelUp", new Texture(Gdx.files.internal("maps/tiles/grid.png")));
  		skin.add("panelView", new Texture(Gdx.files.internal("maps/tiles/gridView.png")));
 
-  		//am.load("gameSkin", Skin.class);
+  		//assetManager.load("gameSkin", Skin.class);
  		
  		return skin;
 	}
@@ -192,7 +186,7 @@ public class GameManager {
 	 * 
 	 * @return skin
 	 */
-	public static Skin infoPanelSkin() {
+	public static Skin createUISkin() {
 		Skin skin = new Skin();
 		
 		//the font scalled down
@@ -253,8 +247,6 @@ public class GameManager {
 		skin.add("stop-tex", new Texture(Gdx.files.internal("sidepanel/stop.png")));
 		
 		//texture for the advance button
-		//TODO: organize these
-		
 		//w/ some of the widget styles added to skin 
 		LabelStyle styleDamage = new LabelStyle();
 		styleDamage.background = skin.getDrawable("damage-popup");
@@ -276,21 +268,19 @@ public class GameManager {
 		 */
 		// creates an advance (player turn end) button  
  		skin.add("lets-go-tex", new Texture(Gdx.files.internal("infopanel/advanceButton.png")));
- 
-		/* set GameManger uiSkin */
-		GameManager.uiSkin = skin; //sets this manager to hold this skin
-		
-		return skin;
-	} 
- 
-	
-	public static Skin animSkin(){
-		Skin skin = new Skin();
-		
-		//skin.add("exoMove", Gdx.files.internal("units/arthropodan/32x32/exoguardMove1.png"));
-		
+
+
+        //------skins for pause menu-------
+        skin.add("pause-background", new Texture(Gdx.files.internal("menu/pause menu/pauseMenu-background.png")));
+        skin.add("pause-music-slider", new Texture(Gdx.files.internal("menu/pause menu/pauseMenu-music-slider.png")));
+        skin.add("pause-sounds-slider", new Texture(Gdx.files.internal("menu/pause menu/pauseMenu-sounds-slider.png")));
+        skin.add("pause-slider-knob", new Texture(Gdx.files.internal("menu/pause menu/pauseMenu-sound-knob.png")));
+
 		return skin;
 	}
+
+
+
 	
 	/** TODO: get user preferences, score & other info here
 	 * 
@@ -302,17 +292,17 @@ public class GameManager {
  
 	
 	/**
-	 * @return the am
+	 * @return the assetManager
 	 */
-	public static AssetManager getAm() {
-		return am;
+	public static AssetManager getAssetManager() {
+		return assetManager;
 	}
 
 	/**
-	 * @param am the am to set
+	 * @param assetManager the assetManager to set
 	 */
-	public static void setAm(AssetManager am) {
-		GameManager.am = am;
+	public static void setAssetManager(AssetManager assetManager) {
+		GameManager.assetManager = assetManager;
 	}
 
 }

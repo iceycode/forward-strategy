@@ -4,6 +4,12 @@ Forward Strategy
 This will update after major changes or fixes pushed to branch1 & merged with master. 
 ####*Change Log*:####
 --
+*11-07-14*
+- fixed unit health/attack sequence
+- started working on the pause menu
+- cleaned up & organized some code
+- sorted & began adding some missing animations
+
 *11-02-14*
 - created a music track & added to LevelScreen
 - method for testing 2 units only added to TestUtils
@@ -14,12 +20,7 @@ This will update after major changes or fixes pushed to branch1 & merged with ma
 - made a 16x12 board to change game mechanics
 - fixed path finding methods, still a bit buggy
 - unit movement work decently
-- TODO:
-	- implement 90 degree turning of medium units for upward movement
-	- add specials to factions & individual units
-	- add random "special" tiles to tiled map
-	- create & add music & soundboard
-	- perfect path finding algorithms
+
 
 --
 

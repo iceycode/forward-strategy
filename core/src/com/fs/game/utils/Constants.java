@@ -37,8 +37,10 @@ public class Constants {
 	public static final String LOG_UNIDAT = "UnitData log: ";
 	public static String LEVELSCREEN_LOG = "LevelScreen LOG : ";
 	public static String LOG_UNIT_UTILS = "Unit Utils LOG: ";
-	
-/*-------------GAME STATES-----------
+    public static final String UNIT_CHOSEN = "unit has been chosen";
+    public static final String GRID_RESET= "panels have been reset";
+    public static final String UNIT_DESELECT = "unit now not chosen";
+    /*-------------GAME STATES-----------
  * paused, running or over
  * 
  * 
@@ -97,7 +99,7 @@ public class Constants {
 	
 	
 	
-/*--------------GAME BOARD INFO--------------------
+/*--------------GAME HUD INFO--------------------
  * 
  */
 	//for the game grid (board where units go on) 
@@ -152,15 +154,12 @@ public class Constants {
 	public static final float GO_X = 120;
 	public static final float GO_Y = 100;
 	
-	//future possible use
-	//public static String[] paths = {};
- 	/*
- 	 *  Strings related to log/debug
- 	 */
-	public static final String UNIT_CHOSE = "unit has been chosen";
-	public static final String GRID_RESET= "panels have been reset";
-	public static final String UNIT_DESELECT = "unit now not chosen"; 
-	
+
+//------------PAUSE MENU DATA---------------
+    public static final float PAUSE_X = 200f;
+    public static final float PAUSE_Y = 100f;
+    public static final float PAUSE_WIDTH = 384f;
+    public static final float PAUSE_HEIGHT = 256f;
 	
 	/* these are all the 32x32 board positions 
 	 * starting from bottom to right, then move up and repeat

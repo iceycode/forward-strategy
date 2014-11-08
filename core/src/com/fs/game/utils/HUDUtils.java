@@ -40,7 +40,7 @@ public class HUDUtils {
 	
 	final String LOG = "InfoPanel log : ";
 	
-	public static Skin skin = GameManager.infoPanelSkin(); //get skin from GameManager
+	public static Skin skin = GameManager.uiSkin; //get skin from GameManager
 	
 	Texture infoLayer;
 	Texture infoBackPan;
@@ -78,45 +78,7 @@ public class HUDUtils {
 	protected InputListener turnListener;
  
 
-	/** gets the unit selected on the stage
-	 * 
-	 * @param stageActors
-	 * @return
-	 */
-	public static Unit findUnit(Array<Actor> stageActors) {
-		Unit unit = new Unit();
-		for (Actor a : stageActors) {
-			if (a instanceof Unit) {
-				Unit u = (Unit)a;
-				if (u.chosen) {
-					 unit = u;
-				}
-			}
-		}
-		return unit;
-	}
-	
-	/** creates a pop-up window for unit info
-	 * - pops up 
-	 * 
-	 */
-	public static Window popUpInfo(ScrollPane pane, float oriX, float oriY, float width, float height) {
-		//sets the window style
-		WindowStyle winStyle = new WindowStyle();
-		winStyle.titleFont = skin.getFont("default-small");
-		winStyle.titleFont.scale(.01f); //scale it down a bit
-		winStyle.stageBackground = skin.getDrawable("infoPane");
-		//create the window
-		Window win = new Window("Details", winStyle);
-		
-		win.add(pane).fill().expand();
-		win.addActor(pane);
- 		//+/- 64 accounts for timer width (64 pix)
-		win.setBounds(Constants.GAMEBOARD_X, 0, width-64, height);
-		win.setFillParent(false);
-		
-		return win;
-	}
+
  
  
 	/** creates a scroll pane for insertion into the main info panel table
@@ -143,30 +105,7 @@ public class HUDUtils {
 		
 		return unitScrollPane;
 	}
-	
-	/** creates a ScrollPane just for unit info
-	 * 
-	 * @param label : either info or damage list
-	 * @return
-	 */
-	public static ScrollPane createLabelScroll(Label label) {
-		//the style for the ScrollPane
-		ScrollPaneStyle style = new ScrollPaneStyle();
- 		style.background = skin.getDrawable("infoPane");
-		style.vScroll = skin.getDrawable("vert-scroll");
-				
-		//the scroll pane for this label
-		ScrollPane scrollPane = new ScrollPane(label, style);
-		scrollPane.setWidth(Constants.INFO_W);
-		scrollPane.setHeight(Constants.INFO_H); 
-		scrollPane.setWidget(label);
 
-		scrollPane.setFillParent(false); //does not fill up parent
-		//(true, fale) <-- (disables x-scroll, does not disable y-scrolling)
-		scrollPane.setScrollingDisabled(true, false); 
-  		
-		return scrollPane;
-	}
 	
  
 	/** creates a timer as a Label
@@ -227,7 +166,7 @@ public class HUDUtils {
 		styleDetail.background = skin.getDrawable("detail-popup");
 		styleDetail.font = skin.getFont("retro2");
 		styleDetail.fontColor = Color.GREEN;
-		styleDetail.font.scale(.01f);	//scale font a bit (TODO: get new font)
+		styleDetail.font.scale(.01f);	//scale font a bit
 		
 		Label unitDetails = new Label("Details (click on unit)",styleDetail);
 		unitDetails.setAlignment(Align.top, Align.left); //sets text alignment
@@ -273,14 +212,14 @@ public class HUDUtils {
 	}//Radio Schizoid - Chillout - "R Who" by Cydelix
 
 	/** creates the side buttons which indicate player turn
-	 * 
+	 *
 	 * @param posX
 	 * @param posY
 	 * @return
 	 */
 	public static Button createSideButton(float posX, float posY) {
 		//go is when player goes
-		
+
 		//creating actors out of circles
 		ButtonStyle buttonStyle = new ButtonStyle();
 		buttonStyle.up = skin.getDrawable("go-tex");
@@ -289,12 +228,12 @@ public class HUDUtils {
 		//create 1st player-go indication button
 		Button button = new Button(buttonStyle);
 		button.setBounds(posX, posY, Constants.SIDE_BUTTON_RADIUS, Constants.SIDE_BUTTON_RADIUS);
-		
+
 		return button;
 	}
-	
+
 	/** the go button which when activated returns true
-	 * 
+	 *
 	 * @return
 	 */
 	public static TextButton createGoButton(){
@@ -303,15 +242,59 @@ public class HUDUtils {
 		style.down = skin.getDrawable("lets-go-tex");
 		style.font = skin.getFont("retro2");
 		style.fontColor = Color.GREEN;
-		
+
 		TextButton goButton = new TextButton("GO",style);
- 
+
 		goButton.setBounds(100, 100, 32, 32);
- 
-		
+
+
 		return goButton;
-		
+
 	}
 
-	
+    /** creates a pop-up window for unit info
+     * - pops up
+     *
+     */
+    public static Window popUpInfo(ScrollPane pane, float oriX, float oriY, float width, float height) {
+        //sets the window style
+        WindowStyle winStyle = new WindowStyle();
+        winStyle.titleFont = skin.getFont("default-small");
+        winStyle.titleFont.scale(.01f); //scale it down a bit
+        winStyle.stageBackground = skin.getDrawable("infoPane");
+        //create the window
+        Window win = new Window("Details", winStyle);
+
+        win.add(pane).fill().expand();
+        win.addActor(pane);
+        //+/- 64 accounts for timer width (64 pix)
+        win.setBounds(Constants.GAMEBOARD_X, 0, width-64, height);
+        win.setFillParent(false);
+
+        return win;
+    }
+
+    /** creates a ScrollPane just for unit info
+     *
+     * @param label : either info or damage list
+     * @return
+     */
+    public static ScrollPane createLabelScroll(Label label) {
+        //the style for the ScrollPane
+        ScrollPaneStyle style = new ScrollPaneStyle();
+        style.background = skin.getDrawable("infoPane");
+        style.vScroll = skin.getDrawable("vert-scroll");
+
+        //the scroll pane for this label
+        ScrollPane scrollPane = new ScrollPane(label, style);
+        scrollPane.setWidth(Constants.INFO_W);
+        scrollPane.setHeight(Constants.INFO_H);
+        scrollPane.setWidget(label);
+
+        scrollPane.setFillParent(false); //does not fill up parent
+        //(true, fale) <-- (disables x-scroll, does not disable y-scrolling)
+        scrollPane.setScrollingDisabled(true, false);
+
+        return scrollPane;
+    }
 }

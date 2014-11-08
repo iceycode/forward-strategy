@@ -2,11 +2,8 @@ package com.fs.game.screens;
 
 //import com.badlogic.gdx.graphics.g2d.tiled.TiledMap;
 
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -30,10 +27,10 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.fs.game.data.GameData;
+import com.fs.game.enums.GameState;
 import com.fs.game.main.MainGame;
 import com.fs.game.maps.Panel;
 import com.fs.game.stages.MapStage;
-import com.fs.game.tests.TestStage;
 import com.fs.game.units.Unit;
 import com.fs.game.unused_old_classes.GameBoard;
 import com.fs.game.utils.*;
@@ -56,24 +53,21 @@ public class LevelScreen implements Screen {
 
 	final MainGame game;
 	
-	int gameState = Constants.GAME_RUNNING; //starts out running
+	GameState gameState = GameState.RUN; //starts out running
 	
  
 	final float VIEWPORTWIDTH = Constants.SCREENWIDTH;
 	final float VIEWPORTHEIGHT = Constants.SCREENHEIGHT;
-	final float GRID_WIDTH = Constants.GRID_WIDTH_B;
-	final float GRID_HEIGHT = Constants.GRID_HEIGHT_B;
-	
 	final float GRID_ORI_X = Constants.GAMEBOARD_X;
 	final float GRID_ORI_Y = Constants.GAMEBOARD_Y;
 	final String LOG = "LevelScreen log: ";
 	
 	//utilities for unit's user interface
-	UnitUtils uf;
-	Unit currUnit;
- 	Array<Unit> p1Units;
-	Array<Unit> p2Units;
-	Array<Panel> panelArray;
+//	UnitUtils uf;
+//	Unit currUnit;
+// 	Array<Unit> p1Units;
+//	Array<Unit> p2Units;
+//	Array<Panel> panelArray;
 	int player = 1; //starts with player 1 going first
 	
 	/** the stages & their utilities/components******
@@ -82,69 +76,48 @@ public class LevelScreen implements Screen {
 	InputMultiplexer in; //handles input events for stage
  
   	//The stages
-    public boolean test ; //determines whether test stage is used
+    public int test = 0; //determines which test configuration, if any, is used (0 is default config)
 	MapStage stageMap; //all the units, tiles go here
-    TestStage testStage; //a stage for testing
 	Stage stage; 	//this shows unit info, timer, player turn, etc. (HUD)
 	Stage pauseStage; //pause menu options
 
-    Music music; //music that plays during screen
-
-	Unit[][] unitArr; //stores units as actors
-	Panel[][] panelMatrix;//stores positions of panels as matrix
+    Music music; //music that plays (during pause & run state)
   	
 	//timer variables - load into Label
 	final float maxTime = Constants.MAX_TIME; //45 seconds for each player
 	float timerCount = 0; //keeps track of hte time
 	public boolean letsGo = false; //if true, switch players
 
+    float currVolumeMusic = 1.0f; //initialize to 1.0f (highest volume)
+    float currVolumeSound = 1.0f; //initialize to 1.0f
 
 	/*********widgets, skins, textures for stage********
 	 * NOTE - get rid of some not being used
 	 */
-	Skin skin; //skin used for timer
-	Table infoTable;
 	Label timer; //the timer, background set to timer.png 
 	Label unitDetail;
 	Label unitDamageList;
 	TextButton goButton;
 	Button p1Button;
 	Button p2Button;
-	ScrollPane scrollPaneInfo;
 	Table scrollTable;
-	Window popUpInfo;
-	//TextureRegion class describes a rectangle inside a texture
-	// and is useful for drawing only a portion of the texture.
-	TextureRegion[] gridRegions;
-	TextureRegion[][] gridMatrix;
- 
+    Window pauseWindow;
+    ScalingViewport scalingViewPort;
+
 	//cameras 
 	OrthographicCamera camera; //main stage cam
- 
-	//protected Vector2 screenCoord;
-
-	//Arrays  for actors, panels, units, processors
-	Array<InputProcessor> processors;
-	Array<Unit> unitsOnStage;
-	Array<Panel> panelsOnStage; //all panels
-	Array<Actor> actorsOnStage; //all actors
-	Array<Array<Unit>> playerUnits; //get this from previous screen
+	Array<InputProcessor> processors; //processors on stages
 	
 	protected ScreenViewport viewport;
- 	//protected ActorGestureListener unitGestureListener;
 	protected InputListener stageInputListener;
 
-	//the actor listeners on stage
-	protected InputListener stagePanelListener;
-	protected InputListener stageUnitListener;
- 
 	/** the main screen for game play
 	 * test determines whether a test stage will pop up
      *
      * @param test
 	 * @param game
 	 */
-	public LevelScreen(final MainGame game, boolean test) {
+	public LevelScreen(final MainGame game, int test) {
 		
 		this.game = game;
         this.test = test;
@@ -179,30 +152,28 @@ public class LevelScreen implements Screen {
 		viewport.setWorldWidth(VIEWPORTHEIGHT);
 		viewport.setCamera(camera);
 		//viewport.setRotation
-		ScalingViewport scalingViewPort = new ScalingViewport(Scaling.stretch, VIEWPORTWIDTH, VIEWPORTHEIGHT);
+        scalingViewPort = new ScalingViewport(Scaling.stretch, VIEWPORTWIDTH, VIEWPORTHEIGHT);
 						
 		/** stage : create the stage for HUD */
 		stage = new Stage(scalingViewPort); //has its own batch
-		//stage.setViewport(viewport);
 
-
+        /** stageMap : contains tile map & actors associated with it ****/
         //either create test stage or normal stage
-        if (test){
+        if (test==1){
             stageMap = MapUtils.createMap(11, test);
         }
+        else if (test ==2){
+            stageMap = MapUtils.createMap(12, test);
+        }
         else{
-            /** stageMap : contains tile map & actors associated with it ****/
             stageMap = MapUtils.createMap(4, test); //creates the TiledMap with Tiles as actorsOnStage
         }
         stageMap.setViewport(scalingViewPort); //sets viewport (renderer must have same )
 
-		/** pause stage*/
-		pauseStage = new Stage(scalingViewPort);
-		Window pauseWin = MenuUtils.pauseWindow();
-		pauseStage.addActor(pauseWin);
+
 
 		createHUD(); //the info panels during game
-
+        createPauseMenu();
   	}
 
 	/** creates the info panel
@@ -214,6 +185,13 @@ public class LevelScreen implements Screen {
  		createSideButtons();
  	}
 
+    public void createPauseMenu(){
+        /** pause stage*/
+        pauseWindow = MenuUtils.pauseWindow(); //pause window
+        pauseStage = new Stage(scalingViewPort);
+        pauseStage.addActor(pauseWindow);
+    }
+
     /**
      * TODO: create & add more music
      * ...currently only 1 track
@@ -221,6 +199,9 @@ public class LevelScreen implements Screen {
     public void createMusic(){
         music = AudioUtils.createMapMusic(0);
         music.setLooping(true); //loops the track
+        GameData.currVolumeMusic = 5f; //initializes volume to 5f
+        music.setVolume(GameData.currVolumeMusic);
+
     }
 
 
@@ -282,9 +263,9 @@ public class LevelScreen implements Screen {
  			@Override
 			public void touchDown (InputEvent event, float x, float y, int pointer, int button) {
  				letsGo = true;  //player is manually finished turn (timer did not reset)
- 				clearBoard();	//clears board of selected panels
+ 				MapUtils.clearBoard(stageMap);	//clears board of selected panels
  				timerCount = 0;
-  	        		}
+  	        }
  		});
 		
  		//add the actors
@@ -293,64 +274,10 @@ public class LevelScreen implements Screen {
 		stage.addActor(goButton);
 	}
  
-	 
-	/** clears the stage of any active (selected) panels
-	 * 
-	 */
-	public void clearBoard(){
-		for (Panel p : stageMap.getPanelArray()){
-			if (p.selected || p.moveableTo){
-				p.selected = false;
-				p.moveableTo = false;
-				p.viewing = false;
-			}
-		}
-	}
-	
+
 
 	
-	/** update player turn
-	 * - int value to determine which player's units to lock
-	 * 
-	 *
-	 * @param player
-	 */
-	public void lockPlayerUnits(int player) {
- 		Unit u = new Unit(); //initialize constructor
- 		Array<Unit> allUnits = MapUtils.findAllUnits(stageMap.getActors());
- 		
-		//look through all units to see if certain ones locked or not
-		for (int i = 0; i < allUnits.size; i++) {
-			u = allUnits.get(i);
 
-			//lock all units of this player
-			if (!u.isLock() && u.player == player) {
-				u.lock = true;
-				u.done = true;
-				u.chosen = false;
-			}
-		}
- 	}
-	
-	/**
-	 * 
-	 * @param player
-	 */
-	public void unlockPlayerUnits(int player) {
- 		Unit u = new Unit(); //initialize constructor
- 		Array<Unit> allUnits = MapUtils.findAllUnits(stageMap.getActors());
- 
-		//look through all units to see if certain ones locked or not
-		for (int i = 0; i < allUnits.size; i++) {
-			u = allUnits.get(i);
-			//unlock if this is not player being locked
-			if (u.isLock() && u.player == player) {
-				u.lock = false;
-				u.done = false;
-				u.standing = true;
- 			}
-		}
-	}
 	
 	/** this method checks to see if player time is up or is done
 	 * 
@@ -361,17 +288,17 @@ public class LevelScreen implements Screen {
 		if (letsGo) {
 			//decides based on player which player to lock
 			if (temp == 1) {
-				lockPlayerUnits(player);  //lock these player units
+				MapUtils.lockPlayerUnits(player, stageMap);  //lock these player units
 				p1Button.toggle();		//toggle checked stage (button is red)
  				player++;				//next player
-				unlockPlayerUnits(player); 	//unlock player units
+				MapUtils.unlockPlayerUnits(player, stageMap); 	//unlock player units
 				p2Button.toggle();	//toggle checked state p2
  			}
 			else {
- 				lockPlayerUnits(player);
+ 				MapUtils.lockPlayerUnits(player, stageMap);
  				p2Button.toggle();	
  				player--;
- 				unlockPlayerUnits(player);
+                MapUtils.unlockPlayerUnits(player, stageMap); 	//unlock player units
  				p1Button.toggle();
 			}
 		}
@@ -385,15 +312,19 @@ public class LevelScreen implements Screen {
 	@Override
 	public void render(float delta) {
 		//glClearColor takes 3 RGB float values & alpha
-		Gdx.graphics.getGL20().glClearColor(0,0,0,1); //sets the color of clear screen
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);	
+        currVolumeMusic = GameData.currVolumeMusic;
+        music.play();
 		
 		switch (gameState){
-			case Constants.GAME_RUNNING : show();
+			case RUN : show();
 				break;
-			case Constants.GAME_PAUSED : pause();
+			case PAUSE : pause();
 				break;
-				
+            case RESUME : show();
+                break;
+            default :
+                show();
+                break;
 		}
  		
 			
@@ -414,17 +345,20 @@ public class LevelScreen implements Screen {
 
 	@Override
 	public void show() {
-        music.play();
+        Gdx.graphics.getGL20().glClearColor(0,0,0,1); //sets the color of clear screen
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+
 		Gdx.input.setInputProcessor(in); //set input processor in show method
 
 		timerCount += Gdx.graphics.getDeltaTime();
 		nextPlayerGo(); //checks to see if next player will go
 		
-		//TODO: make 1st player random ... currently set to player 1 going first 		
+		//TODO:  currently set to player 1 going first
   		//if the timer reaches max time, lets co set to true
 		if (timerCount >= maxTime) {
 			letsGo = true; 		//when true, next player goes
-			clearBoard();	//clears board of selected panels
+			MapUtils.clearBoard(stageMap);	//clears board of selected panels
 			timerCount = 0; //reset timer
 			Gdx.app.log(LOG, " timer count is " +  timerCount + "\n player is : " + Integer.toString(player));
 		}
@@ -435,7 +369,7 @@ public class LevelScreen implements Screen {
 		stageMap.act(delta);
      	stageMap.draw();
 
-     	//stage with the unit actors & UI on it
+     	//stage with UI on it
 		stage.act(delta);
 		stage.draw();	
 		// removed in libgdx 1.4.1 -->Table.drawDebug(stage);                                                                       
@@ -444,27 +378,30 @@ public class LevelScreen implements Screen {
 		timer.act(delta); 
 		
 		Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
-		
-	  	if (Gdx.input.isTouched()) {
-	  		
-   			Array<Unit> allUnits = MapUtils.findAllUnits(stageMap.getActors());
-			for (Unit u : allUnits) {
-				//show unit info & damage lists				
-				if (u.chosen) {
-					//finds enemy units nearby & fights them 
-  					unitDetail.setText(UnitUtils.unitDetails(u));
- 					unitDamageList.setText(UnitUtils.unitDamageList(u)); 
-   				}
-				
-				//u.updateUnitDataArrays(stageMap.getActors());
-  			}	
- 		}
+
+        if (GameData.unitDetails!=null) {
+            unitDetail.setText(GameData.unitDetails.get(0));
+            unitDamageList.setText(GameData.unitDetails.get(1));
+        }
+//	  	if (Gdx.input.isTouched()) {
+//
+//   			Array<Unit> p1Units = MapUtils.findAllUnits(stageMap.getActors());
+//			for (Unit u : p1Units) {
+//				//show unit info & damage lists
+//				if (u.chosen) {
+//					//finds enemy units nearby & fights them
+//  					unitDetail.setText(UnitUtils.unitDetails(u));
+// 					unitDamageList.setText(UnitUtils.unitDamageList(u));
+//   				}
+//
+//				//u.updateUnitDataArrays(stageMap.getActors());
+//  			}
+// 		}
 	  	
-	  	if (Gdx.input.isKeyPressed(Keys.CONTROL_LEFT) ){
-	  		if(Gdx.input.isKeyPressed(Keys.P)){
-	  			Gdx.app.log(LOG, "gameState is paused");
-	  			gameState = Constants.GAME_PAUSED;
-	  		}
+	  	if (Gdx.input.isKeyPressed(Input.Keys.P) ){
+
+            Gdx.app.log(LOG, "gameState is paused");
+            gameState = GameState.PAUSE;
   		}
 	  	
  	}
@@ -476,21 +413,26 @@ public class LevelScreen implements Screen {
 
 	@Override
 	public void pause() {
+        //Gdx.graphics.getGL20().glClearColor(0,1,0,1); //sets the color of clear screen
+        //Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
 		Gdx.input.setInputProcessor(pauseStage);
-		
-		pauseStage.act();
+        pauseStage.act();
 		pauseStage.draw();
-		
-		if (Gdx.input.isKeyPressed(Keys.CONTROL_LEFT) ){
-	  		if(Gdx.input.isKeyPressed(Keys.P)){
-	  			gameState = 1; //game runs again
-	  		}
-		}
+
+        //shows the main pause window
+        pauseWindow.act(Gdx.graphics.getDeltaTime());
+
+        if (!Gdx.input.isKeyJustPressed(Keys.R)) {
+            Gdx.app.log(LOG, "game is resuming");
+            gameState = GameState.RESUME;
+
+        }
 	}
 
 	@Override
 	public void resume() {
-
+        show(); //game runs again
 	}
 
 	@Override

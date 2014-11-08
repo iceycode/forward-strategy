@@ -4,6 +4,8 @@
 package com.fs.game.data;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -26,53 +28,48 @@ import com.fs.game.utils.Constants;
  */
 public class GameData {
 	
-	 
-	//these hold units
-	public static Array<Unit> allUnits;
+
+
 	public static Array<Unit> otherUnits;
-	public static Array<Unit> playerUnits;
+	public static Array<Array<Unit>> playerUnits;
+
+    public static Array<Integer> unitDamageList;
  	
 	public static float score;
- 	public static float health; 
- 	
+ 	public static float health;
  	public static TiledMapTileSet tiledMap;
- 	
-	//this stores temporarily the unit damage when each unit clicked on
-	public static String unitDamage;
- 	public static MapActor[][] mapActMatrix; //stores based on grid cell
 
- 	//all these are related to basic board elements (grid tiles 32x32)
+
+
+	//----------for Unit data---------
+    public static Array<Unit> unitsInGame;
+    public static Array<Unit> p1Units;
+    public static Array<Unit> p2Units;
+    public static Array<String> unitDetails;
+	public static String unitDamage;
+    public static String unitName;
+
+
+
+    //------for Stage/TiledMap data------
+    //all these are related to basic board elements (grid tiles 32x32)
  	public static Panel[][] gridMatrix;	//the grid postiions
  	public static Array<Panel> gamePanels; //the gridBoard array of Panels
 	public static Array<Panel> unitPanels; //each units panel position	
 	public static Table gridTable;  //the table of panels added to stage
-	
-	//these have to do with tile map actors & map stage
-	
-	public static String unitName; 
-	
+    public static MapActor[][] mapActMatrix; //stores based on grid cell
+
+
+    //these have to do with tile map actors & map stage
 	public static Array<MapActor> mapActorArr;
-	
-	
-	/** method which finds all the actors on stage
-	 * 
-	 * @param stageActors
-	 * @return
-	 */
-	public static Array<Unit> findAllUnits(Array<Actor> stageActors){
-		Array<Unit> unitArr = new Array<Unit>();
-		
- 		for (Actor a : stageActors) {
-			if (a.getClass().equals(Unit.class)) {
-				Unit u = (Unit)a;
-				unitArr.add(u);
-			}
-		}
- 		
-		return unitArr;
-	}
-	
-	
+
+
+
+	//----Audio data: music, sound, volumes----//
+	public static Music currMusic;
+    public static Sound currSound;
+    public static float currVolumeMusic;
+    public static float currVolumeSounds;
 	 
 
 }

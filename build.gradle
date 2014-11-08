@@ -6,13 +6,13 @@ buildscript {
     }
     dependencies {
         classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.3'
-        classpath 'com.android.tools.build:gradle:0.9+'
+        classpath 'com.android.tools.build:gradle:0.12+'
         classpath 'com.github.jtakakura:gradle-robovm-plugin:0.0.7'
     }
 }
 
 allprojects {
-    apply plugin: "eclipse"
+    //apply plugin: "eclipse"
     apply plugin: "idea"
 
     version = '1.0'
@@ -111,11 +111,10 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
-       // compile "com.badlogicgames.gdx:gdx-tests" //compile for testing using GdxTest class
 
     }
 }
 
-tasks.eclipse.doLast {
-    delete ".project"
-}
+//tasks.eclipse.doLast {
+//    delete ".project"
+//}
