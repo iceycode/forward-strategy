@@ -39,7 +39,9 @@ public class UnitInfo {
 	
 	protected Array<String> texPaths;
 	
-	public UnitInfo() { }//empty constructor
+	public UnitInfo() {
+
+    }//empty constructor
  	
 	/**
 	 * @return the faction
@@ -87,7 +89,6 @@ public class UnitInfo {
 	 * @param size the size to set
 	 */
 	public void setSize(String size) {
-		 
 		this.size = size;
 	}
 	/**

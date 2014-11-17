@@ -3,33 +3,23 @@
  */
 package com.fs.game.stages;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Map;
-
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.enums.UnitState;
-import com.fs.game.maps.MapActor;
 import com.fs.game.maps.Panel;
 import com.fs.game.tests.TestUtils;
 import com.fs.game.units.Unit;
-import com.fs.game.utils.Constants;
-import com.fs.game.utils.MapUtils;
+import com.fs.game.utils.GameUtils;
 import com.fs.game.utils.UnitUtils;
+
+import java.util.HashMap;
 
 
 /** the stage which contains the tiled map
@@ -37,21 +27,18 @@ import com.fs.game.utils.UnitUtils;
  * @author Allen
  *
  */
-public class MapStage extends Stage implements ActionListener{
+public class GameStage extends Stage {
 	
 	final String LOG = "MapStage log: ";
 
-	TiledMap tiledMap; 	//creates the actual map
-    int test; //determines use of test methods (alternative ATM)
-
-	Panel[][] panelMatrix; //the grids on game board
+	public TiledMap tiledMap; 	//creates the actual map
 	private Array<Panel> panelArray;
 	
 	//variables related to stage/screen placements
 	final float SCREENWIDTH = Constants.SCREENWIDTH;
 	final float SCREENHEIGHT = Constants.SCREENHEIGHT;
-	final float GRID_WIDTH = Constants.GRID_WIDTH_B;
-	final float GRID_HEIGHT = Constants.GRID_HEIGHT_B;
+	final float GRID_WIDTH = Constants.GRID_WIDTH;
+	final float GRID_HEIGHT = Constants.GRID_HEIGHT;
 	final float GRID_X = Constants.GAMEBOARD_X;
 	float GRID_Y = Constants.GAMEBOARD_Y;
 	float scale = 1/32f;
@@ -60,25 +47,28 @@ public class MapStage extends Stage implements ActionListener{
 	OrthographicCamera camera;
 	OrthographicCamera mapCam;
 
-	Viewport viewport; // 
+	Viewport viewport;
 	ScreenViewport viewportStage;
-	
+
+    Unit currUnit;
+    boolean unitSelected = false; //whether or nmot a unit on board chosen
+    HashMap<Integer, Array<String>> damageTextMap; //hashmap containing damage list text
+
 	/**
 	 * instantiated by MapsFactory
 	 */
-	public MapStage(TiledMap tiledMap, int test) {
+	public GameStage(TiledMap tiledMap) {
 //		super(new ScalingViewport(Scaling.stretch, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
 //        new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)));		
 //
 		//sets up the tiled map & renderer
         this.tiledMap = tiledMap;
-        this.test = test;
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         
         setupCamera();//sets up the camera
         setupGridElements(); //get Table & Actors from GameBoard class
-        createMapActors(); //creates & adds these actors to map
-		createUnits();  
+		addUnits();
+
     }
 	
 	//sets up camera
@@ -97,32 +87,20 @@ public class MapStage extends Stage implements ActionListener{
 		viewport.setCamera(camera);
 		
  	}
-	
+
+    //TODO: fuse panel actors with tiledmap actors
 	public void setupGridElements(){
 // 		MapUtils.setupPanels12x12(); //stores data in UnitData
-//		panelMatrix = GameData.gridMatrix;
+//		panelMatrix = GameData.panelMatrix;
 //		this.setPanelArray(GameData.gamePanels);
 		
 		//2nd kind of setup
-		MapUtils.setupPanels16x12();
-		panelMatrix = GameData.gridMatrix;
-		this.setPanelArray(GameData.gamePanels);
-		
+		GameUtils.setupPanels16x12();
+		GameUtils.createMapActors(this);
 
- 
   	}
 
-    /** these map actors are touchable tiled map cells
-     *
-     */
-	public void createMapActors(){
-		//for-each loop thru all layers of map
-		for (MapLayer layer : tiledMap.getLayers()) {
-		    TiledMapTileLayer tiledLayer = (TiledMapTileLayer)layer;
-		    MapUtils.createActorsForLayer(tiledLayer, GameData.gridMatrix, this);
 
-		} //gets all the actors from all the layers
-	}
 	
  	
 	/** initializes & sets units onto stage
@@ -130,21 +108,21 @@ public class MapStage extends Stage implements ActionListener{
 	 *  - gets info from an array in an array
 	 *  
 	 */
-	public void createUnits() {
-//		TestUtils.testBoardSetup1_12x12(); //test setup b/w humans & reptoids
+	public void addUnits() {
 
-		//alternative setup - 16x16 board
-		//TestUtils.initializeUnits(getPanelArray(), panelMatrix); 	//initialize units, with GameBoard panelMatrix positions
-
-        if (test==1) {
+        if (GameData.testType==1) {
             TestUtils.test2Units(this);
         }
-		else if (test == 2){
+		else if (GameData.testType == 2){
             TestUtils.testBoardSetup2_16x12(this); //test setup b/w humans & reptoids
         }
         else{
             TestUtils.testBoardSetup2_16x12(this); //test setup b/w humans & reptoids
         }
+
+        damageTextMap = new HashMap<Integer, Array<String>>();
+        putIntoMap(GameData.p1Units, GameData.p2Units); //adds 1st players unit's damage to 2nd player
+        putIntoMap(GameData.p2Units, GameData.p1Units); //adds 2nd players unit's damage to 1st player
 
 	}
  
@@ -152,42 +130,62 @@ public class MapStage extends Stage implements ActionListener{
      * 
      */
     public void render() {
-    	
-    	//take these out possibly TODO:
+
     	tiledMapRenderer.getSpriteBatch().setProjectionMatrix(camera.combined);
     	tiledMapRenderer.setView(camera.combined, GRID_X, GRID_Y, GRID_WIDTH, GRID_HEIGHT);
-
     	camera.update();
- 
     	tiledMapRenderer.setView(camera);
      	tiledMapRenderer.render();
- 
+
     }
-    
+
+
+    public void putIntoMap(Array<Unit> playerUnits, Array<Unit> enemyUnits){
+
+
+        for (Unit unit : playerUnits) {
+            Array<String> damageTexts = new Array<String>();
+            for (Unit enemy : enemyUnits){
+                int indexEnemy = enemy.getUnitID()-1;
+                String damageText = Integer.toString(unit.damageList[indexEnemy]);
+                damageTexts.add(damageText);
+            }
+            damageTextMap.put(unit.getUnitID(), damageTexts);
+        }
+
+    }
+
+    public void updateDamageLabels(){
+        for (Unit u : GameData.enemyUnits){
+            for (String damage : damageTextMap.get(u.getUnitID())){
+                Label label = UnitUtils.createDamageLabel(u, damage);
+                addActor(label);
+            }
+        }
+
+    }
    
     /* stage maps draw method */
     @Override
     public void draw() {
-    	render(); //renders the tiled map
+    	render(); //renders the tiled map & damageLabelGroup
 
-    	super.draw();    	    	
+    	super.draw();
 
     }
+
+
     
     /**
      *  map stage act method 
      *  */
     @Override
     public void act(float delta) {
-
-        for (Unit u : UnitUtils.findAllUnits(getActors())){
-            if (u.state== UnitState.DEAD)
-                u.remove();
+        if (GameData.unitIsChosen) {
+            updateDamageLabels(); //update damage labels if unit is selected
         }
 
-
      	super.act(delta);
-
     }
 
 	/**
@@ -224,9 +222,4 @@ public class MapStage extends Stage implements ActionListener{
 	}
 
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-
-	}
- 
 }

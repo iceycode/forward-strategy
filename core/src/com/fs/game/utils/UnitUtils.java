@@ -5,27 +5,20 @@ package com.fs.game.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
-import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
+import com.fs.game.assets.Constants;
+import com.fs.game.assets.GameManager;
 import com.fs.game.data.GameData;
 import com.fs.game.enums.UnitState;
 import com.fs.game.maps.Panel;
-import com.fs.game.stages.MapStage;
+import com.fs.game.stages.GameStage;
 import com.fs.game.units.Unit;
 import com.fs.game.units.UnitInfo;
 import com.fs.game.utils.pathfinder.PathFinder;
@@ -58,24 +51,8 @@ import com.fs.game.utils.pathfinder.PathFinder;
  *
  */
 public class UnitUtils  {
+
 	final static String LOG = Constants.LOG_UNIT_UTILS;
-	
-	//vars for JSON conversion
-	protected Json json;
-	protected FileHandle handle;
-	protected String jsonPath; 
-	protected String jsonAsString;
-	protected static AssetManager am;
-	public static Panel[][] panelMatrix;
- 	
-	//arrays of newly created unit-related objs
-	public static Array<Unit> arrayUnits;
-	public static Array<Array<Unit>> playerUnits;
-	static Array<Panel> panelArr;
-	public static Array<UnitInfo> arrayUnitInfo;
-	public static UnitInfo uniInfo;
-
-
  
 	/** createUnit method
 	 * - creates units to be placed on grid
@@ -88,6 +65,7 @@ public class UnitUtils  {
 	 */
 	public static Unit createUnit(int id, float actorX, float actorY) {
 		Unit uni = new Unit();
+        AssetManager am = GameManager.assetManager;
 
 		//loops through unit info & finds right units
 		for (UnitInfo u: GameManager.unitInfoArr) {
@@ -113,11 +91,11 @@ public class UnitUtils  {
      * @param stage
      * @return
      */
-    public static Array<Unit> setUniPositions16x12(String faction, float posX, boolean flip, int player, MapStage stage){
+    public static Array<Unit> setUniPositions16x12(String faction, float posX, boolean flip, int player, GameStage stage){
         Array<Unit> unitsOnBoard = new Array<Unit>(); //array for units per faction
         Array<UnitInfo> unitInfoArr = GameManager.unitInfoArr;
         GameData.unitsInGame = new Array<Unit>(); //initailize array of units that will be in game
-        am = GameManager.assetManager;
+        AssetManager am = GameManager.assetManager;
 
         //counters to see how many to place on board
         int smallCount = 4;
@@ -133,7 +111,7 @@ public class UnitUtils  {
             UnitInfo uniInfo = unitInfoArr.get(i);
             String size = uniInfo.getSize();
             String uniFaction = uniInfo.getFaction();
-            //Gdx.app.log(LOG, " loading this units assets: " + uniInfo.getUnit());
+            //Gdx.app.log(LOG_PAUSE_MENU, " loading this units assets: " + uniInfo.getUnit());
 
             if (size.equals("32x32") && uniFaction.equals(faction) && smallCount > 0) {
                 Texture tex = getUnitStill(uniInfo, flip);
@@ -188,7 +166,8 @@ public class UnitUtils  {
 
     public static Texture getUnitStill(UnitInfo info, boolean flip){
 		String unitPicPath = info.getTexPaths().get(0);
-		
+        AssetManager am = GameManager.assetManager;
+
 		//NOTE: all units have a stillLeft.png file path
 		if (flip && Gdx.files.internal(unitPicPath).exists()){
 			unitPicPath = info.getTexPaths().get(1);
@@ -220,50 +199,51 @@ public class UnitUtils  {
 	 * 
 	 * @param time : for time split between frames
 	 * @param frameSheet : Texture to be split for animation
-	 * @param uni
+	 * @param width : determines columns to be used
+     * @param height : determines the height
 	 */
-	public static Animation animateUnit(float time, Texture frameSheet, Unit uni) {
+	public static Animation createAnimation(float time, Texture frameSheet, float width, float height) {
 		TextureRegion[] walkFrames;
-		int cols = (int) (frameSheet.getWidth()/uni.getWidth()); 
-		int rows = (int) (frameSheet.getHeight()/uni.getHeight());
+		int cols = (int) (frameSheet.getWidth()/width);
+		int rows = (int) (frameSheet.getHeight()/height);
 		int numTiles = rows * cols;
-		
-		if (uni.unitInfo.getSize().equals("32x32")) {
- 			TextureRegion[][] temp = TextureRegion.split(frameSheet, frameSheet.getWidth()/cols, frameSheet.getHeight()/rows);   
- 			
-			walkFrames = new TextureRegion[numTiles]; //creates texture region
-			int index = 0; 
-	        for (int i = 0; i < rows; i++) {
-	            for (int j = 0; j < cols; j++) {
-	                walkFrames[index++] = temp[i][j];
-	            }
-	        }//create the walkFrames textureRegion
-	        
-		}//set frames for animation if small unit
-		else if (uni.unitInfo.getSize().equals("64x32")) {
-			TextureRegion[][] temp = TextureRegion.split(frameSheet, frameSheet.getWidth()/cols, frameSheet.getHeight()/rows);   
-			walkFrames = new TextureRegion[numTiles]; //creates texture region
-			int index = 0;
-	        for (int i = 0; i < rows; i++) {
-	            for (int j = 0; j < cols; j++) {
-	                walkFrames[index++] = temp[i][j];
-	            }
-	        }//create the walkFrames textureRegion
-	        
-	        
-		}//if size is medium, 64x32
-		else {
- 
-			TextureRegion[][] temp = TextureRegion.split(frameSheet, frameSheet.getWidth()/cols, frameSheet.getHeight()/rows);   
-			walkFrames = new TextureRegion[numTiles]; //creates texture region
-			int index = 0;
-	        for (int i = 0; i < rows; i++) {
-	            for (int j = 0; j < cols; j++) {
-	                walkFrames[index++] = temp[i][j];
-	            }
-	        }//create the walkFrames textureRegion
-	        
-		}//if size is large 64x64
+        TextureRegion[][] temp = TextureRegion.split(frameSheet, frameSheet.getWidth()/cols, frameSheet.getHeight()/rows);
+
+        walkFrames = new TextureRegion[numTiles]; //creates texture region
+        int index = 0;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                walkFrames[index++] = temp[i][j];
+            }
+        }//create the walkFrames textureRegion
+//		if (uni.unitInfo.getSize().equals("32x32")) {
+//
+//
+//		}//set frames for animation if small unit
+//		else if (uni.unitInfo.getSize().equals("64x32")) {
+//			TextureRegion[][] temp = TextureRegion.split(frameSheet, frameSheet.getWidth()/cols, frameSheet.getHeight()/rows);
+//			walkFrames = new TextureRegion[numTiles]; //creates texture region
+//			int index = 0;
+//	        for (int i = 0; i < rows; i++) {
+//	            for (int j = 0; j < cols; j++) {
+//	                walkFrames[index++] = temp[i][j];
+//	            }
+//	        }//create the walkFrames textureRegion
+//
+//
+//		}//if size is medium, 64x32
+//		else {
+//
+//			TextureRegion[][] temp = TextureRegion.split(frameSheet, frameSheet.getWidth()/cols, frameSheet.getHeight()/rows);
+//			walkFrames = new TextureRegion[numTiles]; //creates texture region
+//			int index = 0;
+//	        for (int i = 0; i < rows; i++) {
+//	            for (int j = 0; j < cols; j++) {
+//	                walkFrames[index++] = temp[i][j];
+//	            }
+//	        }//create the walkFrames textureRegion
+//
+//		}//if size is large 64x64
 		
         Animation anim = new Animation(time, walkFrames); //final moveAnimation
  
@@ -276,6 +256,20 @@ public class UnitUtils  {
  * 
  * 
  */
+
+    /** since size is always ##x##, index of x is always 2
+     *
+     * @param size
+     * @return
+     */
+    public static float[] convertStringSizeToFloat(String size){
+        float posX = (float) Integer.parseInt(size.substring(0, 2));
+        float posY = (float) Integer.parseInt(size.substring(3));
+        float dimensions[] = {posX, posY}; //will be returning x & y value
+
+        return dimensions;
+    }
+
 	/** returns String value related to unit details
 	 * used in both LevelScreen & UnitScreen
 	 * 
@@ -318,7 +312,7 @@ public class UnitUtils  {
 				//make sure that only damage to unit enemies on board returned
 				if (u.unitInfo.getId() == id) {
 					String name =  u.unitInfo.getUnit(); //gets enemy name
-					String damage = Integer.toString(damageList[i]); //gets damage
+					String damage = Integer.toString(Math.abs(damageList[i])); //gets damage
 	 				unitDamage += name + " : " + damage + "\n";
 				}
 			}
@@ -370,19 +364,19 @@ public class UnitUtils  {
 	 * @param destY
 	 */
 	public static void unitDirection(Unit uni, float destX, float destY){
-		float oriX = uni.getOriginX();
-		float oriY = uni.getOriginY();
+		float oriX = uni.unitBox.getX();
+		float oriY = uni.unitBox.getY();
 		
-		if (movingLeft(oriX, oriY, destX, destY)){
+		if (isLeft(oriX, oriY, destX, destY)){
 			uni.state = UnitState.MOVE_LEFT;
 		}
-		else if (movingRight(oriX, oriY, destX, destY)){
+		else if (isRight(oriX, oriY, destX, destY)){
 			uni.state = UnitState.MOVE_RIGHT;
 		}
-		else if (movingUp(oriX, oriY, destX, destY)){
+		else if (isUp(oriX, oriY, destX, destY)){
 			uni.state = UnitState.MOVE_UP;
 		}
-		else if (movingDown(oriX, oriY, destX, destY)){
+		else if (isDown(oriX, oriY, destX, destY)){
 			uni.state = UnitState.MOVE_DOWN;
 		}
 		else
@@ -398,7 +392,7 @@ public class UnitUtils  {
 	 * @param destY
 	 * @return
 	 */
-	public static boolean movingRight(float oriX, float oriY, float destX, float destY){
+	public static boolean isRight(float oriX, float oriY, float destX, float destY){
 		return oriX < destX && oriY == destY;
 	}
 	
@@ -410,7 +404,7 @@ public class UnitUtils  {
 	 * @param destY
 	 * @return
 	 */
-	public static boolean movingLeft(float oriX, float oriY, float destX, float destY){
+	public static boolean isLeft(float oriX, float oriY, float destX, float destY){
 		return oriX > destX && oriY == destY;
 	}
 	
@@ -422,7 +416,7 @@ public class UnitUtils  {
 	 * @param destY
 	 * @return
 	 */
-	public static boolean movingUp(float oriX, float oriY, float destX, float destY){
+	public static boolean isUp(float oriX, float oriY, float destX, float destY){
 		return oriX == destX && oriY < destY;
 	}
 	
@@ -435,7 +429,7 @@ public class UnitUtils  {
 	 * @param destY
 	 * @return
 	 */
-	public static boolean movingDown(float oriX, float oriY, float destX, float destY){
+	public static boolean isDown(float oriX, float oriY, float destX, float destY){
 		return oriX == destX && oriY > destY;
 	}
 	
@@ -453,20 +447,20 @@ public class UnitUtils  {
 	 */
 	public static float getUnitDamage(Unit unit){
 		float damage = 0;
-		float damageTest = -1; //for testing damage of units (don't have current damage list)
+		//float damageTest = -1; //for testing attack mechanics of units
 		int[] damageList = unit.unitInfo.getDamageList();
 
         for (int i = 0; i < damageList.length; i++) {
             //find unit which is being fought
             if (unit.getUnitID() == i + 1) {
-                damage = -damageList[i];
+                damage = damageList[i];
                 Gdx.app.log(LOG, "damage is " + damage);
                 break;
             }
 
         }
-		
-		return damageTest; //TODO: get actual damage list
+
+		return damage;
 	}
 	
 /*---------------Getting Units from Stage---------------
@@ -476,41 +470,7 @@ public class UnitUtils  {
  * 
  * 	 
  */
-	
-	/** finds all units on the stage
-	 * 
-	 * @param actorsOnStage
-	 * @return
-	 */
-	public static Array<Unit> findAllUnits(Array<Actor> actorsOnStage){
-		Array<Unit> unitsOnStage = new Array<Unit>();
-		
-		for (Actor a : actorsOnStage) {
-			if (a instanceof Unit) {
-				Unit uni = (Unit)a;
-				unitsOnStage.add(uni);
-			}
-		}
- 		
-		return unitsOnStage;
-	}
 
-	/** finds all units of certain player
-	 * - finds all units of a certain player
-	 * 
-	 * @param player
-	 */
-	public static Array<Unit> findPlayerUnits(int player, Array<Unit> allUnits){
-		Array<Unit> playerUnits = new Array<Unit>();
- 		
-		for (Unit u : allUnits) {
-			if (u.getPlayer() == player) {
-				playerUnits.add(u);
-			}
-		}
-		
-		return playerUnits;
-	}
 	
 	/** finds the other units on the stage
 	 * 
@@ -570,21 +530,22 @@ public class UnitUtils  {
 			}
 		}
 	}
-	
-	
-	
-	public static Pixmap createPixmap(int width, int height, Color color) {
-		Pixmap pixmap = new Pixmap(width, height, Format.RGBA8888);
-
-		// pixmap.drawRectangle(200, 200, width, height);
-		pixmap.setColor(color);
-		pixmap.fill(); // fill with the color
-
-		return pixmap;
-	}
 
 
+    public static Label createDamageLabel(Unit unit, String damage){
 
+        float x = unit.getX()+unit.getWidth()-10;
+        float y = unit.getY()+unit.getHeight()-10;
+        Label.LabelStyle styleDamage = new Label.LabelStyle();
+        styleDamage.background = GameManager.gameSkin.getDrawable("dmgTex");
+        styleDamage.font = GameManager.gameSkin.getFont("damageFont");
+        styleDamage.fontColor = Color.RED;
+        Label label = new Label(damage, styleDamage);
+        label.setX(x);
+        label.setY(y);
+
+        return label;
+    }
 
     /** checks whether units are adjacent
      *
@@ -635,7 +596,7 @@ public class UnitUtils  {
 // 		//set unit actor positions on board
 //		for (int i = 0; i < unitInfoArr.size; i++) {
 //			UnitInfo uniInfo = unitInfoArr.get(i);
-//			//Gdx.app.log(LOG, " loading this units assets: " + uniInfo.getUnit());
+//			//Gdx.app.log(LOG_PAUSE_MENU, " loading this units assets: " + uniInfo.getUnit());
 //
 //			if (uniInfo.getSize().equals("32x32") && uniInfo.getFaction().equals(faction) &&
 //					smallCount > 0) {

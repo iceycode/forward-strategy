@@ -6,11 +6,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.data.GameData;
 import com.fs.game.maps.Panel;
-import com.fs.game.stages.MapStage;
+import com.fs.game.stages.GameStage;
 import com.fs.game.units.Unit;
 import com.fs.game.units.UnitInfo;
-import com.fs.game.utils.Constants;
-import com.fs.game.utils.GameManager;
+import com.fs.game.assets.Constants;
+import com.fs.game.assets.GameManager;
 import com.fs.game.utils.UnitUtils;
 
 import java.util.Random;
@@ -19,6 +19,7 @@ public class TestUtils {
 	
 	public static AssetManager am = GameManager.assetManager;
 	public static Array<Unit> p1Units;
+    public static Array<Unit> p2Units;
 	public static Array<UnitInfo> arrayUnitInfo = GameManager.unitInfoArr;
 
 	/** initializes unit creation, taking into account game board info
@@ -33,8 +34,8 @@ public class TestUtils {
 		
  
 		GameData.gamePanels = panelsOnStage;
-		GameData.gridMatrix = gridMatrix;
- 		//UnitUtils.panelMatrix = gridMatrix;
+		GameData.panelMatrix = gridMatrix;
+ 		//UnitUtils.panelMatrix = panelMatrix;
  
 		p1Units = new Array<Unit>(); //holds both players arrays of units
 
@@ -46,7 +47,7 @@ public class TestUtils {
 	 * Humans vs Reptoids
 	 * 
 	 */
-	public static void testBoardSetup2_16x12(MapStage stage) {
+	public static void testBoardSetup2_16x12(GameStage stage) {
  		String faction1 = "Human";
 		String faction2 = "Reptoid"; //not being used at the moment
 		String faction3 = "Arthroid";
@@ -67,13 +68,17 @@ public class TestUtils {
      *
      * @return
      */
-    public static void test2Units(MapStage stage){
+    public static void test2Units(GameStage stage){
+
+        p1Units = new Array<Unit>();
+        p2Units = new Array<Unit>();
+
         Random rand = new Random();
         int randUnit1 = rand.nextInt((4-1)+1)+1; //human units
         int randUnit2 = rand.nextInt((24-21)+21)+1; //arthroid units
 
         float posX1 = 6 * 32 + Constants.GRID_X;
-        float posY1 = 6 * 32 + Constants.GRID_Y;
+        float posY1 = 10 * 32 + Constants.GRID_Y;
         float posX2 = 10 * 32 + Constants.GRID_X;
         float posY2 = 10 * 32 + Constants.GRID_Y;
 
@@ -92,7 +97,7 @@ public class TestUtils {
         Unit unit1 = new Unit(tex1, posX1, posY1, unitInfo1);
         unit1.setPlayer(1); //sets the player
         stage.addActor(unit1);
-        p1Units.add(unit1);        //add to array containing each player's units
+        GameData.p1Units.add(unit1);        //add to array containing each player's units
 
 
         //player 2 is a reptoid unit
@@ -105,8 +110,9 @@ public class TestUtils {
         Texture tex2 = am.get(unitPicPath, Texture.class);
         Unit unit2 = new Unit(tex2, posX2, posY2, unitInfo);
         unit2.setPlayer(2);
+        unit2.setLock(true);
         stage.addActor(unit2);
-        p1Units.add(unit2);
+        GameData.p2Units.add(unit2);
 
 
     }

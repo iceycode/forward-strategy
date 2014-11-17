@@ -1,34 +1,103 @@
 package com.fs.game.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.fs.game.data.GameData;
+import com.fs.game.enums.GameState;
 import com.fs.game.main.MainGame;
-import com.fs.game.menus.MenuScreen;
 
 public class MainScreen implements Screen{
 	
 	final MainGame game;
 	
 	OrthographicCamera camera;
-	
 
-	public MainScreen(final MainGame game) {
+    protected GameState gameState;
+    public GameScreen gameScreen;
+    public MenuScreen menuScreen;
+
+
+    public MainScreen(final MainGame game) {
 		// TODO Auto-generated constructor stub
 		this.game = game;
-		
-		//load assets into textures
-		
-		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 800, 500);
-		
-	}//create camera objects here
+        gameState = GameState.START_SCREEN;
+
+        GameData.currPlayer = 1;
+
+        setupCamera();
+    }
+
+    public void setupCamera(){
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, 800, 500);
+    }
 
 	@Override
 	public void render(float delta) {
- 		Gdx.gl.glClearColor(0, 0, 0.2f, 1);
+
+        switch(gameState){
+            case START_SCREEN:
+                updateCurrent();
+                break;
+            case MAIN_MENU:
+                runMenu();
+                break;
+            case RUN:
+                runGame();
+                break;
+
+        }
+
+	}
+
+    public void updateCurrent(){
+
+        /*
+         * Sets whether the BACK button on Android should be caught.
+         * This will prevent the app from being paused.
+         * Will have no effect on the desktop.
+         */
+        Gdx.input.setCatchBackKey(true);
+
+        if (Gdx.input.isKeyPressed(Input.Keys.ENTER)) {
+            gameState = GameState.MAIN_MENU;
+        }
+
+        //a regular setup of what map stage will look like normally
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
+            //the default test setup; how game play will look with full array of units for both players
+            GameData.testType = 1;
+            gameState = GameState.RUN;
+
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) {
+            GameData.testType = 2;
+            gameState = GameState.RUN;
+
+        }
+
+        show();
+    }
+
+
+    public void runGame(){
+        gameScreen = new GameScreen(game);
+        game.setScreen(gameScreen);
+    }
+
+    public void runMenu(){
+        menuScreen = new MenuScreen(game);
+        game.setScreen(menuScreen);
+    }
+
+
+	@Override
+	public void show() {
+        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         camera.update();
@@ -41,67 +110,36 @@ public class MainScreen implements Screen{
         game.font.draw(game.batch, "For TEST setup 2 (4 units, 2 medium, 2 small), press Control-Left + 2", 75, 170);
         game.font.draw(game.batch, "For TEST setup (Human vs Retpoid), press Alt-left, 75, 140)", 75, 100);
         game.batch.end();
-
-        /*
-         * Sets whether the BACK button on Android should be caught. 
-         * This will prevent the app from being paused. 
-         * Will have no effect on the desktop.
-         */
-        Gdx.input.setCatchBackKey(true);
-
-        /*
-         * method for setting a new screen
-         */
-        if (Gdx.input.isTouched() || Gdx.input.isKeyPressed(Keys.ENTER)) {
-            game.setScreen(new MenuScreen(game));
-            hide();
-        }		
-
-        //a regular setup of what map stage will look like normally
-        if (Gdx.input.isKeyPressed(Keys.NUM_1)) {
-            //the default test setup; how game play will look with full array of units for both players
-            game.setScreen(new LevelScreen(game, 1));
-
-        }
-
-        if (Gdx.input.isKeyPressed(Keys.NUM_2))
-            game.setScreen(new LevelScreen(game, 2));
-	}
-
-	@Override
-	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void show() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void hide() {
-		// TODO Auto-generated method stub
+
 		
 	}
 
 	@Override
 	public void pause() {
-		// TODO Auto-generated method stub
+
 		
 	}
 
 	@Override
 	public void resume() {
-		// TODO Auto-generated method stub
-		
+        gameState = GameState.START_SCREEN;
 	}
 
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
-		
+        gameScreen.dispose();
+        menuScreen.dispose();
 	}
+
+
+    @Override
+    public void resize(int width, int height) {
+
+    }
+
 
 }

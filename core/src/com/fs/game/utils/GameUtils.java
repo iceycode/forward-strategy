@@ -4,30 +4,24 @@
 package com.fs.game.utils;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapTile;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.maps.MapActor;
 import com.fs.game.maps.Panel;
-import com.fs.game.stages.MapStage;
+import com.fs.game.stages.GameStage;
 import com.fs.game.units.Unit;
-import com.fs.game.units.UnitInfo;
 
 /** MapStage.java
  * 
@@ -37,7 +31,7 @@ import com.fs.game.units.UnitInfo;
  * @author Allen Jagoda
  *
  */
-public class MapUtils {
+public class GameUtils {
 	
 	//TextureRegion[][] tilesets;
 	//variables related to stage/screen placements
@@ -50,7 +44,7 @@ public class MapUtils {
 	
 	private static TiledMap tiledMap;
 	private static MapActor mapActor;
-	protected static MapStage stage;
+	protected static GameStage stage;
 	private static Table table; //creates a the table that stores layers
 //	static Array<MapActor> mapActorsArr;
 	public static MapActor[][] mapMatrix; //how maps appear on board in matrix form
@@ -62,17 +56,18 @@ public class MapUtils {
      *  configuration based on test (default 0; regular test/map)
      *
      * @param id
-     * @param test
-     * @return
+     * @return GameStage
      */
-	public static MapStage createMap(int id, int test) {
+	public static GameStage createMap(int id) {
 		//select the .tmx map to load
-		if (id == 1)
-			tiledMap = new TmxMapLoader().load("maps/justGrass.tmx");
+		if (id == 0)
+            tiledMap = new TmxMapLoader().load(Constants.MAP_1);
+        else if (id == 1)
+			tiledMap = new TmxMapLoader().load(Constants.MAP_2);
 		else if (id == 2)
-			tiledMap = new TmxMapLoader().load("maps/map2.tmx");
+			tiledMap = new TmxMapLoader().load(Constants.MAP_3);
 		else if (id == 3)
-			tiledMap = new TmxMapLoader().load("maps/map3.tmx");
+			tiledMap = new TmxMapLoader().load(Constants.MAP_3A);
 		else if (id == 4)
 			tiledMap = new TmxMapLoader().load(Constants.MAP_3B);
         //if test
@@ -84,12 +79,22 @@ public class MapUtils {
 		//tiledMap.getProperties();
 		
 		//creates a  stage
-		MapStage stage = new MapStage(tiledMap, test); //set the stage
+		GameStage stage = new GameStage(tiledMap); //set the stage
 
 		return stage;
 	}
- 
 
+    /** these map actors are touchable tiled map cells
+     *
+     */
+    public static void createMapActors(GameStage stage){
+        //for-each loop thru all layers of map
+        for (MapLayer layer : stage.tiledMap.getLayers()) {
+            TiledMapTileLayer tiledLayer = (TiledMapTileLayer)layer;
+            createActorsForLayer(tiledLayer, GameData.panelMatrix, stage);
+
+        } //gets all the actors from all the layers
+    }
 
 	/** creates actors on the layers
 	 * also sets the unit data
@@ -98,7 +103,7 @@ public class MapUtils {
 	 * @param panelMatrix
 	 * @param stage
 	 */
-    public static void createActorsForLayer(TiledMapTileLayer tiledLayer, Panel[][] panelMatrix, MapStage stage) {
+    public static void createActorsForLayer(TiledMapTileLayer tiledLayer, Panel[][] panelMatrix, GameStage stage) {
         mapMatrix = new MapActor[15*3][11*3]; //16x12 tiles  
         GameData.mapActorArr = new Array<MapActor>();
         GameData.gamePanels = new Array<Panel>();
@@ -120,22 +125,21 @@ public class MapUtils {
                  
                 mapActor.setBounds(posX, posY, 32, 32);
                 mapActor.setPosition(posX, posY);
-//                Gdx.app.log(LOG, "position of mapactor when created is (" + mapActor.getX() + ", " + mapActor.getY() + ")");
-//				Gdx.app.log(LOG, " layer's name is "+ tiledLayer.getName());
+//               Gdx.app.log(LOG_PAUSE_MENU, "position of mapactor when created is (" + mapActor.getX() + ", " + mapActor.getY() + ")");
+//				Gdx.app.log(LOG_PAUSE_MENU, " layer's name is "+ tiledLayer.getName());
 				
 
 				if (cell!= null && (!terrainType.equals("panels") && !terrainType.equals("grid"))) {
-					//Gdx.app.log(LOG, " layer property value is " + mapActor.property.get("Terrain"));
+					//Gdx.app.log(LOG_PAUSE_MENU, " layer property value is " + mapActor.property.get("Terrain"));
 	 				mapMatrix[x][y] = mapActor;
 	 				
 	 				stage.addActor(mapActor);
  	                stage.addActor(panelMatrix[x][y]); //also adds the panel
 	 				
- 
-                	GameData.gridMatrix[x][y].setTerrainType(terrainType); //set panel to terrain type of tile
- 	                GameData.gamePanels.add(GameData.gridMatrix[x][y]); //add to panel array
- 	                
- 	                GameData.mapActorArr.add(mapActor);	//add to a mapActor array TODO: create animation within tiled map
+                    //TODO: get rid of redundencies
+                	GameData.panelMatrix[x][y].setTerrainType(terrainType); //set panel to terrain type of tile
+ 	                GameData.gamePanels.add(GameData.panelMatrix[x][y]); //add to panel array
+ 	                GameData.mapActorArr.add(mapActor);	//add to a mapActor array
  				}
  
             }
@@ -191,11 +195,26 @@ public class MapUtils {
 		//setup the game board = stored in constants for pathfinding 
 		//set the elements which will be used on MapStage by Units
 		GameData.gamePanels = panelsOnStage;
-		GameData.gridMatrix = panelMatrix;
+		GameData.panelMatrix = panelMatrix;
  	}
 	
 	
-
+    public static void nextPlayer(Button p1Button, Button p2Button, GameStage stageMap){
+        if (GameData.currPlayer == 1) {
+            GameUtils.lockPlayerUnits(GameData.currPlayer, stageMap);  //lock these player units
+            p1Button.toggle();		//toggle checked stage (button is red)
+            GameData.currPlayer++;				//next player
+            GameUtils.unlockPlayerUnits(GameData.currPlayer, stageMap); 	//unlock player units
+            p2Button.toggle();	//toggle checked state p2
+        }
+        else {
+            GameUtils.lockPlayerUnits(GameData.currPlayer, stageMap);
+            p2Button.toggle();
+            GameData.currPlayer--;
+            GameUtils.unlockPlayerUnits(GameData.currPlayer, stageMap); 	//unlock player units
+            p1Button.toggle();
+        }
+    }
  
 /*--------------Units on stage-----------------
  * 
@@ -317,9 +336,9 @@ public class MapUtils {
      *
      * @param player
      */
-    public static void lockPlayerUnits(int player, MapStage stage) {
+    public static void lockPlayerUnits(int player, GameStage stage) {
         Unit u = new Unit(); //initialize constructor
-        Array<Unit> allUnits = MapUtils.findAllUnits(stage.getActors());
+        Array<Unit> allUnits = GameUtils.findAllUnits(stage.getActors());
 
         //look through all units to see if certain ones locked or not
         for (int i = 0; i < allUnits.size; i++) {
@@ -339,9 +358,9 @@ public class MapUtils {
      *
      * @param player
      */
-    public static void unlockPlayerUnits(int player, MapStage stage) {
+    public static void unlockPlayerUnits(int player, GameStage stage) {
         Unit u = new Unit(); //initialize constructor
-        Array<Unit> allUnits = MapUtils.findAllUnits(stage.getActors());
+        Array<Unit> allUnits = GameUtils.findAllUnits(stage.getActors());
 
         //look through all units to see if certain ones locked or not
         for (int i = 0; i < allUnits.size; i++) {
@@ -361,7 +380,7 @@ public class MapUtils {
     /** clears the stage of any active (selected) panels
      *
      */
-    public static void clearBoard(MapStage stage){
+    public static void clearBoard(GameStage stage){
         for (Panel p : stage.getPanelArray()){
             if (p.selected || p.moveableTo){
                 p.selected = false;
@@ -453,14 +472,14 @@ public class MapUtils {
 	/**
 	 * @return the stage
 	 */
-	public MapStage getStage() {
+	public GameStage getStage() {
 		return stage;
 	}
 
 	/**
 	 * @param stage the stage to set
 	 */
-	public void setStage(MapStage stage) {
+	public void setStage(GameStage stage) {
 		this.stage = stage;
 	}
 

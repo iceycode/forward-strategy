@@ -4,10 +4,11 @@
 package com.fs.game.menus;
 
 import com.badlogic.gdx.Screen;
+import com.fs.game.enums.GameState;
 import com.fs.game.main.MainGame;
 
 /** MapScreen.java
- * 
+ *  TODO: add more maps
  * implements Screen to show menu of maps to select
  * 
  * 
@@ -16,6 +17,8 @@ import com.fs.game.main.MainGame;
  */
 public class MapScreen implements Screen {
 	final MainGame game;
+
+    GameState gameState;
 	
 	/**
 	 * 
@@ -30,8 +33,9 @@ public class MapScreen implements Screen {
 	 */
 	@Override
 	public void render(float delta) {
-		// TODO Auto-generated method stub
-		
+		//
+        if (gameState == GameState.MAP_SELECT)
+		    show();
 	}
 
 	/* (non-Javadoc)
@@ -39,8 +43,7 @@ public class MapScreen implements Screen {
 	 */
 	@Override
 	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	/* (non-Javadoc)
@@ -48,8 +51,7 @@ public class MapScreen implements Screen {
 	 */
 	@Override
 	public void show() {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	/* (non-Javadoc)
@@ -57,8 +59,7 @@ public class MapScreen implements Screen {
 	 */
 	@Override
 	public void hide() {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	/* (non-Javadoc)
@@ -66,8 +67,6 @@ public class MapScreen implements Screen {
 	 */
 	@Override
 	public void pause() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
@@ -75,8 +74,7 @@ public class MapScreen implements Screen {
 	 */
 	@Override
 	public void resume() {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	/* (non-Javadoc)
@@ -84,8 +82,7 @@ public class MapScreen implements Screen {
 	 */
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 }

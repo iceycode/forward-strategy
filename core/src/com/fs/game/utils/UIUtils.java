@@ -7,79 +7,53 @@
 
 package com.fs.game.utils;
 
-import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Align;
-import com.badlogic.gdx.utils.Array;
-import com.fs.game.maps.Panel;
-import com.fs.game.units.Unit;
-import com.fs.game.unused_old_classes.TextureUtils;
+import com.fs.game.assets.Constants;
+import com.fs.game.assets.GameManager;
+import com.fs.game.data.GameData;
+import com.fs.game.stages.GameStage;
 
 
-public class HUDUtils {
+public class UIUtils {
 	
 	final String LOG = "InfoPanel log : ";
 	
 	public static Skin skin = GameManager.uiSkin; //get skin from GameManager
-	
-	Texture infoLayer;
-	Texture infoBackPan;
-	TextButton exitButton;
-	TextButton panel;	
-	
-    ShapeRenderer shapeRenderer;
-    
-	Vector2 vec1 = new Vector2(10,0);
-	Vector2 vec2 = new Vector2(400, 100);
-	
-	static int rectHeight = 100;
-	static int rectWidth = (int) Constants.GRID_WIDTH_B;
- 
-    
-	//the various widgets, actors, etc used for UI
-	Table infoTable; //used to create table 
-    Window infoWin; 
-	Button infoButton; //button object for Table
-	Image unitPic;
-	Dialog unitDetails;
-	Dialog unitMoves;
-	ScrollPane enemyUnitsPane;
-			 
-	//TextureRegion upRegion = ...
-	//TextureRegion downRegion = ...
-	BitmapFont buttonFont;
-  
- 	Panel panelActor;
-	//Unit unitActor;
-	InputProcessor inputProcessor;
-	Array<Panel> gridActors;
-
-	protected InputListener unitListener;
-	protected InputListener turnListener;
- 
 
 
- 
+
+
+    public static Table createUnitScrollTable(Label unitDetail, Label unitDamage){
+        //individual ScrollPane for each Label sets widget to Table to display:
+        //UnitInfo
+        Table infoTable = new Table();
+        infoTable.add(unitDetail).width(unitDetail.getWidth()).height(unitDetail.getHeight());
+
+        //unit damageList
+        Table damTable = new Table();
+        damTable.add(unitDamage).width(unitDamage.getWidth()).height(unitDamage.getHeight());
+
+        //the scrollpanes
+        ScrollPane infoScroll = createInfoScroll(infoTable, Constants.INFO_X, Constants.INFO_Y, Constants.INFO_W, Constants.INFO_H);
+        ScrollPane damageScroll = createInfoScroll(damTable, Constants.INFO_X + Constants.INFO_W, Constants.INFO_Y, Constants.INFO_W, Constants.INFO_H);
+
+        //scrollTable is the Table which holds the ScrollPane objects
+        Table scrollTable = createInfoTable(infoScroll, damageScroll);
+        return scrollTable;
+    }
+
+
  
 	/** creates a scroll pane for insertion into the main info panel table
 	 * 
@@ -106,7 +80,7 @@ public class HUDUtils {
 		return unitScrollPane;
 	}
 
-	
+
  
 	/** creates a timer as a Label
 	 * 
@@ -145,7 +119,6 @@ public class HUDUtils {
 		scrollTable.setBounds(Constants.INFO_X, Constants.INFO_Y, Constants.INFO_W*2, Constants.INFO_H);
 		
 		//scrollTable.addActor(unitDetail);
- 		
 		//scrollTable.addActor(unitDamageList);
   		
 		return scrollTable;
@@ -236,7 +209,7 @@ public class HUDUtils {
 	 *
 	 * @return
 	 */
-	public static TextButton createGoButton(){
+	public static TextButton createGoButton(final GameStage stageMap){
 		TextButtonStyle style = new TextButtonStyle();
 		style.up = skin.getDrawable("lets-go-tex");
 		style.down = skin.getDrawable("lets-go-tex");
@@ -247,6 +220,14 @@ public class HUDUtils {
 
 		goButton.setBounds(100, 100, 32, 32);
 
+        //add a listener to the go button so player turn changes
+        goButton.addListener(new ActorGestureListener(){
+            @Override
+            public void touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                GameData.finishTurn = true;  //player is manually finished turn (timer did not reset)
+                GameUtils.clearBoard(stageMap);	//clears board of selected panels
+            }
+        });
 
 		return goButton;
 
@@ -256,22 +237,75 @@ public class HUDUtils {
      * - pops up
      *
      */
-    public static Window popUpInfo(ScrollPane pane, float oriX, float oriY, float width, float height) {
+    public static Window popUpInfo(Table scrollTable, float oriX, float oriY, float width, float height) {
         //sets the window style
         WindowStyle winStyle = new WindowStyle();
         winStyle.titleFont = skin.getFont("default-small");
         winStyle.titleFont.scale(.01f); //scale it down a bit
         winStyle.stageBackground = skin.getDrawable("infoPane");
         //create the window
-        Window win = new Window("Details", winStyle);
+        Window win = new Window("Unit Information", winStyle);
 
-        win.add(pane).fill().expand();
-        win.addActor(pane);
+        win.add(scrollTable).fill().expand();
+        win.addActor(scrollTable);
         //+/- 64 accounts for timer width (64 pix)
-        win.setBounds(Constants.GAMEBOARD_X, 0, width-64, height);
+        win.setBounds(Constants.GAMEBOARD_X, 0, width, height);
         win.setFillParent(false);
 
         return win;
+    }
+
+
+    /** creates a confirmation dialog (used in unitscreen to confirm chosing unit
+     *
+     * @param dialogType
+     * @param label
+     * @param styleText
+     * @return
+     */
+    public static Dialog confirmDialog(String dialogType, String label, String styleText, Stage stage) {
+        //create dialog box
+        final Dialog dialogUnit = new Dialog("", skin, dialogType) {
+            @Override
+            protected void result (Object chosen) {
+                System.out.println("Chose unit");
+            }
+        };
+        dialogUnit.text(label);
+
+        dialogUnit.padTop(10).padBottom(25);
+        dialogUnit.getContentTable().add(label).width(850).row();
+        dialogUnit.getButtonTable().padTop(50);
+
+        //adding yes/no buttons
+        TextButton textBtn = new TextButton("Yes",skin, styleText);
+        dialogUnit.button(textBtn, true);
+        textBtn = new TextButton("No", skin, styleText);
+        dialogUnit.button(textBtn, false);
+
+        dialogUnit.key(Keys.ENTER, true).key(Keys.ESCAPE, false).show(stage);
+
+        dialogUnit.layout();
+        //dialogUnit.show(stage);
+
+        return dialogUnit;
+
+    }
+
+    /** creates a simple label using specified stype string
+     *
+     * @param labelText : the text that goes with this label
+     * @param styleName : obatained from GameManager.uiSkin
+     * @return
+     */
+    public static Label createLabel(String labelText, String styleName){
+        Label label = new Label(labelText, skin, styleName);
+        label.setWrap(true); //need this for dialogs
+        label.setFontScale(.9f);
+        label.setAlignment(Align.center);
+        label.setLayoutEnabled(true);
+
+        return label;
     }
 
     /** creates a ScrollPane just for unit info

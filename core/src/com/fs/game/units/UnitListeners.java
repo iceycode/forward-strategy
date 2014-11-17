@@ -2,11 +2,10 @@ package com.fs.game.units;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Event;
-import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
-import com.fs.game.utils.Constants;
+import com.fs.game.assets.Constants;
 import com.fs.game.utils.UnitUtils;
 
 public class UnitListeners {
@@ -28,22 +27,20 @@ public class UnitListeners {
 			
 			Gdx.app.log(LOG, " unit rectangle position is: " + 
 						"(" + currUnit.getUnitBox().x + ", " + currUnit.getUnitBox().y + ")");
- 
 
-			if (currUnit.clickCount < 2 && (!currUnit.lock || !currUnit.done)){
+			if (currUnit.clickCount < 2 && !currUnit.lock && !currUnit.done){
 				if (currUnit.otherUnits!=null)
 					UnitUtils.deselectUnits(currUnit.otherUnits);
 
-				currUnit.chosen = true;
                 currUnit.clickCount++;
-				Gdx.app.log(LOG, "unit selected (touchDown - ActorGestureListener)");
+				currUnit.chosen = true;
+				Gdx.app.log(LOG, currUnit.getName() + " selected (touchDown - ActorGestureListener)");
  			}
-            else{
+            else if (currUnit.clickCount >= 2 && !currUnit.lock && !currUnit.done){
                 currUnit.chosen = false;
-                //currUnit.hideMoves();
-                Gdx.app.log(LOG, "unit unselected (touchDown - ActorGestureListener)");
                 currUnit.clickCount = 0; //reset clickCount
             }
+
  		}
 		
 		@Override
@@ -54,14 +51,13 @@ public class UnitListeners {
  				currUnit.chosen = false;
                 currUnit.clickCount = 0; //reset clickCount
 				//currUnit.hideMoves();
-				Gdx.app.log(LOG, "unit unselected (touchUp - ActorGestureListener)");
+				Gdx.app.log(LOG, currUnit.getName() +" UNSELECTED (touchUp - ActorGestureListener)");
 			}
+//            else if (currUnit.clickCount != 2 && ){
+//
+//            }
 			
 		}
-
-
-
-
 	};
 
 
@@ -195,36 +191,38 @@ public class UnitListeners {
 
 //
 //
-//	/** -----InputListener for unit
-//	 *
-//	 * - not currently used
-//	 *
-//	 *  InputListener for unit
-//	 */
-//	public static final InputListener unitInputListener = new InputListener(){
-//				@Override
-//			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-//				Unit uni = (Unit)event.getTarget(); //sets this as Unit which recieved this event
-//
-//				//UnitUtils.checkBoard(uni); //checks board to see whether other units selected, if so, resets them
-//
-//				uni.clickCount++; //for tracking user interaction
-// 				System.out.println("selected unit");
-//				uni.chosen = true; //sets unit as not chosen, seen in act method as false
-//
-//				return true;
-//			}//
-//
-//			@Override
-//			public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-//				Unit uni = (Unit)event.getTarget(); //sets this as Unit which recieved this event
-//
-//				if (uni.clickCount == 2) {
-//					System.out.println("deselected unit");
-//					uni.chosen = false; //sets unit as not chosen, seen in act method as false
-//					uni.clickCount = 0; //reset clickCount
-//				}
-//			}
-//
-//	};
+	/** -----InputListener for unit
+	 *
+	 * - not currently used
+	 *
+	 *  InputListener for unit
+	 */
+	public static final InputListener unitInputListener = new InputListener(){
+				@Override
+			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+				Unit uni = (Unit)event.getTarget(); //sets this as Unit which recieved this event
+
+				//UnitUtils.checkBoard(uni); //checks board to see whether other units selected, if so, resets them
+
+				uni.clickCount++; //for tracking user interaction
+				System.out.println("selected unit");
+				uni.chosen = true; //sets unit as not chosen, seen in act method as false
+
+				return true;
+			}//
+
+			@Override
+			public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+				Unit uni = (Unit)event.getTarget(); //sets this as Unit which recieved this event
+
+				if (uni.clickCount == 2) {
+					System.out.println("deselected unit");
+					uni.chosen = false; //sets unit as not chosen, seen in act method as false
+					uni.clickCount = 0; //reset clickCount
+				}
+			}
+
+
+
+	};
 }

@@ -52,7 +52,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.maps.Panel;
 import com.fs.game.units.Unit;
-import com.fs.game.utils.Constants;
+import com.fs.game.assets.Constants;
 
 public class PathFinder {
 	
@@ -77,19 +77,19 @@ public class PathFinder {
  
  		openList = new Array<GridNode>();
 		closedList = new Array<GridNode>();
-		
-		 
+
+
 		Vector2 startVec = new Vector2(unit.getX(), unit.getY());
 		Vector2 targetVec = target.getLocation();
-		
+
 		GridNode end = new GridNode(targetVec, null, null);
 		GridNode start = new GridNode(startVec, null , end);
- 		
-		Gdx.app.log(LOG, " START is at : " + NodeUtils.getBoardPositions(start) + 
+
+		Gdx.app.log(LOG, " START is at : " + NodeUtils.getBoardPositions(start) +
 				", TARGET is at : " + NodeUtils.getBoardPositions(end));
- 		
+
 		//create the map of nodes unit needs to navigate
-		gridNodeGraph = NodeUtils.createNodeMap(uni, start, end); 
+		gridNodeGraph = NodeUtils.createNodeMap(uni, start, end);
 		
 		//initialize open & closed lists
 		openList.add(start);	//add parent to open list

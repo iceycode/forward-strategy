@@ -1,17 +1,74 @@
 package com.fs.game.unused_old_classes;
 
-import com.badlogic.gdx.utils.Array;
-import com.fs.game.maps.Panel;
-import com.fs.game.units.Unit;
-
 /** Contains unused methods from various classes
  *  methods are commented out
  * Created by Allen on 11/6/14.
  *
  * @deprecated
+ *
+ *
  */
 public class OldMethods {
 
+    /**
+     * @deprecated
+     */
+    public OldMethods(){
+
+    }
+
+
+    //FROM old unitscreen
+    //	/** creates the listeners for units, panel & infopanel
+//	 *
+//	 */
+//	public ChangeListener createChangeListener() {
+//
+//		ChangeListener unitChangeListener = new ChangeListener() {
+//			private int clickCount = 0;
+//
+//			@Override
+//			public void changed(ChangeEvent event, Actor actor) {
+//				int id = Integer.parseInt(event.getTarget().toString());
+//
+//				clickCount++;
+//
+//				Gdx.app.log(LOG, " clicked unit " + "unit & button id: " + id +
+//						", clickcount : " + clickCount);
+//
+//				//show dialogs based on click count
+//				if (clickCount == 1) {
+//					Dialog dia = createDialogBox(1);
+//					dia.show(stage);
+//				}
+//
+//
+//				if (clickCount == 2 && choseUnit == true) {
+//					Dialog dia = createDialogBox(2);
+//					dia.show(stage);
+// 				}
+//
+//				//gets the unit id from image buttons name
+//				if (choseUnit == true) {
+//					if (!unitForPlayer.contains(id, true)) {
+//						unitForPlayer.add(id);
+//						this.clickCount = 0;
+//					}//only adds if not already there
+//				}
+//
+//				if (choseUnit == false) {
+//					if (unitForPlayer.contains(id, true)) {
+//						unitForPlayer.removeValue(id, true);
+//						clickCount = 0;
+//					}//only adds if not already there
+//				}
+//
+//				Gdx.app.log(LOG, "Current size of array: " + unitForPlayer.size);
+//			}
+//		};
+//
+//		return unitChangeListener;
+//	}
 
 
     //
@@ -211,14 +268,14 @@ public static void createMapCam() {
 
 //*************TABLE GRID******w************
 makes a Table which can be added to stage
-	public static Table createPanelTable(Panel[][] gridMatrix) {
+	public static Table createPanelTable(Panel[][] panelMatrix) {
 		Table table = new Table();
 		table.setFillParent(false);
 
 		for(int x = 0; x < Constants.ROWS; x++)  {
 			for (int y = 0; y < Constants.COLS; y++ ) {
 				// final Panel p = new Panel(stage, tiles, x, y);
-				Panel panelActor = gridMatrix[x][y];
+				Panel panelActor = panelMatrix[x][y];
 				//panelActor.addListener(MapUtils.createPanelListener(panelActor));
 				table.add(panelActor).width(panelActor.getWidth()).height(panelActor.getHeight());
 				table.addActor(panelActor);
@@ -391,7 +448,7 @@ makes a Table which can be added to stage
 //
 //        //set the elements which will be used on stage & by Unit actors
 //        GameData.gamePanels = panelsOnStage;
-//        GameData.gridMatrix = panelMatrix;
+//        GameData.panelMatrix = panelMatrix;
 //    }
 
 }

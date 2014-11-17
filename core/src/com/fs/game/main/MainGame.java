@@ -1,37 +1,40 @@
 package com.fs.game.main;
 
-import com.badlogic.gdx.Game; 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.fs.game.assets.Constants;
+import com.fs.game.assets.GameManager;
+import com.fs.game.enums.GameState;
 import com.fs.game.menus.FactionScreen;
 import com.fs.game.menus.MapScreen;
-import com.fs.game.menus.MenuScreen;
+import com.fs.game.menus.UnitsScreen;
 import com.fs.game.screens.MainScreen;
-import com.fs.game.utils.Constants;
-import com.fs.game.utils.GameManager;
+import com.fs.game.screens.MenuScreen;
 
 public class MainGame extends Game{
 	
 	//the main game batch & font
 	public SpriteBatch batch;
 	public BitmapFont font;
-	
- 	public AssetManager manager; //manages assets game
+    public TextureRegion splashTitle; //the splash screen title
+    public AssetManager manager; //manages assets game
  	
 	/*All the screens that will be used*/
 	public MainScreen mainScreen;
-	public MenuScreen menuScreen;
-	public MapScreen mapScreen;
-	public FactionScreen factionScreen;
-  	
-	public TextureRegion splashTitle; //the splash screen title
- 
-	int player = 0; //stores player turn num
-	String faction = ""; //stores the player faction
+    public MenuScreen menuScreen;
+
+
+
+    protected GameState gameState;
+    public FactionScreen factionScreen;
+    public MapScreen mapScreen;
+    public UnitsScreen unitsScreen;
+
  
 	@Override
 	public void create() {
@@ -40,15 +43,19 @@ public class MainGame extends Game{
  		
 		//the splash screen while assets load
  		splashTitle = new TextureRegion(new Texture(Gdx.files.internal(Constants.TITLE_PATH)));
- 		
- 		mainScreen = new MainScreen(this);
- 		menuScreen = new MenuScreen(this);
-        factionScreen = new FactionScreen(this);
-  		
 		//creates spritebatch
         batch = new SpriteBatch();
-        //Use LibGDX's default Arial font.
-        font = new BitmapFont();
+        font = new BitmapFont(); //libgdx default is Arial font.
+
+
+
+    }
+
+    public void setupScreens(){
+        mainScreen = new MainScreen(this);
+        menuScreen = new MenuScreen(this);
+        factionScreen = new FactionScreen(this);
+
     }
 
     @Override
@@ -64,8 +71,12 @@ public class MainGame extends Game{
     	if (manager.update()) {
             super.render(); //important!
     	}
-    	else
+    	else{
+            setupScreens();
             this.setScreen(mainScreen);
+
+
+        }
     	
     	float progress = manager.getProgress();
     	Gdx.app.debug("output", "current AM progress" + progress);
@@ -82,14 +93,14 @@ public class MainGame extends Game{
 	/**
 	 * @return the manager1
 	 */
-	public AssetManager getManager1() {
+	public AssetManager getManager() {
 		return manager;
 	}
 
 	/**
 	 * @param manager1 the manager1 to set
 	 */
-	public void setManager1(AssetManager manager1) {
+	public void setManager(AssetManager manager1) {
 		this.manager = manager1;
 	}
  
@@ -101,82 +112,35 @@ public class MainGame extends Game{
 		return mainScreen;
 	}
 
-	/**
-	 * @param main the main to set
-	 */
-	public void setMainScreen(MainScreen mainScreen) {
-		this.mainScreen = mainScreen;
-	}
 
-	/**
-	 * @return the menuScreen
-	 */
-	public MenuScreen getMenuScreen() {
-		return menuScreen;
-	}
+    public GameState getGameState() {
+        return gameState;
+    }
 
-	/**
-	 * @param menuScreen the menuScreen to set
-	 */
-	public void setMenuScreen(MenuScreen menuScreen) {
-		this.menuScreen = menuScreen;
-	}
+    public void setGameState(GameState gameState) {
+        this.gameState = gameState;
+    }
 
-	/**
-	 * @return the mapScreen
-	 */
-	public MapScreen getMapScreen() {
-		return mapScreen;
-	}
 
-	/**
-	 * @param mapScreen the mapScreen to set
-	 */
-	public void setMapScreen(MapScreen mapScreen) {
-		this.mapScreen = mapScreen;
-	}
 
-	/**
-	 * @return the factionScreen
-	 */
-	public FactionScreen getFactionScreen() {
-		return factionScreen;
-	}
+    public void setMainScreen(MainScreen mainScreen) {
+        this.mainScreen = mainScreen;
+    }
 
-	/**
-	 * @param factionScreen the factionScreen to set
-	 */
-	public void setFactionScreen(FactionScreen factionScreen) {
-		this.factionScreen = factionScreen;
-	}
- 
-	/**
-	 * @return the player
-	 */
-	public int getPlayer() {
-		return player;
-	}
+    public MenuScreen getMenuScreen() {
+        return menuScreen;
+    }
 
-	/**
-	 * @param player the player to set
-	 */
-	public void setPlayer(int player) {
-		this.player = player;
-	}
+    public void setMenuScreen(MenuScreen menuScreen) {
+        this.menuScreen = menuScreen;
+    }
 
-	/**
-	 * @return the faction
-	 */
-	public String getFaction() {
-		return faction;
-	}
+    public FactionScreen getFactionScreen() {
+        return factionScreen;
+    }
 
-	/**
-	 * @param faction the faction to set
-	 */
-	public void setFaction(String faction) {
-		this.faction = faction;
-	}
-	
+    public void setFactionScreen(FactionScreen factionScreen) {
+        this.factionScreen = factionScreen;
+    }
 
 }

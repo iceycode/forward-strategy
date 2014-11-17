@@ -9,7 +9,6 @@ package com.fs.game.maps;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -18,9 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
-import com.fs.game.units.Unit;
-import com.fs.game.utils.GameManager;
-import com.fs.game.utils.MapUtils;
+import com.fs.game.assets.GameManager;
 
 public class Panel extends Actor{
 
@@ -89,7 +86,6 @@ public class Panel extends Actor{
 
 				if (clickCount == 1) {
 					Gdx.app.log(LOG, "panel " +	getName() + " is now being viewed");
- 
 					selected = true;
  				}
 				

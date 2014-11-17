@@ -1,3 +1,6 @@
+//for adding non-mavenized file dependencies see:
+//    https://github.com/libgdx/libgdx/wiki/Dependency-management-with-Gradle#file-dependencies
+
 buildscript {
     repositories {
         mavenCentral()
@@ -8,6 +11,8 @@ buildscript {
         classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.3'
         classpath 'com.android.tools.build:gradle:0.12+'
         classpath 'com.github.jtakakura:gradle-robovm-plugin:0.0.7'
+
+        //compile fileTree(dir: 'libs', include: '*.jar')
     }
 }
 
@@ -40,6 +45,7 @@ project(":desktop") {
         compile "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
         
         compile "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+
     }
 }
 
@@ -64,6 +70,9 @@ project(":android") {
         natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi"
         natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi-v7a"
         natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86"
+
+        //compile fileTree(dir: 'libs', include: '*.jar') //appwarp dependency location for android
+
     }
 }
 
@@ -112,6 +121,7 @@ project(":core") {
         
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
 
+        compile fileTree(dir: 'libs', include: '*.jar')
     }
 }
 

@@ -8,15 +8,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapTile;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.fs.game.utils.GameManager;
 
 /** MapActor extends Actor
  * the main actor that gets created on new stage
@@ -33,12 +29,7 @@ public class MapActor extends Actor {
 	TiledMapTileLayer tiledLayer; //the tile layer
 	TiledMapTileLayer.Cell cell; //will become an actor
 	
- 	public MapProperties property; 
- 	
- 	//for unit movement selection
- 	Texture panelUp;
- 	Texture panelDown;
- 	Texture panelView;
+ 	public MapProperties property;
  	
  	Texture panelTexture; //current tile Panel texture (changes)
  	Texture mapTexture;	//current map texture
@@ -51,21 +42,19 @@ public class MapActor extends Actor {
 	Texture texture; //this map tiles textures
  
     //TiledMap actor listeners
-    protected EventListener eventListener;
-    protected InputListener inputListener;
     protected ClickListener clickListener;
     
     //A* scores for pathfinding algorithm
-  	public float totalCost; //cost from start + heuristic
-  	public float costFromStart;//distance from start panel to current panel
-  	public float heuristic;//estimated distance from current panel to goal
+//  	public float totalCost; //cost from start + heuristic
+//  	public float costFromStart;//distance from start panel to current panel
+//  	public float heuristic;//estimated distance from current panel to goal
     
-    public MapActor(TiledMapTile tile, float actorX, float actorY) {
-    	
-     	this.setX(actorX);
-    	this.setY(actorY);
-     }
-    
+//    public MapActor(TiledMapTile tile, float actorX, float actorY) {
+//
+//     	this.setX(actorX);
+//    	this.setY(actorY);
+//     }
+//
     /** creates a clickable actor from the TiledMap cells
      * 
      * @param tiledMap
