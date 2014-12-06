@@ -1,64 +1,112 @@
 package com.fs.game.tests;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.fs.game.assets.Assets;
+import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.maps.Panel;
 import com.fs.game.stages.GameStage;
 import com.fs.game.units.Unit;
 import com.fs.game.units.UnitInfo;
-import com.fs.game.assets.Constants;
-import com.fs.game.assets.GameManager;
 import com.fs.game.utils.UnitUtils;
 
 import java.util.Random;
 
 public class TestUtils {
-	
-	public static AssetManager am = GameManager.assetManager;
-	public static Array<Unit> p1Units;
-    public static Array<Unit> p2Units;
-	public static Array<UnitInfo> arrayUnitInfo = GameManager.unitInfoArr;
 
-	/** initializes unit creation, taking into account game board info
-	 * 
-	 * @param panelsOnStage
-     * @param gridMatrix
-	 */
-	public static void initializeUnits(Array<Panel> panelsOnStage, Panel[][] gridMatrix) {
-		am = GameManager.assetManager;
-		
-		am.getAssetNames(); //an array containing file name info
-		
- 
-		GameData.gamePanels = panelsOnStage;
-		GameData.panelMatrix = gridMatrix;
- 		//UnitUtils.panelMatrix = panelMatrix;
- 
-		p1Units = new Array<Unit>(); //holds both players arrays of units
+    /** A method for testing multiplayer setup
+     * Sets up player 1 & 2 setup (just for testing multiplayer)
+     * random factions (currently not random units)
+     *
+     * @param stage
+     */
+    public static Array<Unit> randomMultiplayerSetup(int player, String faction, GameStage stage){
+        Array<Unit> playerUnits;
+        Array<UnitInfo> unitInfoArray = UnitUtils.Setup.getDefaultUnits(faction);
 
-		//get the array unit info from unit textures
+        if (player == 1){
+            playerUnits = UnitUtils.Setup.setupUnits(unitInfoArray, player,
+                    Constants.UNITS_POS_LEFT, stage);
 
- 	}
+            GameData.unitsInGame.put(1, playerUnits);
+            stage.p1Units = playerUnits;
+        }
+        else{
+            playerUnits = UnitUtils.Setup.setupUnits(unitInfoArray, player,
+                    Constants.UNITS_POS_RIGHT, stage);
+
+            GameData.unitsInGame.put(2, playerUnits);
+            stage.p2Units = playerUnits;
+        }
+
+        return playerUnits;
+    }
+
+    public static Array<Unit> randomMultiplayerSetup1(int player, String name, float[][] positions, String faction, GameStage stage){
+        Array<Unit> playerUnits;
+        Array<UnitInfo> unitInfoArray = UnitUtils.Setup.getDefaultUnits(faction);
+
+        playerUnits = UnitUtils.Setup.setupUnits(name, unitInfoArray, player, positions, stage);
+
+        GameData.unitsInGame.put(player, playerUnits);
+        stage.p1Units = playerUnits;
+
+        return playerUnits;
+    }
+
+    public static void initialUnitSetup_Multi(String factionP1, String factionP2, GameStage stage){
+
+    }
+
+
+
+
+    public static void testJsonFile(int player, int score, String name, Array<Unit> units, GameStage stage){
+        Json json = new Json();
+
+    }
+
+
+
+//    public static Array<Integer> randIndices(int[] indices){
+//        Random rand = new Random();
+//        ArrayList listIndices = new ArrayList(Arrays.asList(indices));
+//        Array<Integer> randIndices = new Array<Integer>();
+//
+//        while (listIndices.size()> 0){
+//
+//            int in = rand.nextInt(listIndices.toArray().length);
+//
+//            if (listIndices.contains(in)){
+//                listIndices.remove(in);
+//                randIndices.add(in);
+//            }
+//
+//        }
+//
+//        return randIndices;
+//    }
 
 	/** testSetup1
-	 * Humans vs Reptoids
+	 * Humans vs Arthroids
 	 * 
 	 */
 	public static void testBoardSetup2_16x12(GameStage stage) {
- 		String faction1 = "Human";
-		String faction2 = "Reptoid"; //not being used at the moment
-		String faction3 = "Arthroid";
-		
-		float posXBL = Constants.GAMEBOARD_X; //x coordinate bottom left
-		float posXBR = Constants.GAMEBOARD_X + 32*15; //(208f + 32f*15 ) x coordinate bottom right
+ 		String faction1 = "Human"; //player 1s faction
+		String faction2 = "Arthroid"; //player 2's faction
 
-        GameData.p1Units = UnitUtils.setUniPositions16x12(faction1, posXBL, false, 1, stage);
-        GameData.p2Units = UnitUtils.setUniPositions16x12(faction3, posXBR, true, 2, stage);
-        GameData.unitsInGame = p1Units;
-		
+
+        Array<UnitInfo> p1UnitInfo = UnitUtils.Setup.getDefaultUnits(faction1);
+        Array<UnitInfo> p2UnitInfo = UnitUtils.Setup.getDefaultUnits(faction2);
+
+        stage.p1Units = UnitUtils.Setup.setupUnits(p1UnitInfo, 1, Constants.UNITS_POS_LEFT, stage);
+        stage.p2Units = UnitUtils.Setup.setupUnits(p2UnitInfo, 2, Constants.UNITS_POS_RIGHT, stage);
+
+        //adds to all units array in game data
+        GameData.unitsInGame.put(1, stage.p1Units);
+        GameData.unitsInGame.put(2, stage.p2Units);
 	}
 
 
@@ -70,8 +118,6 @@ public class TestUtils {
      */
     public static void test2Units(GameStage stage){
 
-        p1Units = new Array<Unit>();
-        p2Units = new Array<Unit>();
 
         Random rand = new Random();
         int randUnit1 = rand.nextInt((4-1)+1)+1; //human units
@@ -82,41 +128,49 @@ public class TestUtils {
         float posX2 = 10 * 32 + Constants.GRID_X;
         float posY2 = 10 * 32 + Constants.GRID_Y;
 
-        Array<UnitInfo> unitInfoArr = GameManager.unitInfoArr;
+        Array<UnitInfo> unitInfoArr = Assets.unitInfoArray;
         Array<Unit> unitsOnBoard1 = new Array<Unit>(); //array for units per faction
         Array<Unit> unitsOnBoard2 = new Array<Unit>(); //array for units per faction
 
-        am = GameManager.assetManager;
+        AssetManager am = Assets.assetManager;
         //NOTE: as of 11/1/14; single digits: 1-6 is small; 7-9 medium; 0 large
 
 
         //sets up 1st unit (player 1's unit - Human)
         UnitInfo unitInfo1 = unitInfoArr.get(randUnit1);
-        String unitPicPath = unitInfo1.getTexPaths().get(0);
-        Texture tex1 = am.get(unitPicPath, Texture.class);
-        Unit unit1 = new Unit(tex1, posX1, posY1, unitInfo1);
-        unit1.setPlayer(1); //sets the player
+        Unit unit1 = new Unit(unitInfo1, posX1, posY1, 1);
         stage.addActor(unit1);
-        GameData.p1Units.add(unit1);        //add to array containing each player's units
+        stage.p1Units.add(unit1);        //add to array containing each player's units
 
 
         //player 2 is a reptoid unit
         UnitInfo unitInfo = unitInfoArr.get(randUnit2);
-        unitPicPath = unitInfo.getTexPaths().get(1);
-        boolean exists = Gdx.files.internal(unitPicPath).exists();
-        if (!exists){
-            unitInfo.getTexPaths().get(0);
-        }
-        Texture tex2 = am.get(unitPicPath, Texture.class);
-        Unit unit2 = new Unit(tex2, posX2, posY2, unitInfo);
-        unit2.setPlayer(2);
+        Unit unit2 = new Unit(unitInfo, posX2, posY2, 2);
         unit2.setLock(true);
         stage.addActor(unit2);
-        GameData.p2Units.add(unit2);
+        stage.p2Units.add(unit2);
 
-
+        GameData.unitsInGame.put(1, stage.p1Units);
+        GameData.unitsInGame.put(2, stage.p2Units);
     }
 
 
+    /** useful class for printing out positions of actors/widgets/tiles/etc
+     *
+     * @param positions
+     * @return
+     */
+    public static String printPositions(Array<Vector2> positions){
+        String posMessage = "";
 
+        for (Vector2 vec : positions){
+            String x = Float.toString(vec.x);
+            String y = Float.toString(vec.y);
+            String screenPos = "{" + x + ", " + y + "}, ";
+            posMessage.concat(screenPos);
+        }
+
+
+        return posMessage;
+    }
 }

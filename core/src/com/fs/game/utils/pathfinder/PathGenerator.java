@@ -41,7 +41,7 @@ import com.fs.game.data.GameData;
 import com.fs.game.maps.Panel;
 import com.fs.game.stages.GameStage;
 import com.fs.game.units.Unit;
-import com.fs.game.utils.UnitUtils;
+import com.fs.game.utils.GameUtils;
 
 public class PathGenerator {
 	
@@ -300,7 +300,8 @@ public class PathGenerator {
 		boolean mapObstacle = false;  //whether this is a map obstacle 
 		
 		GameStage stage = (GameStage)this.unit.getStage();
-		Array<Unit> otherUnits = UnitUtils.findOtherUnits(stage.getActors(), unit);
+        Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
+		Array<Unit> otherUnits = GameUtils.StageUtils.otherUnits(allUnits, unit);
 		
 		if(!this.crossWater && pan.terrainType.equals("water") ||
 				!this.crossLand && pan.terrainType.equals("obstacles")){

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.fs.game.menus;
+package com.fs.game.screens.menus;
 
 import com.badlogic.gdx.Screen;
 import com.fs.game.enums.GameState;

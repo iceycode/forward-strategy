@@ -10,13 +10,6 @@ package com.fs.game.unused_old_classes;
  */
 public class OldMethods {
 
-    /**
-     * @deprecated
-     */
-    public OldMethods(){
-
-    }
-
 
     //FROM old unitscreen
     //	/** creates the listeners for units, panel & infopanel

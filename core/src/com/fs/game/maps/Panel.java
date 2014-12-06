@@ -17,7 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
-import com.fs.game.assets.GameManager;
+import com.fs.game.assets.Assets;
 
 public class Panel extends Actor{
 
@@ -63,7 +63,7 @@ public class Panel extends Actor{
 
 	
 	public Panel(float actorX, float actorY) {
-		skin = GameManager.gameSkin; //sets the skin for panels
+		skin = Assets.uiSkin; //sets the skin for panels
   	 
 		panelUp = skin.get("panelUp", Texture.class); //the original texture
 		panelDown = skin.get("panelDown", Texture.class);

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.fs.game.menus;
+package com.fs.game.screens.menus;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -15,6 +15,7 @@ import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.enums.GameState;
 import com.fs.game.main.MainGame;
+import com.fs.game.stages.UnitStage;
 import com.fs.game.utils.MenuUtils;
 
 /** FactionScreen.java
@@ -24,113 +25,97 @@ import com.fs.game.utils.MenuUtils;
  * @author Allen Jagoda
  *
  */
-public class FactionScreen implements Screen{
-	
+public class FactionScreen implements Screen {
 	final MainGame game;
     public GameState gameState;
-
-	Stage stage;
 
     Array<Button> factionButtons;
     OrthographicCamera camera;
 	String LOG = "Faction Select Log: ";
 
+    Stage stage;
+    UnitStage unitStage;
 
-    protected UnitsScreen unitsScreen;
 
-	/**
-	 * 
-	 */
+
 	public FactionScreen(final MainGame game) {
-		this.game = game;
-		
-		camera = new OrthographicCamera();
-		camera.setToOrtho(false, Constants.SCREENWIDTH, Constants.SCREENHEIGHT);
+        this.game = game;
+        this.gameState = GameState.FACTION_SELECT;
 
-        gameState = GameState.FACTION_SELECT;
-
-        GameData.currFaction = "";
+        setupCamera();
 		setupStage();
 		
 	}
 
 	public void setupStage() {
         stage = new Stage();
-
         MenuUtils.FactionMenu.factionMenuButtons(stage);
 	}
 
-	@Override
-	public void render(float delta) {
-
-
-        switch (gameState){
-            case FACTION_SELECT:
-                updateCurrent(delta);
-                break;
-            case UNIT_SELECT:
-                nextMenu();
-                break;
-//            case MAP_SELECT:
-//                updateMenu();
-//                break;
-            case START_SCREEN:
-                prevMenu();
-                break;
-        }
-	}
-
-    public void nextMenu(){
-        String nextFaction = GameData.currFaction;
-        unitsScreen = new UnitsScreen(game, nextFaction);
-        hide();
-    }
-
-    public void prevMenu(){
-        game.mainScreen.menuScreen.resume();
-        hide();
+    public void setupCamera(){
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, Constants.SCREENWIDTH, Constants.SCREENHEIGHT);
     }
 
 
-    public void updateCurrent(float delta){
+    public void unitMenu(){
+        gameState = GameState.UNIT_SELECT;
+        unitStage = new UnitStage();
+        Gdx.input.setInputProcessor(unitStage);
+        //hide();
+    }
 
-        Gdx.input.setInputProcessor(stage);
-        stage.act(delta);
+    public void updateMenu(){
 
         for (String s : Constants.FACTION_LIST){
             if (GameData.currFaction.equals(s)){
-                gameState = GameState.UNIT_SELECT;
+                unitMenu();
             }
         }
 
-        if (Gdx.app.getInput().isKeyPressed(Input.Keys.ESCAPE)){
+        if (Gdx.app.getInput().isKeyJustPressed(Input.Keys.ESCAPE)){
             gameState = GameState.MAIN_MENU;
         }
 
+        stage.act();
+    }
 
 
+    @Override
+    public void render(float delta) {
 
-        show();
-
-
+        //goes in act method on stage
+        switch (gameState){
+            case FACTION_SELECT:
+                show();
+                break;
+            case UNIT_SELECT:
+                game.setScreen(new UnitScreen(game));
+                break;
+            case MAIN_MENU:
+                game.setScreen(game.menuScreen);
+                break;
+        }
 
     }
 
+
 	@Override
 	public void show() {
+        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        Gdx.input.setInputProcessor(stage);
+
+        updateMenu();
+        stage.act();
         stage.draw();
 	}
 
 
 	@Override
 	public void hide() {
-        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (gameState == GameState.UNIT_SELECT)
-            game.setScreen(unitsScreen);
-        else if (gameState == GameState.MAIN_MENU)
-            game.setScreen(game.menuScreen);
+
 	}
 
 	/* (non-Javadoc)
@@ -138,14 +123,16 @@ public class FactionScreen implements Screen{
 	 */
 	@Override
 	public void pause() {
-        game.setScreen(game.getMenuScreen());
+
 	}
 
     /**
      */
     @Override
     public void resume() {
+
         gameState = GameState.FACTION_SELECT;
+        game.setScreen(this);
     }
 
 

@@ -3,18 +3,18 @@ package com.fs.game.main;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.fs.game.assets.Assets;
 import com.fs.game.assets.Constants;
-import com.fs.game.assets.GameManager;
-import com.fs.game.enums.GameState;
-import com.fs.game.menus.FactionScreen;
-import com.fs.game.menus.MapScreen;
-import com.fs.game.menus.UnitsScreen;
+import com.fs.game.data.GameData;
 import com.fs.game.screens.MainScreen;
-import com.fs.game.screens.MenuScreen;
+import com.fs.game.screens.menus.FactionScreen;
+import com.fs.game.screens.menus.MapScreen;
+import com.fs.game.screens.menus.MenuScreen;
 
 public class MainGame extends Game{
 	
@@ -28,100 +28,85 @@ public class MainGame extends Game{
 	public MainScreen mainScreen;
     public MenuScreen menuScreen;
 
-
-
-    protected GameState gameState;
     public FactionScreen factionScreen;
     public MapScreen mapScreen;
-    public UnitsScreen unitsScreen;
-
+    public boolean screenSet;
  
 	@Override
 	public void create() {
-        GameManager.initializeAssets();
-		manager = GameManager.assetManager;
- 		
+
+        Assets.initializeAssets();
+        GameData.initGameData();
+        manager = Assets.assetManager;
+
 		//the splash screen while assets load
  		splashTitle = new TextureRegion(new Texture(Gdx.files.internal(Constants.TITLE_PATH)));
-		//creates spritebatch
+
+        screenSet = false; //whether or not the screen is set
+		//creates spritebatch for game
         batch = new SpriteBatch();
         font = new BitmapFont(); //libgdx default is Arial font.
 
-
-
     }
 
-    public void setupScreens(){
-        mainScreen = new MainScreen(this);
-        menuScreen = new MenuScreen(this);
-        factionScreen = new FactionScreen(this);
 
+
+    public void setupScreens(){
+        setMainScreen(new MainScreen(this));
+        setMenuScreen(new MenuScreen(this));
+        setFactionScreen(new FactionScreen(this));
+        setMapScreen(new MapScreen(this));
     }
 
     @Override
 	public void render() {
 
-    	//this creates a splash screen while assets load
-    	batch.begin();
-    	batch.draw(splashTitle, 0, 0, splashTitle.getRegionWidth(), splashTitle.getRegionHeight());
-    	batch.end();
-
-    	//until manager updates, above splash shown
-    	//when manager finished, sets main screen
+    	//until manager updates, shows splash screen
+    	//when manager finished, returns true, sets main screen
     	if (manager.update()) {
-            super.render(); //important!
-    	}
-    	else{
-            setupScreens();
-            this.setScreen(mainScreen);
+            Gdx.gl.glClearColor(0, 0, 0.2f, 1);
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+            super.render();
 
+            if (!screenSet){
+                setupScreens();
+                this.setScreen(mainScreen);
+                screenSet = true;
+            }
         }
-    	
-    	float progress = manager.getProgress();
-    	Gdx.app.debug("output", "current AM progress" + progress);
-    	
-    	
+    	else{
+            //this shows a splash screen while assets load
+            batch.begin();
+            batch.draw(splashTitle, 0, 0, splashTitle.getRegionWidth(), splashTitle.getRegionHeight());
+            batch.end();
+        }
     }
 
     @Override
 	public void dispose() {
+        super.dispose();
+        getScreen().dispose();
+
         batch.dispose();
         font.dispose();
     }
- 
-	/**
-	 * @return the manager1
-	 */
-	public AssetManager getManager() {
-		return manager;
-	}
 
-	/**
-	 * @param manager1 the manager1 to set
-	 */
-	public void setManager(AssetManager manager1) {
-		this.manager = manager1;
-	}
- 
+    @Override
+    public void resize(int width, int height) {
 
-	/**
+        super.resize(width, height);
+
+        if (getScreen()!=null)
+            getScreen().resize(width, height);
+    }
+
+    /**
 	 * @return the main
 	 */
 	public MainScreen getMainScreen() {
 		return mainScreen;
 	}
-
-
-    public GameState getGameState() {
-        return gameState;
-    }
-
-    public void setGameState(GameState gameState) {
-        this.gameState = gameState;
-    }
-
-
 
     public void setMainScreen(MainScreen mainScreen) {
         this.mainScreen = mainScreen;
@@ -141,6 +126,14 @@ public class MainGame extends Game{
 
     public void setFactionScreen(FactionScreen factionScreen) {
         this.factionScreen = factionScreen;
+    }
+
+    public MapScreen getMapScreen() {
+        return mapScreen;
+    }
+
+    public void setMapScreen(MapScreen mapScreen) {
+        this.mapScreen = mapScreen;
     }
 
 }

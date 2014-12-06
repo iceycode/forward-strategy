@@ -7,19 +7,19 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.fs.game.assets.Assets;
 import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
+import com.fs.game.data.UnitData;
 import com.fs.game.maps.Panel;
 import com.fs.game.tests.TestUtils;
 import com.fs.game.units.Unit;
+import com.fs.game.units.UnitInfo;
 import com.fs.game.utils.GameUtils;
 import com.fs.game.utils.UnitUtils;
-
-import java.util.HashMap;
 
 
 /** the stage which contains the tiled map
@@ -29,7 +29,7 @@ import java.util.HashMap;
  */
 public class GameStage extends Stage {
 	
-	final String LOG = "MapStage log: ";
+	final String LOG = "GAMESTAGE LOG: ";
 
 	public TiledMap tiledMap; 	//creates the actual map
 	private Array<Panel> panelArray;
@@ -45,29 +45,42 @@ public class GameStage extends Stage {
 	
 	OrthogonalTiledMapRenderer tiledMapRenderer;
 	OrthographicCamera camera;
-	OrthographicCamera mapCam;
-
 	Viewport viewport;
-	ScreenViewport viewportStage;
 
-    Unit currUnit;
-    boolean unitSelected = false; //whether or nmot a unit on board chosen
-    HashMap<Integer, Array<String>> damageTextMap; //hashmap containing damage list text
+    Unit chosenUnit;
+    int[] UNIT_STATE = Constants.UNIT_STATES;
+
+    //for multiplayer setup
+    public Array<Unit> allUnits;
+    public Array<Unit> p1Units;
+    public Array<Unit> p2Units;
+
+    public Array<Unit> playerUnits;
+    public Array<Unit> enemyUnits;
+
+    public Array<UnitData> unitsData;
+
+    public String playerName;
+    public int currentState;
+
 
 	/**
 	 * instantiated by MapsFactory
 	 */
 	public GameStage(TiledMap tiledMap) {
 //		super(new ScalingViewport(Scaling.stretch, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-//        new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)));		
-//
+//        new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)));
 		//sets up the tiled map & renderer
         this.tiledMap = tiledMap;
-        tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
-        
+        this.tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+        this.allUnits = new Array<Unit>();
+
         setupCamera();//sets up the camera
-        setupGridElements(); //get Table & Actors from GameBoard class
-		addUnits();
+
+        //this also sets up this stages panelArray
+        GameUtils.Map.setupGridElements(this);//get Table & Actors from GameBoard class
+
+        addUnits();
 
     }
 	
@@ -88,21 +101,7 @@ public class GameStage extends Stage {
 		
  	}
 
-    //TODO: fuse panel actors with tiledmap actors
-	public void setupGridElements(){
-// 		MapUtils.setupPanels12x12(); //stores data in UnitData
-//		panelMatrix = GameData.panelMatrix;
-//		this.setPanelArray(GameData.gamePanels);
-		
-		//2nd kind of setup
-		GameUtils.setupPanels16x12();
-		GameUtils.createMapActors(this);
 
-  	}
-
-
-	
- 	
 	/** initializes & sets units onto stage
 	 * creates 7 units on board 
 	 *  - gets info from an array in an array
@@ -117,15 +116,60 @@ public class GameStage extends Stage {
             TestUtils.testBoardSetup2_16x12(this); //test setup b/w humans & reptoids
         }
         else{
-            TestUtils.testBoardSetup2_16x12(this); //test setup b/w humans & reptoids
+            this.currentState = Constants.STAGE_STATES[2]; //=3
         }
 
-        damageTextMap = new HashMap<Integer, Array<String>>();
-        putIntoMap(GameData.p1Units, GameData.p2Units); //adds 1st players unit's damage to 2nd player
-        putIntoMap(GameData.p2Units, GameData.p1Units); //adds 2nd players unit's damage to 1st player
-
 	}
- 
+
+
+    public void addUnitsToStage(int player){
+        for (Unit u : p1Units){
+            addActor(u);
+        }
+
+        for (Unit u: p2Units){
+
+        }
+    }
+
+    public void updateUnitData(int player, Array<Unit> units){
+        if (player == 1){
+            for (int i = 0; i < units.size; i++){
+                p1Units.get(i).setX(units.get(i).getX());
+                units.get(i).getY();
+            }
+        }
+    }
+
+    public void initialPlayerSetup(int player, String name){
+        Array<UnitInfo> unitInfoArray = new Array<UnitInfo>();
+
+
+
+        if (player == 1){
+            playerUnits = UnitUtils.Setup.setupUnits(name, unitInfoArray, player, Constants.UNITS_POS_LEFT, this);
+        }
+        else{
+            playerUnits = UnitUtils.Setup.setupUnits(name, unitInfoArray, player, Constants.UNITS_POS_LEFT, this);
+        }
+    }
+
+
+    public void initialEnemySetup(int player, String name, Array<UnitData> unitDataArr){
+        Array<UnitInfo> unitInfoArray = new Array<UnitInfo>();
+        for (UnitData unitData : unitDataArr) {
+            UnitInfo unitInfo = Assets.unitInfoArray.get(unitData.getUnitID() - 1);
+            unitInfoArray.add(unitInfo);
+        }
+
+        if (player == 1){
+            enemyUnits = UnitUtils.Setup.setupUnits(name, unitInfoArray, player, Constants.UNITS_POS_LEFT, this);
+        }
+
+    }
+
+
+
     /**renders the tiled map
      * 
      */
@@ -136,42 +180,50 @@ public class GameStage extends Stage {
     	camera.update();
     	tiledMapRenderer.setView(camera);
      	tiledMapRenderer.render();
-
     }
 
 
-    public void putIntoMap(Array<Unit> playerUnits, Array<Unit> enemyUnits){
 
+    public void updateStage(Array<Unit> updatedUnits, int currPlayer){
+        if (currPlayer == 1){
+            if (p1Units != null)
+                p1Units.clear();
+            else
+                p1Units = updatedUnits;
 
-        for (Unit unit : playerUnits) {
-            Array<String> damageTexts = new Array<String>();
-            for (Unit enemy : enemyUnits){
-                int indexEnemy = enemy.getUnitID()-1;
-                String damageText = Integer.toString(unit.damageList[indexEnemy]);
-                damageTexts.add(damageText);
+            for (Unit u: updatedUnits){
+                p1Units.add(u);
             }
-            damageTextMap.put(unit.getUnitID(), damageTexts);
+        }
+        else{
+            if (p2Units != null)
+                p2Units.clear();
+            else
+                p1Units = updatedUnits;
+
+            for (Unit u: updatedUnits){
+                p2Units.add(u);
+            }
         }
 
     }
 
-    public void updateDamageLabels(){
-        for (Unit u : GameData.enemyUnits){
-            for (String damage : damageTextMap.get(u.getUnitID())){
-                Label label = UnitUtils.createDamageLabel(u, damage);
-                addActor(label);
-            }
-        }
 
+    public void updateEnemyUnits(Array<Unit> updatedUnits){
+
+        for (int i = 0; i < updatedUnits.size; i++){
+
+
+        }
     }
-   
+
+
+
     /* stage maps draw method */
     @Override
     public void draw() {
-    	render(); //renders the tiled map & damageLabelGroup
-
+    	render(); //renders the tiled map & actors
     	super.draw();
-
     }
 
 
@@ -181,11 +233,9 @@ public class GameStage extends Stage {
      *  */
     @Override
     public void act(float delta) {
-        if (GameData.unitIsChosen) {
-            updateDamageLabels(); //update damage labels if unit is selected
-        }
 
      	super.act(delta);
+
     }
 
 	/**

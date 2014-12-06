@@ -14,12 +14,19 @@ public enum GameState {
     FACTION_SELECT,
     UNIT_SELECT,
     MAP_SELECT,
+    MULTIPLAYER, //when a multiplayer game is start
+
 
     //Game state during game play (cannot go into selection or main menus)
-    PLAYER_IDLE, //when a player is idle (has not moved in >2 turns
+    WAITING, //when a player is waiting
+    PLAYER_DONE, //when player is done
+    PLAYER_TURN, //when player has turn
+
     RUN,    //when actual game is running
     PAUSE,  //when game is paused
     RESUME, //when game is resumed
+
+
     GAME_OVER, //when game is over
     QUIT,   //when game is quit by player
 

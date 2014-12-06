@@ -9,29 +9,24 @@ package com.fs.game.utils;
 
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.Event;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.fs.game.assets.Assets;
 import com.fs.game.assets.Constants;
-import com.fs.game.assets.GameManager;
 import com.fs.game.data.GameData;
 import com.fs.game.stages.GameStage;
 
 
 public class UIUtils {
-	
-	final String LOG = "InfoPanel log : ";
-	
-	public static Skin skin = GameManager.uiSkin; //get skin from GameManager
-
-
 
 
     public static Table createUnitScrollTable(Label unitDetail, Label unitDamage){
@@ -46,15 +41,16 @@ public class UIUtils {
 
         //the scrollpanes
         ScrollPane infoScroll = createInfoScroll(infoTable, Constants.INFO_X, Constants.INFO_Y, Constants.INFO_W, Constants.INFO_H);
-        ScrollPane damageScroll = createInfoScroll(damTable, Constants.INFO_X + Constants.INFO_W, Constants.INFO_Y, Constants.INFO_W, Constants.INFO_H);
+        ScrollPane damageScroll = createInfoScroll(damTable, Constants.INFO_X + Constants.INFO_W, Constants.INFO_Y,
+                                        Constants.INFO_W, Constants.INFO_H);
 
         //scrollTable is the Table which holds the ScrollPane objects
         Table scrollTable = createInfoTable(infoScroll, damageScroll);
+
         return scrollTable;
     }
 
 
- 
 	/** creates a scroll pane for insertion into the main info panel table
 	 * 
 	 * @param scrollTable
@@ -67,8 +63,8 @@ public class UIUtils {
 	public static ScrollPane createInfoScroll(Table scrollTable, float posX, float posY, float width, float height) {
 		//the style for the ScrollPane
 		ScrollPaneStyle style = new ScrollPaneStyle();
- 		style.background = skin.getDrawable("infoPane");
-		style.vScroll = skin.getDrawable("vert-scroll");
+ 		style.background = Assets.uiSkin.getDrawable("infoPane");
+		style.vScroll = Assets.uiSkin.getDrawable("vert-scroll");
 				
 		ScrollPane unitScrollPane = new ScrollPane(scrollTable, style);
 		unitScrollPane.setBounds(posX, posY, width, height);
@@ -89,8 +85,8 @@ public class UIUtils {
 	public static Label createTimer() {
 		//create the timer label
 		LabelStyle timerStyle = new LabelStyle();
-		timerStyle.background = skin.getDrawable("timer");
-		timerStyle.font = skin.getFont("font1");
+		timerStyle.background = Assets.uiSkin.getDrawable("timer");
+		timerStyle.font = Assets.uiSkin.getFont("font1");
 		timerStyle.fontColor = Color.MAGENTA;
 				
 		//initialize the timer to 0
@@ -112,14 +108,11 @@ public class UIUtils {
 	public static Table createInfoTable(ScrollPane unitDetail, ScrollPane unitDamageList) {
 		Table scrollTable = new Table();
 		//scrollTable.setFillParent(true);
-		
+
 		//add the labels to the table   width(unitDetail.getWidth()).height(unitDetail.getWidth()).align(Align.left);
 		scrollTable.add(unitDetail).width(unitDetail.getWidth()).height(unitDetail.getHeight()) ;
 		scrollTable.add(unitDamageList).width(unitDamageList.getWidth()).height(unitDamageList.getHeight());
 		scrollTable.setBounds(Constants.INFO_X, Constants.INFO_Y, Constants.INFO_W*2, Constants.INFO_H);
-		
-		//scrollTable.addActor(unitDetail);
-		//scrollTable.addActor(unitDamageList);
   		
 		return scrollTable;
 	}
@@ -136,8 +129,8 @@ public class UIUtils {
 		
 		//the label style
 		LabelStyle styleDetail = new LabelStyle();
-		styleDetail.background = skin.getDrawable("detail-popup");
-		styleDetail.font = skin.getFont("retro2");
+		styleDetail.background = Assets.uiSkin.getDrawable("detail-popup");
+		styleDetail.font = Assets.uiSkin.getFont("retro2");
 		styleDetail.fontColor = Color.GREEN;
 		styleDetail.font.scale(.01f);	//scale font a bit
 		
@@ -166,12 +159,12 @@ public class UIUtils {
 		float height = Constants.INFO_H + 100; //100 extra pixels for scrolling
 		
 		LabelStyle styleDamage = new LabelStyle();
-		styleDamage.background = skin.getDrawable("damage-popup");
- 		styleDamage.font = skin.getFont("retro2");
+		styleDamage.background = Assets.uiSkin.getDrawable("damage-popup");
+ 		styleDamage.font = Assets.uiSkin.getFont("retro2");
 		styleDamage.fontColor = Color.RED;
 //		styleDamage.font.scale(.01f);
 		
-		Label unitDamageList = new Label("Damage", styleDamage);
+		Label unitDamageList = new Label("Attack", styleDamage);
 	//	unitDamageList.setTouchable(Touchable.disabled);
 		unitDamageList.setAlignment(Align.top, Align.left);
 		unitDamageList.setWidth(width);
@@ -190,16 +183,18 @@ public class UIUtils {
 	 * @param posY
 	 * @return
 	 */
-	public static Button createSideButton(float posX, float posY) {
+	public static TextButton createSideButton(String player, float posX, float posY) {
 		//go is when player goes
 
 		//creating actors out of circles
-		ButtonStyle buttonStyle = new ButtonStyle();
-		buttonStyle.up = skin.getDrawable("go-tex");
-		buttonStyle.checked = skin.getDrawable("stop-tex");
+		TextButtonStyle buttonStyle = new TextButtonStyle();
+		buttonStyle.up = Assets.uiSkin.getDrawable("go-tex");
+		buttonStyle.checked = Assets.uiSkin.getDrawable("stop-tex");
+        buttonStyle.font = Assets.uiSkin.getFont("retro2");
+        buttonStyle.fontColor = Color.DARK_GRAY;
 
 		//create 1st player-go indication button
-		Button button = new Button(buttonStyle);
+		TextButton button = new TextButton(player, buttonStyle);
 		button.setBounds(posX, posY, Constants.SIDE_BUTTON_RADIUS, Constants.SIDE_BUTTON_RADIUS);
 
 		return button;
@@ -211,9 +206,9 @@ public class UIUtils {
 	 */
 	public static TextButton createGoButton(final GameStage stageMap){
 		TextButtonStyle style = new TextButtonStyle();
-		style.up = skin.getDrawable("lets-go-tex");
-		style.down = skin.getDrawable("lets-go-tex");
-		style.font = skin.getFont("retro2");
+		style.up = Assets.uiSkin.getDrawable("lets-go-tex");
+		style.down = Assets.uiSkin.getDrawable("lets-go-tex");
+		style.font = Assets.uiSkin.getFont("retro2");
 		style.fontColor = Color.GREEN;
 
 		TextButton goButton = new TextButton("GO",style);
@@ -224,8 +219,8 @@ public class UIUtils {
         goButton.addListener(new ActorGestureListener(){
             @Override
             public void touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                GameData.finishTurn = true;  //player is manually finished turn (timer did not reset)
-                GameUtils.clearBoard(stageMap);	//clears board of selected panels
+                GameData.playerTurn = true;  //player is manually finished turn (timer did not reset)
+                GameUtils.Map.clearBoard(stageMap);	//clears board of selected panels
             }
         });
 
@@ -240,16 +235,16 @@ public class UIUtils {
     public static Window popUpInfo(Table scrollTable, float oriX, float oriY, float width, float height) {
         //sets the window style
         WindowStyle winStyle = new WindowStyle();
-        winStyle.titleFont = skin.getFont("default-small");
+        winStyle.titleFont = Assets.uiSkin.getFont("default-small");
         winStyle.titleFont.scale(.01f); //scale it down a bit
-        winStyle.stageBackground = skin.getDrawable("infoPane");
+        winStyle.stageBackground = Assets.uiSkin.getDrawable("infoPane");
         //create the window
         Window win = new Window("Unit Information", winStyle);
 
         win.add(scrollTable).fill().expand();
         win.addActor(scrollTable);
         //+/- 64 accounts for timer width (64 pix)
-        win.setBounds(Constants.GAMEBOARD_X, 0, width, height);
+        win.setBounds(oriX, oriY, width, height);
         win.setFillParent(false);
 
         return win;
@@ -265,7 +260,7 @@ public class UIUtils {
      */
     public static Dialog confirmDialog(String dialogType, String label, String styleText, Stage stage) {
         //create dialog box
-        final Dialog dialogUnit = new Dialog("", skin, dialogType) {
+        final Dialog dialogUnit = new Dialog("", Assets.uiSkin, dialogType) {
             @Override
             protected void result (Object chosen) {
                 System.out.println("Chose unit");
@@ -278,9 +273,9 @@ public class UIUtils {
         dialogUnit.getButtonTable().padTop(50);
 
         //adding yes/no buttons
-        TextButton textBtn = new TextButton("Yes",skin, styleText);
+        TextButton textBtn = new TextButton("Yes",Assets.uiSkin, styleText);
         dialogUnit.button(textBtn, true);
-        textBtn = new TextButton("No", skin, styleText);
+        textBtn = new TextButton("No", Assets.uiSkin, styleText);
         dialogUnit.button(textBtn, false);
 
         dialogUnit.key(Keys.ENTER, true).key(Keys.ESCAPE, false).show(stage);
@@ -299,7 +294,7 @@ public class UIUtils {
      * @return
      */
     public static Label createLabel(String labelText, String styleName){
-        Label label = new Label(labelText, skin, styleName);
+        Label label = new Label(labelText, Assets.uiSkin, styleName);
         label.setWrap(true); //need this for dialogs
         label.setFontScale(.9f);
         label.setAlignment(Align.center);
@@ -316,8 +311,8 @@ public class UIUtils {
     public static ScrollPane createLabelScroll(Label label) {
         //the style for the ScrollPane
         ScrollPaneStyle style = new ScrollPaneStyle();
-        style.background = skin.getDrawable("infoPane");
-        style.vScroll = skin.getDrawable("vert-scroll");
+        style.background = Assets.uiSkin.getDrawable("infoPane");
+        style.vScroll = Assets.uiSkin.getDrawable("vert-scroll");
 
         //the scroll pane for this label
         ScrollPane scrollPane = new ScrollPane(label, style);
@@ -331,4 +326,50 @@ public class UIUtils {
 
         return scrollPane;
     }
+
+
+    //TODO: implement this
+    public static Dialog confirmStart(final Stage stage){
+        Dialog confirm = new Dialog("confirmStart", Assets.uiSkin) {
+
+            {
+                text("Do you really want to start?"). button("No")
+                .button("yes", "proceeding to game").addListener(new EventListener() {
+                @Override
+                public boolean handle(Event event) {
+
+                    return false;
+                }
+                });
+
+            }
+
+            @Override
+            protected void result(final Object object) {
+                new Dialog("", Assets.uiSkin) {
+
+                    {
+                        text(object.toString());
+                        button("OK");
+                    }
+
+                }.show(stage);
+
+            }
+
+        }.show(stage);
+
+        return confirm;
+    }
+
+    public static Label scoreBoard(int score, float posX, float posY){
+        Label scoreLabel = new Label("Score: \n" + Integer.toString(score), Assets.uiSkin, "scoreStyle");
+        scoreLabel.setWidth(64);
+        scoreLabel.setHeight(45);
+        scoreLabel.setX(posX);
+        scoreLabel.setY(posY);
+
+        return scoreLabel;
+    }
+
 }

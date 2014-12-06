@@ -4,25 +4,24 @@ package appwarp;
  *
  */
 
+import com.fs.game.assets.Constants;
 import com.shephertz.app42.gaming.multiplayer.client.WarpClient;
 import com.shephertz.app42.gaming.multiplayer.client.command.WarpResponseResultCode;
 import com.shephertz.app42.gaming.multiplayer.client.events.RoomEvent;
 
 import java.util.HashMap;
 
+//from SJDTutorial; organization: mytutorials; appwarp realtime multiplayer
 public class WarpController {
 
 	private static WarpController instance;
 	
 	private boolean showLog = true;
-	
-//	private final String apiKey = "14a611b4b3075972be364a7270d9b69a5d2b24898ac483e32d4dc72b2df039ef";
-//	private final String secretKey = "55216a9a165b08d93f9390435c9be4739888d971a17170591979e5837f618059";
 
-    //from SJDTutorial; organization: mytutorials; appwarp realtime multiplayer
 
-    private final String apiKey = "1be0d7c3d073454d9e067e61b28cf4891d47ce73d46bd529b1b7a00f62610337";
-    private final String secretKey = "a9531f773558d202dfa31aeeafdd7e32275cb90d2cefb500302c558501257690";
+    private final String apiKey = Constants.App42.API_KEY;
+    private final String secretKey = Constants.App42.SECRET_KEY;
+    private final String roomA_ID = Constants.App42.ROOM_A;
 
 	private WarpClient warpClient;
 	
@@ -35,9 +34,13 @@ public class WarpController {
 	boolean isUDPEnabled = false;
 	
 	private WarpListener warpListener ;
+    private WarpListener turnListener;
 	
 	private int STATE;
-	
+    public int player = 0; //the players assignment
+
+
+
 	// Game state constants
 	public static final int WAITING = 1;
 	public static final int STARTED = 2;
@@ -46,7 +49,7 @@ public class WarpController {
 	
 	// Game completed constants
 	public static final int GAME_WIN = 5;
-	public static final int GAME_LOOSE = 6;
+	public static final int GAME_LOST = 6;
 	public static final int ENEMY_LEFT = 7;
 	
 	public WarpController() {
@@ -56,6 +59,10 @@ public class WarpController {
 		warpClient.addZoneRequestListener(new ZoneListener(this));
 		warpClient.addRoomRequestListener(new RoomListener(this));
 		warpClient.addNotificationListener(new NotificationListener(this));
+
+//
+//        warpClient.addTurnBasedRoomListener(new TurnRoomListener(this));
+
 	}
 	
 	public static WarpController getInstance(){
@@ -73,7 +80,8 @@ public class WarpController {
 	public void setListener(WarpListener listener){
 		this.warpListener = listener;
 	}
-	
+
+
 	public void stopApp(){
 		if(isConnected){
 			warpClient.unsubscribeRoom(roomId);
@@ -90,6 +98,8 @@ public class WarpController {
 			e.printStackTrace();
 		}
 	}
+
+
 	
 	public void sendGameUpdate(String msg){
 		if(isConnected){
@@ -111,7 +121,8 @@ public class WarpController {
 	}
 	
 	public void onConnectDone(boolean status){
-		log("onConnectDone: "+status);
+
+		log("onConnectDone: "+status );
 		if(status){
 			warpClient.initUDP();
 			warpClient.joinRoomInRange(1, 1, false);
@@ -132,7 +143,11 @@ public class WarpController {
 			handleError();
 		}
 	}
-	
+
+    /** creates a turn based room
+     *
+     * @param event
+     */
 	public void onJoinRoomDone(RoomEvent event){
 		log("onJoinRoomDone: "+event.getResult());
 		if(event.getResult()==WarpResponseResultCode.SUCCESS){// success case
@@ -140,8 +155,8 @@ public class WarpController {
 			warpClient.subscribeRoom(roomId);
 		}else if(event.getResult()==WarpResponseResultCode.RESOURCE_NOT_FOUND){// no such room found
 			HashMap<String, Object> data = new HashMap<String, Object>();
-			data.put("result", "");
-			warpClient.createRoom("superjumper", "shephertz", 2, data);
+            data.put("result", "");
+			warpClient.createRoom("ForwardStrategy Room", "ADMIN", 2, data);
 		}else{
 			warpClient.disconnect();
 			handleError();
@@ -160,11 +175,14 @@ public class WarpController {
 	}
 	
 	public void onGetLiveRoomInfo(String[] liveUsers){
-		log("onGetLiveRoomInfo: "+liveUsers.length);
+
+		log("onGetLiveRoomInfo: "+ player);
 		if(liveUsers!=null){
 			if(liveUsers.length==2){
+                player = 2;
 				startGame();	
 			}else{
+                player = 1;
 				waitForOtherUser();
 			}
 		}else{
@@ -185,9 +203,11 @@ public class WarpController {
 	public void onSendChatDone(boolean status){
 		log("onSendChatDone: "+status);
 	}
+
+
 	
 	public void onGameUpdateReceived(String message){
-//		log("onMoveUpdateReceived: message"+ message );
+		log("onMoveUpdateReceived: message"+ message );
 		String userName = message.substring(0, message.indexOf("#@"));
 		String data = message.substring(message.indexOf("#@")+2, message.length());
 		if(!localUser.equals(userName)){

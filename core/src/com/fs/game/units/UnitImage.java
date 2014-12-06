@@ -1,14 +1,13 @@
 package com.fs.game.units;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.scenes.scene2d.Event;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
-import com.fs.game.assets.GameManager;
+import com.fs.game.assets.Assets;
+import com.fs.game.data.GameData;
 import com.fs.game.utils.UnitUtils;
 
 /** Extension of Image widget to show a unit still animation for selection in
@@ -17,19 +16,24 @@ import com.fs.game.utils.UnitUtils;
  * Created by Allen on 11/16/14.
  */
 public class UnitImage extends Image {
-
-    final Skin skin = GameManager.uiSkin;
+    final String LOG = "UNITIMAGE LOG: ";
 
     public UnitInfo unitInfo;
+    public int key; //for key in hashmap (combination of currUnit & player number*100)
     public String size;
     public String drawableName;
 
-    protected Animation stillAnim; //animation
-    protected Texture frameSheet; //framesheet for image
-    protected float timeInterval;//animation timer
+    Animation stillAnim; //animation
+    Texture frameSheet; //framesheet for image
+    TextureRegion checked;
 
-    public boolean selected; //whether this unit was selected
+    float timeInterval;//animation timer
+
+    public boolean selected; //whether this unit was selected (clicked on)
+    public boolean viewing; //being viewed
+    public boolean chosen; //added to list
     public int tapCount = 0; //counter for number of times unit tapped/clicked
+    public boolean copy; //whether this unit image has been copied to roster or not
 
 
 
@@ -37,40 +41,32 @@ public class UnitImage extends Image {
     public UnitImage(UnitInfo unitInfo) {
         this.unitInfo = unitInfo;
         this.size = unitInfo.getSize();
+        this.key = GameData.currPlayer  ;
+        this.setName(unitInfo.getUnit());
+        this.copy = false; //initail state is false
+
+        this.setWidth(unitInfo.getWidth());
+        this.setHeight(unitInfo.getHeight());
 
         setupAnimation();
-        setupDrawables();
+        setupCheckTexture();
 
-        this.addListener(new ActorGestureListener() {
-            @Override
-            public boolean handle(Event event) {
-                return true;
-            }
-
-            @Override
-            public void touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                tapCount++;
-                if (tapCount < 2)
-                    selected = true;
-                else
-                    selected = false;
-            }
-        });
+        this.addListener(UnitUtils.Listeners.unitImageActorListener);
+//        this.addListener(UnitUtils.Listeners.unitImageChangeListener);
     }
 
 
     public void setupAnimation(){
-        this.frameSheet = UnitUtils.getUnitStill(unitInfo, false); //returns stillLeft framesheet
+        this.frameSheet = UnitUtils.Setup.getUnitStill(unitInfo, false); //returns stillLeft framesheet
         setWidth(unitInfo.getWidth());
         setHeight(unitInfo.getHeight());
-        this.stillAnim = UnitUtils.createAnimation(.1f, frameSheet, getWidth(), getHeight());
+        this.stillAnim = UnitUtils.Setup.createAnimation(.1f, frameSheet, getWidth(), getHeight());
 
-        this.needsLayout();
     }
 
 
     //sets up panels which show behind unit image it is clicked on
-    public void setupDrawables(){
+    public void setupCheckTexture(){
 
         if (size.equals("32x32")) {
             drawableName = "checkS";
@@ -82,34 +78,42 @@ public class UnitImage extends Image {
             this.drawableName = "checkL";
         }
 
-        this.setDrawable(skin, drawableName); //for check down
+        checked = new TextureRegion(Assets.uiSkin.get(drawableName, Texture.class)); //for check down
 
     }
 
 
+    //whether or not to add this unit to hashmap
     public void imageActs(){
-
+        if (chosen){
+            GameData.playrUnitChoices.add(unitInfo);
+            Gdx.app.log(LOG, "Now selected unit with key = " + Integer.toString(key));
+        }
+        else if (GameData.playrUnitChoices.contains(unitInfo, true) && !chosen){
+            GameData.playrUnitChoices.removeValue(unitInfo, true);
+        }
     }
 
 
     @Override
     public void draw(Batch batch, float parentAlpha){
-        batch.draw(stillAnim.getKeyFrame(timeInterval), getX(), getY(), getWidth(), getHeight());
+        super.draw(batch, parentAlpha);
+
+        batch.draw(stillAnim.getKeyFrame(timeInterval), getX(), getY());
 
         if (selected){
-            this.getDrawable().draw(batch, getX(), getY(), getWidth(), getHeight());
+            batch.draw(checked, getX(), getY(), getWidth(), getHeight());
         }
 
-        super.draw(batch, parentAlpha);
+
     }
 
     @Override
     public void act(float delta){
-        timeInterval = delta;
+        timeInterval += delta;
 
-        imageActs();
         super.act(delta);
-
+        imageActs();
     }
 
 

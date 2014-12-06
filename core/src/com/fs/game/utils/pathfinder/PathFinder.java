@@ -225,8 +225,8 @@ public class PathFinder {
 	
  	/** checks neighbors above or below
  	 * 
- 	 * @param n1
- 	 * @param n2
+ 	 * @param parent
+ 	 * @param node
  	 * @return
  	 */
 	public boolean horizNodeNeighbor(GridNode parent, GridNode node ){

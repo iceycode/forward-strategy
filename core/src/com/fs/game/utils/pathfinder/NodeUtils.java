@@ -14,7 +14,7 @@ public class NodeUtils {
 	 * TODO: figure out what this will be used for
 	 * 
 	 * @param panelArray
-	 * @param parent
+	 * @param target
 	 * @param target
 	 * @return Array<GridNode> nodeGraph
 	 */
@@ -37,7 +37,7 @@ public class NodeUtils {
 	/** creates a map out of positions unit can move to
 	 * NOTE: already filtered out other units
 	 * 
-	 * @param panelArray
+	 * @param unit
 	 * @param end
 	 * @param start
 	 * @return
@@ -60,8 +60,6 @@ public class NodeUtils {
 	/** this method turns unit panelArray into a graph with grid nodes
 	 * 
 	 * @param panelArray
-	 * @param start
-	 * @param target
 	 */
 	public static Array<Vector2> getVectorMap(Array<Panel> panelArray){
 		Array<Vector2> gridVectors = new Array<Vector2>();
@@ -121,8 +119,8 @@ public class NodeUtils {
 	
 	/** if it is left of successor 
 	 * 
-	 * @param n1
-	 * @param n2
+	 * @param curr
+	 * @param dest
 	 * @return
 	 */
 	public static boolean isLeft(GridNode curr, GridNode dest){
@@ -131,8 +129,8 @@ public class NodeUtils {
  	
 	/** if it is above successor 
 	 * 
-	 * @param n1
-	 * @param n2
+	 * @param curr
+	 * @param dest
 	 * @return
 	 */
 	public static boolean isUp(GridNode curr, GridNode dest){
@@ -141,8 +139,8 @@ public class NodeUtils {
 	
 	/** if it is below of successor 
 	 * 
-	 * @param n1
-	 * @param n2
+	 * @param curr
+	 * @param dest
 	 * @return
 	 */
 	public static boolean isDown(GridNode curr, GridNode dest){
