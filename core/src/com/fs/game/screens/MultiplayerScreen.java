@@ -336,7 +336,6 @@ public class MultiplayerScreen implements Screen, WarpListener{
         pauseWindow.act(delta);
         pauseStage.act(delta);
 
-
         if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             Gdx.app.log(LOG, "game is resuming");
             gameState = GameState.RESUME;
@@ -489,7 +488,7 @@ public class MultiplayerScreen implements Screen, WarpListener{
     }
 
 
-    int updateState = 0; //0 = setup units; 1 = update unit; 2 = update player
+    int updateState = 0;
     @Override
     public void onGameUpdateReceived(String message) {
         try{
@@ -499,10 +498,12 @@ public class MultiplayerScreen implements Screen, WarpListener{
 
             int updateState = data.getUpdateState();
 
+            //updateState: 0 = setup units; 1 = update unit; 2 = update player
             switch (updateState){
                 case 0: //initiate setup
                     updateSetup(data);
-                    gameState = GameState.RUN; //run the game
+                    if (setupDone)
+                        gameState = GameState.RUN; //run the game
                     break;
                 case 1:
                     updateUnit(data);
@@ -540,6 +541,7 @@ public class MultiplayerScreen implements Screen, WarpListener{
             setupPlayers(2, 1, data.getFaction());
         } else {
             setupDone = false;
+            sendSetupData();
         }
 
 

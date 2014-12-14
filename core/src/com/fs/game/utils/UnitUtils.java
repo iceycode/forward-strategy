@@ -390,7 +390,7 @@ public class UnitUtils  {
          * @param unit
          * @return
          */
-        public static int setUnitDamageText(Unit unit){
+        public static int setUnitDamageText(Unit unit, String playerName){
             int damage = 0;
 
             for (Unit u : unit.enemyUnits){

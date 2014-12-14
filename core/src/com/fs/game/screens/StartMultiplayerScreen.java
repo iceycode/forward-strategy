@@ -90,7 +90,7 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
     public void gameIsStarting(){
 
-        if (counter > 3) {
+        if (counter > 3.5) {
             counter = 0;
             Gdx.app.postRunnable(new Runnable() {
                 @Override
@@ -101,7 +101,7 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
             });
         }
         else{
-            this.msg = startCount + Float.toString(counter);
+            this.msg = startCount + Integer.toString((int)counter);
             drawMessage();
         }
     }
@@ -121,12 +121,13 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
             this.msg = "Player left the game " + Integer.toString(5 - (int)counter);
         }
 
-        if (counter < 5){
-            drawMessage();
-        }
-        else{
+        if (counter > 5.5){
+            counter = 0;
             prevScreen.gameState = GameState.START_SCREEN;
             gameState = gameState.START_SCREEN;
+        }
+        else{
+            drawMessage();
         }
 
     }
@@ -153,6 +154,7 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
                 break;
             case START_SCREEN:
                 game.setScreen(prevScreen);
+                this.dispose();
                 break;
 
         }
@@ -208,17 +210,7 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
     @Override
     public void onGameStarted(String message) {
 
-//        while (counter < 3){
-//            counter += Gdx.graphics.getDeltaTime();
-//            this.msg = startCount + Float.toString(counter);
-//        }
         gameState = GameState.STARTING;
-//        Gdx.app.postRunnable(new Runnable() {
-//            @Override
-//            public void run() {
-//                game.setScreen(new MultiplayerScreen(game, StartMultiplayerScreen.this));
-//            }
-//        });
 
     }
 
