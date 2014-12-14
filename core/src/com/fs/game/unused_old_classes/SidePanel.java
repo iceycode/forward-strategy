@@ -13,8 +13,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.fs.game.utils.Constants;
-import com.fs.game.utils.GameManager;
+import com.fs.game.assets.Assets;
+import com.fs.game.assets.Constants;
 
 /** @deprecated merged with the HUDUtils class
  * 
@@ -42,7 +42,7 @@ public class SidePanel {
 	 */
 	public SidePanel() {
 
-		skin = GameManager.uiSkin;
+		skin = Assets.uiSkin;
 
 //		go = TextureUtils.createPixmapCircle(64, Color.GREEN);
 //		stop = TextureUtils.createPixmapCircle(64, Color.RED);

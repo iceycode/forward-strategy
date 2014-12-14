@@ -2,6 +2,8 @@ package com.fs.game.utils;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
+import com.fs.game.assets.Assets;
+import com.fs.game.assets.Constants;
 
 /**
  * Created by Allen on 11/2/14.
@@ -10,7 +12,8 @@ import com.badlogic.gdx.audio.Music;
 
 public class AudioUtils {
 
-    public static AssetManager am = GameManager.getAssetManager();
+    public static AssetManager am = Assets.getAssetManager();
+
 
     /** returns a music track for map (during gameplay)
      *

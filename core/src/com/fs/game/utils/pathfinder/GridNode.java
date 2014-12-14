@@ -10,7 +10,6 @@ package com.fs.game.utils.pathfinder;
  * @author Allen 
  */
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 
 public class GridNode extends Vector2 {
@@ -63,11 +62,7 @@ public class GridNode extends Vector2 {
  
 	
 	/** returns G, or movement cost from one location to another
-	 * 
-	 * @param currX
-	 * @param currY
-	 * @param parentX
-	 * @param parentY
+	 *
 	 * @return total cost in int (faster processing if int)s
 	 */
 	public float calculateCostFromStart(){
@@ -98,7 +93,6 @@ public class GridNode extends Vector2 {
 	
 	/** returns the heuristic cost (Diagonal Shortcut Heuristic)
 	 * 
-	 * @param goal
 	 * @return
 	 */
  	public float calculateCostToGoal(){

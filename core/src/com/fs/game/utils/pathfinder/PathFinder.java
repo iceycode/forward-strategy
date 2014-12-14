@@ -52,7 +52,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.maps.Panel;
 import com.fs.game.units.Unit;
-import com.fs.game.utils.Constants;
+import com.fs.game.assets.Constants;
 
 public class PathFinder {
 	
@@ -67,8 +67,7 @@ public class PathFinder {
 	Array<GridNode> openList;	//the list into which grid adjacent grid nodes go into
 	Array<GridNode> closedList; //the list of nodes within graph
   	
-	Array<Vector2> gridVectors; //the set of nodes (directed graph)
-	Array<GridNode> gridNodeGraph; 
+	Array<GridNode> gridNodeGraph;
 	
 	double[][] graph = Constants.GRID_SCREEN_VECTORS; //all grid vectors from columns 1 to 12
 	
@@ -77,19 +76,19 @@ public class PathFinder {
  
  		openList = new Array<GridNode>();
 		closedList = new Array<GridNode>();
-		
-		 
+
+
 		Vector2 startVec = new Vector2(unit.getX(), unit.getY());
 		Vector2 targetVec = target.getLocation();
-		
+
 		GridNode end = new GridNode(targetVec, null, null);
 		GridNode start = new GridNode(startVec, null , end);
- 		
-		Gdx.app.log(LOG, " START is at : " + NodeUtils.getBoardPositions(start) + 
-				", TARGET is at : " + NodeUtils.getBoardPositions(end));
- 		
+
+//		Gdx.app.log(LOG, " START is at : " + NodeUtils.getBoardPositions(start) +
+//				", TARGET is at : " + NodeUtils.getBoardPositions(end));
+
 		//create the map of nodes unit needs to navigate
-		gridNodeGraph = NodeUtils.createNodeMap(uni, start, end); 
+		gridNodeGraph = NodeUtils.createNodeMap(uni, start, end);
 		
 		//initialize open & closed lists
 		openList.add(start);	//add parent to open list
@@ -109,22 +108,22 @@ public class PathFinder {
 
   			addNeighborNodes(parent, end); //adds successors if they exist
 
-  			Gdx.app.log(LOG, " parent is currently at " + NodeUtils.getBoardPositions(parent) 
-				+ ", G " + parent.getCostFromStart() + " + H  "
-				+ parent.costToGoal + " = F  " + parent.getTotalCost());
+//  			Gdx.app.log(LOG, " parent is currently at " + NodeUtils.getBoardPositions(parent)
+//				+ ", G " + parent.getCostFromStart() + " + H  "
+//				+ parent.costToGoal + " = F  " + parent.getTotalCost());
   
   			//parent = findBestNode2(parent);
    			parent = findBestNode(parent);
 			closedList.add(parent);  
 
 
-			Gdx.app.log(LOG, " node, now PARENT, removed from OPEN LIST & added to CLOSED LIST : " 
-					+ NodeUtils.getBoardPositions(parent) 
-					+ ", G " + parent.getCostFromStart() + " + H  "
-					+ parent.costToGoal + " = F  " + parent.getTotalCost());
+//			Gdx.app.log(LOG, " node, now PARENT, removed from OPEN LIST & added to CLOSED LIST : "
+//					+ NodeUtils.getBoardPositions(parent)
+//					+ ", G " + parent.getCostFromStart() + " + H  "
+//					+ parent.costToGoal + " = F  " + parent.getTotalCost());
  		}
 		
-		Gdx.app.log(LOG, "path was not completed!!!!!! currently contains " + shortestPath());
+//		Gdx.app.log(LOG, "path was not completed!!!!!! currently contains " + shortestPath());
  		return shortestPath(); 
  	}
 	
@@ -151,7 +150,7 @@ public class PathFinder {
 		GridNode node = openList.removeIndex(lowestCostIndex); //remove from openList
 		
 		
-		Gdx.app.log(LOG, " node removed and new parent node is " + NodeUtils.getBoardPositions(node));
+//		Gdx.app.log(LOG, " node removed and new parent node is " + NodeUtils.getBoardPositions(node));
  		
 		return node;
 	}
@@ -170,12 +169,12 @@ public class PathFinder {
 					
  					openList.add(node);
  					
-					Gdx.app.log(LOG, " node added to OPEN LIST : " + NodeUtils.getBoardPositions(parent) + 
-							", G " + node.getCostFromStart() + " + H  "
-							+ node.costToGoal + " = F  " + node.getTotalCost());
-					
-					
-					Gdx.app.log(LOG, "Open list contains values : " + openList.toString(", "));
+//					Gdx.app.log(LOG, " node added to OPEN LIST : " + NodeUtils.getBoardPositions(parent) +
+//							", G " + node.getCostFromStart() + " + H  "
+//							+ node.costToGoal + " = F  " + node.getTotalCost());
+//
+//
+//					Gdx.app.log(LOG, "Open list contains values : " + openList.toString(", "));
  				}
 				else if (openList.contains(node, false) && node.getCostFromStart() < parent.getCostFromStart() ){
 					node.setParent(parent);
@@ -183,7 +182,7 @@ public class PathFinder {
 					node.calculateCostToGoal();
 
 					//openList.add(node);
-					Gdx.app.log(LOG, " new cost (G) of node in open list is "+ node.getCostFromStart());
+//					Gdx.app.log(LOG, " new cost (G) of node in open list is "+ node.getCostFromStart());
 				}
 				else if (!closedList.contains(node, false) && !openList.contains(node, false)){
 					node.setParent(parent);
@@ -225,8 +224,8 @@ public class PathFinder {
 	
  	/** checks neighbors above or below
  	 * 
- 	 * @param n1
- 	 * @param n2
+ 	 * @param parent
+ 	 * @param node
  	 * @return
  	 */
 	public boolean horizNodeNeighbor(GridNode parent, GridNode node ){
@@ -258,7 +257,7 @@ public class PathFinder {
 		
 		for (GridNode node : closedList){
 			unitMovePath.add(node.location);
-			Gdx.app.log(LOG, "this node is on path: " + NodeUtils.getBoardPositions(node) );
+//			Gdx.app.log(LOG, "this node is on path: " + NodeUtils.getBoardPositions(node) );
 		}
  
 		

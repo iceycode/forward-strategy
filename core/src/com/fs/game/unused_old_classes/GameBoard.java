@@ -1,14 +1,10 @@
 package com.fs.game.unused_old_classes;
 
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.data.GameData;
+import com.fs.game.assets.Constants;
 import com.fs.game.maps.MapActor;
 import com.fs.game.maps.Panel;
-import com.fs.game.utils.Constants;
-import com.fs.game.utils.GameManager;
 
 /** @deprecated ... replaced by methods in @link MapUtils 
  * 
@@ -93,9 +89,9 @@ public class GameBoard {
 		this.panelMatrix = panelMatrix;
 		this.table = createGridTable(panelMatrix); //places panels into table grid
 
-		//this is for units
- 		GameData.gamePanels = panelsOnStage;
-		GameData.gridMatrix = panelMatrix;
+//		//this is for units
+// 		GameData.gamePanels = panelsOnStage;
+//		GameData.panelMatrix = panelMatrix;
 		
  	}
 	
@@ -128,7 +124,6 @@ public class GameBoard {
 	}
 
 	/**
-	 * @param panelMatrix the panelMatrix to set
 	 */
 	public void setPanelMatrix(Panel[][] panelArr) {
 		this.panelMatrix = panelArr;

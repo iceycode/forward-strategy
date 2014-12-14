@@ -4,6 +4,10 @@ Forward Strategy
 This will update after major changes or fixes pushed to branch1 & merged with master. 
 ####*Change Log*:####
 --
+*12-14-14*
+- got online multiplayer movements working
+- created a TODO markdown file
+
 *11-07-14*
 - fixed unit health/attack sequence
 - started working on the pause menu

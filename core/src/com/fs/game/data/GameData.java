@@ -1,75 +1,85 @@
 /**
- * 
+ *
  */
 package com.fs.game.data;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.OrderedMap;
 import com.fs.game.maps.MapActor;
 import com.fs.game.maps.Panel;
-import com.fs.game.stages.MapStage;
 import com.fs.game.units.Unit;
-import com.fs.game.utils.Constants;
+import com.fs.game.units.UnitImage;
+import com.fs.game.units.UnitInfo;
 
-/** stores data that is relevant to current Units on the grid board
- *  - keeps track of current score
- *  - current units & player turn
- * 
- * @author Allen Jagoda
+/**
+ * stores data that is relevant to current Units on the grid board
+ * - keeps track of current score
+ * - current units & player turn
  *
+ * @author Allen Jagoda
  */
 public class GameData {
-	
 
 
-	public static Array<Unit> otherUnits;
-	public static Array<Array<Unit>> playerUnits;
+    //-------Game play info--------
+    public static Unit chosenUnit; //current unit chosen
+    public static Array<Unit> enemyUnits;
+    public static String[] unitDetails; //chosen unit's attributes
+    public static int currScore; //current players score
+    public static int scoreP1; //tracks player 1 score
+    public static int scoreP2;
 
-    public static Array<Integer> unitDamageList;
- 	
-	public static float score;
- 	public static float health;
- 	public static TiledMapTileSet tiledMap;
+    public static Array<Unit> playerUnits;
+    public static OrderedMap<Integer, Array<Unit>> unitsInGame; //all units, p1Units, p2Units
+    public static String playerName; //player name
+    public static String enemyName;  //enemy's name
+    public static int playerPosition; //1 : left, 2 : right
+    public static int enemyPosition;
+    public static int updateState;
+
+    public static int currPlayer; //current player (1 or 2)
+    public static boolean isChosen; //whether a unit is chosen
+    public static boolean playerTurn; //if true, next player goes
+
+    //------data to/from menu screens (or tests)----
+    public static String[] factions;
+    public static String playerFaction;
+    public static String enemyFaction; //could be obtained from multiplayer json
+    public static Array<UnitImage> factUnitImages;
+    public static Array<UnitInfo> playerUnitChoices;
+    public static int mapChoice; //level choice (for tiled map)
+    public static int testType; //type of test that will be implemented
 
 
-
-	//----------for Unit data---------
-    public static Array<Unit> unitsInGame;
-    public static Array<Unit> p1Units;
-    public static Array<Unit> p2Units;
-    public static Array<String> unitDetails;
-	public static String unitDamage;
-    public static String unitName;
-
-
-
-    //------for Stage/TiledMap data------
+    //------for Map (TiledMap & Panel) data------
+    //TODO: need to fix redudencies in these
     //all these are related to basic board elements (grid tiles 32x32)
- 	public static Panel[][] gridMatrix;	//the grid postiions
- 	public static Array<Panel> gamePanels; //the gridBoard array of Panels
-	public static Array<Panel> unitPanels; //each units panel position	
-	public static Table gridTable;  //the table of panels added to stage
-    public static MapActor[][] mapActMatrix; //stores based on grid cell
+    public static Panel[][] panelMatrix;    //the grid postiions
+    public static Array<Panel> gamePanels; //the gridBoard array of Panels
+    public static Array<MapActor> mapActorArr; //tiled map actors
+
+    //for audio
+    public static float[] volumes;
 
 
-    //these have to do with tile map actors & map stage
-	public static Array<MapActor> mapActorArr;
+    //initialize all of the fields here
+    public static void initGameData(){
+        chosenUnit = null;
+        unitsInGame = new OrderedMap<Integer, Array<Unit>>();
 
+        factUnitImages = new Array<UnitImage>();
+        playerUnitChoices = new Array<UnitInfo>();
 
+        gamePanels = new Array<Panel>();
+        mapActorArr = new Array<MapActor>();
 
-	//----Audio data: music, sound, volumes----//
-	public static Music currMusic;
-    public static Sound currSound;
-    public static float currVolumeMusic;
-    public static float currVolumeSounds;
-	 
+        float[] vols = {.5f, .5f}; //temporary, TODO: get these from preferences
+        volumes = vols;
+
+        //initalize scores
+        scoreP1 = 0;
+        scoreP2 = 0;
+    }
+
 
 }

@@ -35,14 +35,12 @@ package com.fs.game.utils.pathfinder;
  * 
  */
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.data.GameData;
 import com.fs.game.maps.Panel;
-import com.fs.game.stages.MapStage;
+import com.fs.game.stages.GameStage;
 import com.fs.game.units.Unit;
-import com.fs.game.utils.Constants;
-import com.fs.game.utils.UnitUtils;
+import com.fs.game.utils.GameUtils;
 
 public class PathGenerator {
 	
@@ -60,7 +58,6 @@ public class PathGenerator {
 	
 	Panel origin; //the origin panel where Unit is positioned at
 	
-	double[][] PANEL_COORD_GRAPH = Constants.GRID_SCREEN_VECTORS;
 	Array<Panel> allPanels = GameData.gamePanels;
 	Array<Panel> possibleMoves = new Array<Panel>(); //the panel array of POSSIBLE moves; 
 	Array<Panel> openList = new Array<Panel>(); //contains panels being inspected
@@ -78,7 +75,7 @@ public class PathGenerator {
 		this.unit = unit;
 		this.maxDistance = unit.getMaxMoves()*32;
 		this.unitSize = unit.getUnitSize();
-		Gdx.app.log(LOG, "unit size = " + unitSize);
+//		Gdx.app.log(LOG, "unit size = " + unitSize);
 		this.crossWater = unit.crossWater;
 		this.crossLand = unit.crossLand;
 		getOriginPanel(oriX, oriY);
@@ -94,6 +91,7 @@ public class PathGenerator {
 		for (Panel p : allPanels){
 			if (p.getX() == panX && p.getY() == panY){
 				this.origin = p;
+
 				break;
 			}
 		}
@@ -105,6 +103,7 @@ public class PathGenerator {
 	 * @return possibleMoves
 	 */
 	public Array<Panel> findPaths(){
+        getOriginPanel(unit.getX(), unit.getY());
 		origin.setCostFromStart(0);
 		Panel temp = origin; //temporary holder for panel being checked initialized to origin
 		
@@ -299,8 +298,9 @@ public class PathGenerator {
 		boolean unitObstacle = false; //whether this is a unit obstacle
 		boolean mapObstacle = false;  //whether this is a map obstacle 
 		
-		MapStage stage = (MapStage)this.unit.getStage();
-		Array<Unit> otherUnits = UnitUtils.findOtherUnits(stage.getActors(), unit);
+		GameStage stage = (GameStage)this.unit.getStage();
+        Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
+		Array<Unit> otherUnits = GameUtils.StageUtils.findOtherUnits(allUnits, unit);
 		
 		if(!this.crossWater && pan.terrainType.equals("water") ||
 				!this.crossLand && pan.terrainType.equals("obstacles")){
