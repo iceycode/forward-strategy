@@ -86,11 +86,11 @@ public class UnitImage extends Image {
     //whether or not to add this unit to hashmap
     public void imageActs(){
         if (chosen){
-            GameData.playrUnitChoices.add(unitInfo);
+            GameData.playerUnitChoices.add(unitInfo);
             Gdx.app.log(LOG, "Now selected unit with key = " + Integer.toString(key));
         }
-        else if (GameData.playrUnitChoices.contains(unitInfo, true) && !chosen){
-            GameData.playrUnitChoices.removeValue(unitInfo, true);
+        else if (GameData.playerUnitChoices.contains(unitInfo, true) && !chosen){
+            GameData.playerUnitChoices.removeValue(unitInfo, true);
         }
     }
 

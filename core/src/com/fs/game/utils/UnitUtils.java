@@ -19,6 +19,7 @@ import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Assets;
 import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
+import com.fs.game.data.UnitData;
 import com.fs.game.enums.UnitState;
 import com.fs.game.maps.Panel;
 import com.fs.game.stages.GameStage;
@@ -82,7 +83,19 @@ public class UnitUtils  {
             return chosenUnits;
         }
 
+        public static Array<Unit> setupUnits(Array<UnitInfo> chosenUnits, int player, String playerName, float[][] positions) {
+            Array<Unit> unitArray = new Array<Unit>();
 
+            for (int i = 0; i < chosenUnits.size; i++) {
+                float x = positions[i][0];
+                float y = positions[i][1];
+                Unit unit = new Unit(chosenUnits.get(i), x, y, player);
+                unit.setOwner(playerName);
+                unitArray.add(unit);
+            }
+
+            return unitArray;
+        }
 
         public static Array<Unit> setupUnits(Array<UnitInfo> chosenUnits, int player, float[][] positions,  GameStage stage){
             Array<Unit> currUnits = new Array<Unit>();
@@ -115,7 +128,7 @@ public class UnitUtils  {
                 float x = positions[i][0];
                 float y = positions[i][1];
                 Unit unit = new Unit(chosenUnits.get(i), x, y, player);
-                unit.owner = playerName;
+                unit.setOwner(playerName);
                 stage.addActor(unit);
                 currUnits.add(unit);
             }
@@ -229,7 +242,7 @@ public class UnitUtils  {
 
 
         public static Array<Animation> setupAnimations(Unit unit, float aniTime){
-            Array<Animation> animations = new Array<Animation>(8);
+            Array<Animation> animations = new Array<Animation>(9);
 
             UnitInfo unitInfo = unit.unitInfo;
             float width = unit.getWidth();
@@ -271,7 +284,7 @@ public class UnitUtils  {
             }
 
             //since not all animations have up & down movements
-            if (animations.get(3)==null || animations.get(4)==null){
+            if (animations.size < 4){
                 animations.insert(3, animations.get(0));
                 animations.insert(4, animations.get(0));
             }
@@ -642,12 +655,27 @@ public class UnitUtils  {
 
             for (Unit u : unit.enemyUnits){
                 if (u.chosen){
-                    unit.damage = Assets.damageListArray.get(u.getUnitID()-1)[unit.getUnitID()-1];
+                    unit.damage = Assets.damageListArray.get(getUnitIndex(u))[getUnitIndex(unit)];
                     unit.damageSet = true;
                 }
             }
         }
 
+        public static int getUnitIndex(Unit unit){
+            int index = 0;
+            if (unit.getFaction().equals("Arthroid")){
+                index = unit.getUnitID() - 21;
+
+            }
+            else if (unit.getFaction().equals("Reptoid")){
+                index = unit.getUnitID() - 11;
+            }
+            else{
+                index = unit.getUnitID() -1;
+            }
+
+            return index;
+        }
 
         /** finds any and all attackers
          *
@@ -805,67 +833,11 @@ public class UnitUtils  {
 
 
 
-//
-//
-//	/** finds the other units on the stage
-//	 *
-//	 * @param stageUnits
-//	 * @return
-//	 */
-//	public static Array<Unit> findOtherUnits(Array<Actor> stageUnits, Unit unit){
-//		Array<Unit> otherUnits = new Array<Unit>();
-//
-//		for (Actor a : stageUnits) {
-//			if (a.getClass().equals(Unit.class)) {
-//				Unit uni = (Unit)a;
-//				otherUnits.add(uni);
-//			}
-//		}
-//
-//		otherUnits.removeValue(unit, false);
-//
-//		return otherUnits;
-//	}
-//
-//
-//        public static ChangeListener unitImageChangeListener = new ChangeListener(){
-//
-//            @Override
-//            public void changed(ChangeEvent event, Actor actor){
-//                UnitImage currUnit = ((UnitImage)actor);
-//                Array<String> unitDetailText = MenuUtils.UnitMenu.updateUnitText(currUnit.unitInfo);
-//
-//                if (currUnit.selected){
-//                    Label unitDetail = UIUtils.createLabelInfo();
-//                    Label unitDamageList = UIUtils.createLabelDamage();
-//                    unitDetail.setText(unitDetailText.get(0));
-//                    unitDamageList.setText(unitDetailText.get(1));
-//
-//                    MenuUtils.UnitMenu.showUnitInfo(unitDetail, unitDamageList, currUnit.getStage());
-//                }
-//            }
-//
-////            @Override
-////            public boolean handle(Event event){
-////
-////                UnitImage currUnit = (UnitImage)event.getTarget();
-////                Array<String> unitDetailText = MenuUtils.UnitMenu.updateUnitText(currUnit.unitInfo);
-////
-////                if (currUnit.selected){
-////                    Label unitDetail = UIUtils.createLabelInfo();
-////                    Label unitDamageList = UIUtils.createLabelDamage();
-////                    unitDetail.setText(unitDetailText.get(0));
-////                    unitDamageList.setText(unitDetailText.get(1));
-////
-////                    MenuUtils.UnitMenu.showUnitInfo(unitDetail, unitDamageList, currUnit.getStage());
-////                }
-////
-////                return true;
-////            }
-//        };
-//
     }
 
+    public static void updateUnitData(UnitData unitData, Unit unit){
+
+    }
 
 
 }

@@ -168,7 +168,8 @@ public class GameScreen implements Screen {
 	 * 
 	 */
 	public void setupUI() {
-        GameUtils.Screen.setupUI(uiButtons, labels, stage, stageMap);
+        currPlayer = GameUtils.Player.randPlayer();
+        GameUtils.Screen.setupUI(uiButtons, labels, stage, stageMap, currPlayer);
         setupPauseMenu();
 
  	}
@@ -224,7 +225,7 @@ public class GameScreen implements Screen {
         //if the timer reaches max time, lets co set to true
         if (timerCount >= maxTime) {
             GameData.playerTurn = true;
-            GameUtils.Map.clearBoard(stageMap);	//clears board of selected panels
+            GameUtils.StageUtils.clearBoard(stageMap);	//clears board of selected panels
             timerCount = 0; //reset timer
         }
     }

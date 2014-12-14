@@ -9,23 +9,17 @@ package com.fs.game.enums;
 
 public enum UnitState {
 
-	//which direction unit is facing
-	STILL(0),
-	STILL_LEFT(0),
-	STILL_RIGHT(0),
 
-    //unit is chosen
-    CHOSEN(10),
-    MOVING(20),
-    ATTACKING(30),
+    CHOSEN(10), //unit is chosen
+    MOVING(20), //unit is moving
+    ATTACKING(30), //unit is attacking
 
-	//which direction moving
+	//which direction moving or attacking
+    STILL(0),
  	MOVE_RIGHT(1),
 	MOVE_LEFT(2),
 	MOVE_UP(3),
 	MOVE_DOWN(4),
-
-	//direction attacking
 	ATTACK_RIGHT(5),
 	ATTACK_LEFT(6),
 	ATTACK_UP(7),

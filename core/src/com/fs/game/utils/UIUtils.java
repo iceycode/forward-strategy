@@ -219,8 +219,8 @@ public class UIUtils {
         goButton.addListener(new ActorGestureListener(){
             @Override
             public void touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                GameData.playerTurn = true;  //player is manually finished turn (timer did not reset)
-                GameUtils.Map.clearBoard(stageMap);	//clears board of selected panels
+                GameData.playerTurn = false;  //player is manually finished turn (timer did not reset)
+                GameUtils.StageUtils.clearBoard(stageMap);	//clears board of selected panels
             }
         });
 

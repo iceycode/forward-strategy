@@ -19,6 +19,8 @@ public enum GameState {
 
     //Game state during game play (cannot go into selection or main menus)
     WAITING, //when a player is waiting
+    STARTING, //starting the game
+    STARTING_MULTI,
     PLAYER_DONE, //when player is done
     PLAYER_TURN, //when player has turn
 

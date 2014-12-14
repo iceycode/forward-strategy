@@ -17,28 +17,23 @@ import java.util.Random;
 public class TestUtils {
 
     /** A method for testing multiplayer setup
-     * Sets up player 1 & 2 setup (just for testing multiplayer)
-     * random factions (currently not random units)
+     * Sets up player's units using defualt setup
      *
-     * @param stage
+     * @param player : determines the player's side
+     * @param faction : chosen or random
      */
-    public static Array<Unit> randomMultiplayerSetup(int player, String faction, GameStage stage){
+    public static Array<Unit> randomMultiplayerSetup(int player, String playerName, String faction){
         Array<Unit> playerUnits;
-        Array<UnitInfo> unitInfoArray = UnitUtils.Setup.getDefaultUnits(faction);
+        Array<UnitInfo> unitInfoArray = UnitUtils.Setup.getDefaultUnits(GameData.playerFaction);
 
         if (player == 1){
-            playerUnits = UnitUtils.Setup.setupUnits(unitInfoArray, player,
-                    Constants.UNITS_POS_LEFT, stage);
+            playerUnits = UnitUtils.Setup.setupUnits(unitInfoArray, player, playerName, Constants.UNITS_POS_LEFT);
 
             GameData.unitsInGame.put(1, playerUnits);
-            stage.p1Units = playerUnits;
         }
         else{
-            playerUnits = UnitUtils.Setup.setupUnits(unitInfoArray, player,
-                    Constants.UNITS_POS_RIGHT, stage);
-
+            playerUnits = UnitUtils.Setup.setupUnits(unitInfoArray, player, playerName, Constants.UNITS_POS_RIGHT );
             GameData.unitsInGame.put(2, playerUnits);
-            stage.p2Units = playerUnits;
         }
 
         return playerUnits;
@@ -55,12 +50,6 @@ public class TestUtils {
 
         return playerUnits;
     }
-
-    public static void initialUnitSetup_Multi(String factionP1, String factionP2, GameStage stage){
-
-    }
-
-
 
 
     public static void testJsonFile(int player, int score, String name, Array<Unit> units, GameStage stage){

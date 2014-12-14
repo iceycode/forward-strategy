@@ -138,8 +138,8 @@ public class MenuUtils {
                     @Override
                     public void changed(ChangeEvent event, Actor actor) {
                         Gdx.app.log("Faction Menu LOG: ", "selected " + faction);
-                        if (GameData.currFaction == null) {
-                            GameData.currFaction = faction;
+                        if (GameData.playerFaction == null) {
+                            GameData.playerFaction = faction;
 
                         }
 

@@ -2,8 +2,6 @@ package com.fs.game.data;
 
 import com.badlogic.gdx.math.Vector2;
 
-import java.util.ArrayList;
-
 /** Class that stores unit data to be read/written by Json (libgdx)
  *
  *
@@ -14,34 +12,40 @@ public class UnitData {
 
     //units ID
     private int unitID;
-    private float[] size;
+    private String owner;
+    private String size;
     private Vector2 unitPosition; //this could be null
     private int state; //unit state
-    private String owner;
-
-    private ArrayList<Vector2> panelPositions; //panel positions of unit (if selected
     private int damage;
     private int health;
 
-    public UnitData(int id, int state, float[] size, String owner){
-        this.unitID = id;
-        this.state = state;
-        this.size = size;
+
+    public UnitData(){
+
     }
 
     public int getUnitID() {
         return unitID;
     }
 
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
     public void setUnitID(int unitID) {
         this.unitID = unitID;
     }
 
-    public float[] getSize() {
+    public String getSize() {
         return size;
     }
 
-    public void setSize(float[] size) {
+    public void setSize(String size) {
         this.size = size;
     }
 
@@ -61,14 +65,6 @@ public class UnitData {
         this.state = state;
     }
 
-    public ArrayList<Vector2> getPanelPositions() {
-        return panelPositions;
-    }
-
-    public void setPanelPositions(ArrayList<Vector2> panelPositions) {
-        this.panelPositions = panelPositions;
-    }
-
     public int getDamage() {
         return damage;
     }
@@ -84,4 +80,20 @@ public class UnitData {
     public void setHealth(int health) {
         this.health = health;
     }
+
+//    @Override
+//    public void write(Json json) {
+//        json.writeValue("unitID", unitID);
+//        json.writeValue("owner", owner);
+//        json.writeValue("size", size);
+//        json.writeValue("state", state);
+//        json.writeValue("unitPosition", unitPosition);
+//        json.writeValue("damage", damage);
+//        json.writeValue("health", health);
+//    }
+//
+//    @Override
+//    public void read(Json json, JsonValue jsonData) {
+//
+//    }
 }

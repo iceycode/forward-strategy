@@ -22,18 +22,18 @@ public class Constants {
 
     //-----------start screen-----------------//
     public static final String WELCOME = "Forward Strategy \n click anywhere to begin";
-    public static final String[] TEST_MGS = {"Click here or Press 1 for Test 1: \n 2 Units on Board",
-            "Click here or press 2 for Test 2: \n Humans vs Arthroid Setup",
-            "Click here or press 3 for Test 3: \n Multiplayer setup "};
+    public static final String[] TEST_MGS = {"Click here or press 1 for Test 1: \n 2 Units on Board",
+            "Click here or press 2 for Test 2: " + "\n Humans vs Arthroid Setup",
+            "Click here or press 3 for Test 3: " + "\n Multiplayer setup "};
 
 
     //-----------multiplayer connection/game status---------------//
-    public static final String[] TRY_CONNECT_MSGS = {"Connecting","to AppWarp"};
-    public static final String[] WAIT_MSGS = {"Waiting for","other user"};
-    public static final String[] ERROR_CONNECT_MSGS = {"Error in","Connection", "Go Back"};
-    public static final String[] GAME_WIN_MSGS = {"Congrats You Win!", "Enemy Defeated"};
-    public static final String[] GAME_LOSE_MSGS = {"You Lose!","Enemy Won"};
-    public static final String[] PLAYER_LEFT_MSGS = {"Congrats You Win!", "Enemy Left the Game"};
+    public static final String TRY_CONNECT_MSG = "Connecting\n to AppWarp";
+    public static final String WAIT_MSG = "Waiting for\n other user";
+    public static final String ERROR_CONNECT_MSG = "Error in \n Connection \n Go Back";
+    public static final String GAME_WIN_MSG = "Congrats You Win!\nEnemy Defeated";
+    public static final String GAME_LOSE_MSG = "You Lose!\nEnemy Won";
+    public static final String PLAYER_LEFT_MSG = "Congrats You Win!\nEnemy Left the Game";
 
 
 
@@ -238,6 +238,8 @@ public class Constants {
         public static final String API_KEY = "ae7493bafe3ef380323eb41c1032f62b5ddd0b940017648c62a7ea183471c408";
         public static final String SECRET_KEY = "55e85dd41157782e533246712d06b7913c3d56c2eec0d615f19c6ec08f942e66";
         public static final String ROOM_A = "506734404"; //ADMIN room
+
+        public static final int[] UPDATE_STATES = {0, 1, 2, 3, 4, 5};
 
     }
 

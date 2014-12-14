@@ -10,7 +10,65 @@ package com.fs.game.unused_old_classes;
  */
 public class OldMethods {
 
-
+//
+//
+//	/** finds the other units on the stage
+//	 *
+//	 * @param stageUnits
+//	 * @return
+//	 */
+//	public static Array<Unit> findOtherUnits(Array<Actor> stageUnits, Unit unit){
+//		Array<Unit> findOtherUnits = new Array<Unit>();
+//
+//		for (Actor a : stageUnits) {
+//			if (a.getClass().equals(Unit.class)) {
+//				Unit uni = (Unit)a;
+//				findOtherUnits.add(uni);
+//			}
+//		}
+//
+//		findOtherUnits.removeValue(unit, false);
+//
+//		return findOtherUnits;
+//	}
+//
+//
+//        public static ChangeListener unitImageChangeListener = new ChangeListener(){
+//
+//            @Override
+//            public void changed(ChangeEvent event, Actor actor){
+//                UnitImage currUnit = ((UnitImage)actor);
+//                Array<String> unitDetailText = MenuUtils.UnitMenu.updateUnitText(currUnit.unitInfo);
+//
+//                if (currUnit.selected){
+//                    Label unitDetail = UIUtils.createLabelInfo();
+//                    Label unitDamageList = UIUtils.createLabelDamage();
+//                    unitDetail.setText(unitDetailText.get(0));
+//                    unitDamageList.setText(unitDetailText.get(1));
+//
+//                    MenuUtils.UnitMenu.showUnitInfo(unitDetail, unitDamageList, currUnit.getStage());
+//                }
+//            }
+//
+////            @Override
+////            public boolean handle(Event event){
+////
+////                UnitImage currUnit = (UnitImage)event.getTarget();
+////                Array<String> unitDetailText = MenuUtils.UnitMenu.updateUnitText(currUnit.unitInfo);
+////
+////                if (currUnit.selected){
+////                    Label unitDetail = UIUtils.createLabelInfo();
+////                    Label unitDamageList = UIUtils.createLabelDamage();
+////                    unitDetail.setText(unitDetailText.get(0));
+////                    unitDamageList.setText(unitDetailText.get(1));
+////
+////                    MenuUtils.UnitMenu.showUnitInfo(unitDetail, unitDamageList, currUnit.getStage());
+////                }
+////
+////                return true;
+////            }
+//        };
+//
     //FROM old unitscreen
     //	/** creates the listeners for units, panel & infopanel
 //	 *

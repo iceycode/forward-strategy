@@ -16,13 +16,16 @@ public class UserData implements Json.Serializable{
 
     private int score;
     private int player;
-    private String name;
-    private Array<UnitData> unitList;
+    private String name; //player's name
+    private int playerID; //player's unique identifier
+    private String faction; // player's faction
+    private Array<UnitData> unitList; //unit data list
+    private boolean isPlayerTurn; //players turn if true
+    private int updateState;
+    private UnitData unitData; //for updating individual units
 
-    public UserData(int player, int score, String name){
-        this.setPlayer(player);
-        this.setScore(score);
-        this.setName(name);
+
+    public UserData(){
 
     }
 
@@ -42,7 +45,6 @@ public class UserData implements Json.Serializable{
         this.unitList = unitList;
     }
 
-
     public int getScore() {
         return score;
     }
@@ -59,25 +61,76 @@ public class UserData implements Json.Serializable{
         return unitList;
     }
 
+    public String getFaction() {
+        return faction;
+    }
+
+    public void setFaction(String faction) {
+        this.faction = faction;
+    }
+
+    public boolean isPlayerTurn() {
+        return isPlayerTurn;
+    }
+
+    public void setPlayerTurn(boolean isTurn) {
+        this.isPlayerTurn = isTurn;
+    }
+
+    public int getPlayerID() {
+        return playerID;
+    }
+
+    public void setPlayerID(int playerID) {
+        this.playerID = playerID;
+    }
+
+    public int getUpdateState() {
+        return updateState;
+    }
+
+    public void setUpdateState(int updateState) {
+        this.updateState = updateState;
+    }
+
+
+    public UnitData getUnitData() {
+        return unitData;
+    }
+
+    public void setUnitData(UnitData unitData) {
+        this.unitData = unitData;
+    }
+
     @Override
     public void write(Json json) {
         json.setIgnoreUnknownFields(true);
+        json.addClassTag("userData", UserData.class);
 
         json.writeValue("score", score);
         json.writeValue("player", player);
         json.writeValue("name", name);
         json.writeValue("unitList", unitList);
-//        json.writeValue("stage", stage);
+        json.writeValue("faction", faction);
+        json.writeValue("isPlayerTurn", isPlayerTurn);
+        json.writeValue("playerID", playerID);
+        json.writeValue("updateState", updateState);
+        json.writeValue("unitData", unitData);
     }
 
     @Override
     public void read(Json json, JsonValue jsonData) {
         json.setIgnoreUnknownFields(true);
+        json.addClassTag("userData", UserData.class);
 
         score = json.readValue("score", Integer.class, jsonData);
         player = json.readValue("player", Integer.class, jsonData);
         name = json.readValue("name", String.class, jsonData);
         unitList = json.readValue("unitList", Array.class, Unit.class, jsonData);
-//        stage = json.readValue("stage", GameStage.class, jsonData);
+        faction = json.readValue("faction", String.class, jsonData);
+        isPlayerTurn = json.readValue("isPlayerTurn", Boolean.class, jsonData);
+        playerID = json.readValue("playerID", Integer.class, jsonData);
+        updateState = json.readValue("updateState", Integer.class, jsonData);
+        unitData = json.readValue("unitData", UnitData.class, jsonData);
     }
 }

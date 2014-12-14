@@ -46,7 +46,7 @@ public class UnitListeners {
 //   					Gdx.app.log("UNIT log: ", " current pos : (" + uni.getX() + ", " + uni.getY() + ")");
 //   	 				uni.updateRectangle(); //updates unit position on board & stage
 //
-//   	 				for (Unit u: uni.otherUnits){
+//   	 				for (Unit u: uni.findOtherUnits){
 //   	 					u.updateUnitDataArrays( uni.getStage().getActors());
 //   	 				}
 //   					uni.clickCount = 0; //reset clickCount
@@ -79,7 +79,7 @@ public class UnitListeners {
 //                Gdx.app.log("UNIT log: ", " current pos : (" + uni.getX() + ", " + uni.getY() + ")");
 //                uni.updateRectangle(); //updates unit position on board & stage
 //
-//                for (Unit u: uni.otherUnits){
+//                for (Unit u: uni.findOtherUnits){
 //                    u.updateUnitDataArrays( uni.getStage().getActors());
 //                }
 //                uni.clickCount = 0; //reset clickCount

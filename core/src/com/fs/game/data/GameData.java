@@ -28,17 +28,25 @@ public class GameData {
     public static int currScore; //current players score
     public static int scoreP1; //tracks player 1 score
     public static int scoreP2;
+
+    public static Array<Unit> playerUnits;
     public static OrderedMap<Integer, Array<Unit>> unitsInGame; //all units, p1Units, p2Units
-    public static String playerName; //player names
-    public static int currPlayer;
+    public static String playerName; //player name
+    public static String enemyName;  //enemy's name
+    public static int playerPosition; //1 : left, 2 : right
+    public static int enemyPosition;
+    public static int updateState;
+
+    public static int currPlayer; //current player (1 or 2)
     public static boolean isChosen; //whether a unit is chosen
     public static boolean playerTurn; //if true, next player goes
 
     //------data to/from menu screens (or tests)----
     public static String[] factions;
-    public static String currFaction;
+    public static String playerFaction;
+    public static String enemyFaction; //could be obtained from multiplayer json
     public static Array<UnitImage> factUnitImages;
-    public static Array<UnitInfo> playrUnitChoices;
+    public static Array<UnitInfo> playerUnitChoices;
     public static int mapChoice; //level choice (for tiled map)
     public static int testType; //type of test that will be implemented
 
@@ -60,7 +68,7 @@ public class GameData {
         unitsInGame = new OrderedMap<Integer, Array<Unit>>();
 
         factUnitImages = new Array<UnitImage>();
-        playrUnitChoices = new Array<UnitInfo>();
+        playerUnitChoices = new Array<UnitInfo>();
 
         gamePanels = new Array<Panel>();
         mapActorArr = new Array<MapActor>();

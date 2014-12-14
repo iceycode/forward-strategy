@@ -21,7 +21,6 @@ import com.fs.game.maps.Panel;
 import com.fs.game.stages.GameStage;
 import com.fs.game.units.Unit;
 
-import java.util.HashMap;
 import java.util.Random;
 
 /** MapStage.java
@@ -186,30 +185,21 @@ public class GameUtils {
             GameData.panelMatrix = panelMatrix;
         }
 
-        /** clears the stage of any active (selected) panels
-         *
-         */
-        public static void clearBoard(GameStage stage){
-            for (Panel p : stage.getPanelArray()){
-                if (p.selected || p.moveableTo){
-                    p.selected = false;
-                    p.moveableTo = false;
-                    //p.viewing = false;
-                }
-            }
-        }
-
-
 
     }
 
 
     public static class Screen{
-        /** creates the side panels next to the board
+
+        /** sets up the stage UI & who goes first
          *
-         *
+         * @param buttons
+         * @param labels
+         * @param stage
+         * @param stageMap
+         * @param firstPlayer
          */
-        public static void setupUI(TextButton[] buttons, Label[] labels, Stage stage, GameStage stageMap) {
+        public static void setupUI(TextButton[] buttons, Label[] labels, Stage stage, GameStage stageMap, int firstPlayer) {
 
             //The side panel buttons indicating whose turn it is
             buttons[1] = UIUtils.createSideButton("P1", Constants.BT1_X, Constants.BT_Y);
@@ -249,9 +239,7 @@ public class GameUtils {
             int player = GameUtils.Player.randPlayer();
             buttons[player].toggle();
 
-
-            GameData.currPlayer = player;
-            GameUtils.Player.nextPlayer(player, buttons[1], buttons[2], stageMap);
+            GameUtils.Player.nextPlayer(firstPlayer, buttons[1], buttons[2], stageMap);
 
         }
 
@@ -301,14 +289,14 @@ public class GameUtils {
 
 
 
-        public static void nextPlayer(int player, Button p1Button, Button p2Button, GameStage stageMap){
+        public static int nextPlayer(int player, Button p1Button, Button p2Button, GameStage stageMap){
             if (player == 1) {
                 StageUtils.lockPlayerUnits(player, stageMap);  //lock these player units
 
                 if (!p1Button.isChecked())
                     p1Button.toggle(); //toggle
 
-                GameData.currPlayer = 2; //next player
+                player = 2; //next player
                 StageUtils.unlockPlayerUnits(player, stageMap); 	//unlock player units
                 p2Button.toggle();	//toggle checked state p2
             } //player 2 goes
@@ -318,11 +306,17 @@ public class GameUtils {
                 if (!p2Button.isChecked())
                     p2Button.toggle(); //if it is not checked
 
-                GameData.currPlayer = 1; //next player
+                player = 1; //next player
                 StageUtils.unlockPlayerUnits(player, stageMap); 	//unlock player units
                 p1Button.toggle();
             } //player 1 goes
+
+
+            return player;
         }
+
+
+
 
         /** updates current game score
          *
@@ -349,13 +343,6 @@ public class GameUtils {
 
     public static class StageUtils {
 
-
-        public static void updateAllUnits(GameStage stage){
-
-        }
-
-
-
         //--------------------FIND STAGE UNIT METHODS--------------------------
         /** finds all units on the stage
          *
@@ -374,7 +361,7 @@ public class GameUtils {
             return unitsOnStage;
         }
 
-        public static Array<Unit> otherUnits(Array<Unit> allUnits, Unit u){
+        public static Array<Unit> findOtherUnits(Array<Unit> allUnits, Unit u){
             Array<Unit> tempArr = allUnits; //the array to be created each iteration
              tempArr.removeValue(u, false); //remove it from temporary array
 
@@ -399,13 +386,36 @@ public class GameUtils {
             return playerUnits;
         }
 
+        /** finds all units of certain player
+         * - finds all units of a certain player
+         *
+         * @param playerName: player id as String (players name)
+         * @param stage : GameStage on which units exist
+         */
+        public static Array<Unit> findPlayerUnits(String playerName, GameStage stage){
+            Array<Actor> actors = stage.getActors();
+            Array<Unit> playerUnits = new Array<Unit>();
+
+            for (int i = 0; i< actors.size; i++) {
+                Actor a = actors.get(i);
+                if (a instanceof Unit) {
+                    Unit uni = (Unit)a;
+                    if (uni.getOwner() == playerName)
+                        playerUnits.add(uni);
+
+                }
+            }
+
+            return playerUnits;
+        }
+
         /** finds the enemy units on board
          * - this needs to be reset every time units change positions
          *
          */
         public static Array<Unit> findEnemyUnits(Unit unit, com.badlogic.gdx.scenes.scene2d.Stage stage){
             Array<Unit> enemyUnits = new Array<Unit>();
-            Array<Unit> otherUnits = otherUnits(findAllUnits(stage.getActors()), unit);
+            Array<Unit> otherUnits = findOtherUnits(findAllUnits(stage.getActors()), unit);
 
             //look through other units
             // if does not equal to this player, then it is enemy
@@ -485,67 +495,18 @@ public class GameUtils {
 
         }
 
-
-
-        //---------------------UNIT DAMAGE INIT/UPDATE METHODS---------------------------//
-
-        /** creates a damage HashMap containing arrays
+        /** clears the stage of any active (selected) panels
          *
-         * @param playerUnits
-         * @param enemyUnits
-         * @return HashMap containing array of unit damage texts
          */
-        public static void createDamageMap(HashMap<Integer, Array<String>> damageTextMap,
-                                           Array<Unit> playerUnits, Array<Unit> enemyUnits){
-
-            for (Unit unit : playerUnits) {
-                Array<String> damageTexts = new Array<String>();
-
-                for (Unit enemy : enemyUnits){
-                    int indexEnemy = enemy.getUnitID()-1;
-                    String damageText = Integer.toString(unit.damageList[indexEnemy]);
-                    damageTexts.add(damageText);
+        public static void clearBoard(GameStage stage){
+            for (Panel p : stage.getPanelArray()){
+                if (p.selected || p.moveableTo){
+                    p.selected = false;
+                    p.moveableTo = false;
+                    //p.viewing = false;
                 }
-
-                damageTextMap.put(unit.getUnitID(), damageTexts);
             }
-
         }
-
-//        /** updates damage labels on stage
-//         *
-//         * @param damageTextMap
-//         * @param damageLabels
-//         * @param currUnit
-//         * @param stage
-//         */
-//        public static void updateDamageLabels(HashMap<Integer, Array<String>> damageTextMap, Array<Label> damageLabels,
-//                                              Unit currUnit, GameStage stage){
-//            if (damageLabels != null){
-//                if (GameData.chosenUnit != currUnit){
-//                    damageLabels.clear();
-//                }
-//
-//            }
-//
-//            for (Unit u : GameData.enemyUnits){
-//                for (String damage : damageTextMap.get(u.getUnitID())){
-//                    Label label = UnitUtils.Attack.createDamageLabel(u, damage);
-//                    stage.addActor(label);
-//                }
-//            }
-//
-//        }
-//
-//        public static void resetDamageLabels(GameStage stage){
-//            for (Actor a : stage.getActors()){
-//                if (a instanceof Label){
-//                    Label label = (Label)a;
-//                    label.remove();
-//                    label.clear();
-//                }
-//            }
-//        }
     }
 
 

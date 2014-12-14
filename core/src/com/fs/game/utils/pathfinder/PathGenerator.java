@@ -35,7 +35,6 @@ package com.fs.game.utils.pathfinder;
  * 
  */
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.data.GameData;
 import com.fs.game.maps.Panel;
@@ -76,7 +75,7 @@ public class PathGenerator {
 		this.unit = unit;
 		this.maxDistance = unit.getMaxMoves()*32;
 		this.unitSize = unit.getUnitSize();
-		Gdx.app.log(LOG, "unit size = " + unitSize);
+//		Gdx.app.log(LOG, "unit size = " + unitSize);
 		this.crossWater = unit.crossWater;
 		this.crossLand = unit.crossLand;
 		getOriginPanel(oriX, oriY);
@@ -104,7 +103,7 @@ public class PathGenerator {
 	 * @return possibleMoves
 	 */
 	public Array<Panel> findPaths(){
-        getOriginPanel(unit.getOriginX(), unit.getOriginX());
+        getOriginPanel(unit.getX(), unit.getY());
 		origin.setCostFromStart(0);
 		Panel temp = origin; //temporary holder for panel being checked initialized to origin
 		
@@ -301,7 +300,7 @@ public class PathGenerator {
 		
 		GameStage stage = (GameStage)this.unit.getStage();
         Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
-		Array<Unit> otherUnits = GameUtils.StageUtils.otherUnits(allUnits, unit);
+		Array<Unit> otherUnits = GameUtils.StageUtils.findOtherUnits(allUnits, unit);
 		
 		if(!this.crossWater && pan.terrainType.equals("water") ||
 				!this.crossLand && pan.terrainType.equals("obstacles")){

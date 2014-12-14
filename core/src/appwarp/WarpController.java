@@ -15,6 +15,7 @@ import java.util.HashMap;
 public class WarpController {
 
 	private static WarpController instance;
+//    public static WarpController instance;
 	
 	private boolean showLog = true;
 
@@ -37,9 +38,6 @@ public class WarpController {
     private WarpListener turnListener;
 	
 	private int STATE;
-    public int player = 0; //the players assignment
-
-
 
 	// Game state constants
 	public static final int WAITING = 1;
@@ -75,6 +73,7 @@ public class WarpController {
 	public void startApp(String localUser){
 		this.localUser = localUser;
 		warpClient.connectWithUserName(localUser);
+
 	}
 	
 	public void setListener(WarpListener listener){
@@ -176,13 +175,11 @@ public class WarpController {
 	
 	public void onGetLiveRoomInfo(String[] liveUsers){
 
-		log("onGetLiveRoomInfo: "+ player);
+		log("onGetLiveRoomInfo: ");
 		if(liveUsers!=null){
 			if(liveUsers.length==2){
-                player = 2;
-				startGame();	
+				startGame();
 			}else{
-                player = 1;
 				waitForOtherUser();
 			}
 		}else{
@@ -205,9 +202,10 @@ public class WarpController {
 	}
 
 
-	
+	int counter = 0;
 	public void onGameUpdateReceived(String message){
-		log("onMoveUpdateReceived: message"+ message );
+        log("onMoveUpdateReceived: " + message );
+
 		String userName = message.substring(0, message.indexOf("#@"));
 		String data = message.substring(message.indexOf("#@")+2, message.length());
 		if(!localUser.equals(userName)){

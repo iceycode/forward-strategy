@@ -1,11 +1,9 @@
 package com.fs.game.utils;
 
 import appwarp.WarpController;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.fs.game.assets.Constants;
-import com.fs.game.data.GameData;
 import com.fs.game.data.UnitData;
 import com.fs.game.data.UserData;
 import com.shephertz.app42.gaming.multiplayer.client.WarpClient;
@@ -22,72 +20,91 @@ public class MultiUtils {
     private final static String LOG = "MultiUtils LOG: ";
 
 
-    //Initializes App42 API/AppWarp cloud services
-    public static void initApp42Services(){
-        //ServiceAPI spJava = new ServiceAPI(Constants.App42.API_KEY, Constants.App42.SECRET_KEY);
-        WarpClient.initialize(Constants.App42.API_KEY, Constants.App42.SECRET_KEY);
-        WarpController.getInstance().startApp(GameData.playerName); //starts appwarp
-
-    }
 
 
 
-    public static String setupUsername(){
+
+
+
+
+    public static boolean positionOnLeft(){
         Random rand = new Random();
-        String numID = Integer.toString(rand.nextInt(1000)+1);
 
-        return "playerTester" + numID;
+        boolean leftPos = false;
+        int pos1 = rand.nextInt(1000);
+        int pos2 = rand.nextInt(1000);
+
+        if (pos1 > pos2){
+            leftPos = true;
+        }
+        else if (pos1 == pos2){
+            leftPos = positionOnLeft();
+        }
+
+        return leftPos;
     }
 
 
 
-    /** Checks to see if users have conflicting player assignments
-     * 1st player always gets switched if there is a collision
-     *
-     * @param player
-     * @param otherPlayer
-     * @return returns an updated (or not) player value
-     */
-    public static int matchPlayerVals(int player, int otherPlayer){
-        if (player == 1 && otherPlayer == 1)
-            player = 2;
-        else if (player == 2 && otherPlayer == 2)
-            player = 1;
+    public static class PlayerData{
+        private String player;
+        private String faction;
 
-        return player;
+        public PlayerData(){
+
+        }
+
+        public String getName() {
+            return player;
+        }
+
+        public String getFaction() {
+            return faction;
+        }
+
+        public void setPlayer(String player) {
+            this.player = player;
+        }
+
+        public void setFaction(String faction) {
+            this.faction = faction;
+        }
     }
 
-
-//    public static class PlayerData{
-//        private int player;
-//        private String faction;
-//
-//        public PlayerData(int player, String faction){
-//            this.player = player;
-//            this.faction = faction;
-//        }
-//
-//        public int getPlayer() {
-//            return player;
-//        }
-//
-//        public String getFaction() {
-//            return faction;
-//        }
-//
-//    }
-
-
-    public static void sendStartData(int player, String faction){
+    public static void sendSetupData(int playerID, String playerName, String faction){
         try{
-//            PlayerData playerData = new PlayerData(player, faction);
-            UserData userData = new UserData(player, 0, faction);
+            UserData userData = new UserData();
+            userData.setName(playerName);
+            userData.setFaction(faction);
+            userData.setPlayerID(playerID);
 
             Json json = new Json();
             json.setIgnoreUnknownFields(true);
             String data = json.toJson(userData);
 
-            Gdx.app.log(LOG, "start Json file for player "+ player + ":" + data); //for logging purposes
+            WarpController.getInstance().sendGameUpdate(data);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void sendStartData(int player, String name, String faction, Array<UnitData> unitDataArray){
+        try{
+//            PlayerData playerData = new PlayerData(player, faction);
+            UserData userData = new UserData();
+
+            userData.setPlayer(player);
+            userData.setName(name);
+            userData.setFaction(faction);
+            userData.setUnitList(unitDataArray);
+
+            Json json = new Json();
+            json.setIgnoreUnknownFields(true);
+            String data = json.toJson(userData);
+
+//            Gdx.app.log(LOG, "start Json file for player "+ player + ":" + data); //for logging purposes
 
             WarpController.getInstance().sendGameUpdate(data);
 
@@ -98,40 +115,35 @@ public class MultiUtils {
         }
     }
 
-    /** writes & sends a JSONObject with updated unit states
-     *
-     * @param player : player
-     * @param score : player's score
-     * @param name : player's name (unique ID)
-     * @param units : all of the players current Units (for updating units)
-     *
-     */
-    public static void sendPlayerData(int player, int score, String name, Array<UnitData> units){
-
-        try {
-            UserData userData = new UserData(player, score, name);
-            userData.setUnitList(units);
-
-            Json json = new Json();
-            String data = json.prettyPrint(userData);
 
 
-            System.out.println("UserData Json as string: " + data);
+    //Initializes App42 API/AppWarp cloud services
+    public static void initApp42Services(String playerName){
+        //ServiceAPI spJava = new ServiceAPI(Constants.App42.API_KEY, Constants.App42.SECRET_KEY);
+        WarpClient.initialize(Constants.App42.API_KEY, Constants.App42.SECRET_KEY);
+        WarpController.getInstance().startApp(playerName); //starts appwarp
 
-            WarpController.getInstance().sendGameUpdate(data);
-
-        } catch (Exception e) {
-            // exception in sendPlayerData
-            System.out.println("Error writing json! ");
-            e.printStackTrace();
-        }
     }
 
 
 
+    public static String setupUsername(){
+        Random rand = new Random();
+        int idLength = rand.nextInt(15)+1;
 
+        String uniqueID = getRandomHexString(idLength);
 
+        return "tester" + uniqueID;
+    }
 
+    private static String getRandomHexString(int numchars){
+        Random r = new Random();
+        StringBuffer sb = new StringBuffer();
+        while(sb.length() < numchars){
+            sb.append(Integer.toHexString(r.nextInt()));
+        }
+        return sb.toString().substring(0, numchars);
+    }
 
 
 }

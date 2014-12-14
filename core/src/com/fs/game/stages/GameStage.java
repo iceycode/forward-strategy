@@ -3,23 +3,24 @@
  */
 package com.fs.game.stages;
 
+import appwarp.WarpController;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.fs.game.assets.Assets;
 import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UnitData;
+import com.fs.game.data.UserData;
 import com.fs.game.maps.Panel;
 import com.fs.game.tests.TestUtils;
 import com.fs.game.units.Unit;
-import com.fs.game.units.UnitInfo;
 import com.fs.game.utils.GameUtils;
-import com.fs.game.utils.UnitUtils;
 
 
 /** the stage which contains the tiled map
@@ -58,11 +59,7 @@ public class GameStage extends Stage {
     public Array<Unit> playerUnits;
     public Array<Unit> enemyUnits;
 
-    public Array<UnitData> unitsData;
-
-    public String playerName;
-    public int currentState;
-
+    public Array<UnitData> unitDataArray;
 
 	/**
 	 * instantiated by MapsFactory
@@ -75,12 +72,18 @@ public class GameStage extends Stage {
         this.tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         this.allUnits = new Array<Unit>();
 
+        playerUnits = new Array<Unit>();
+        enemyUnits = new Array<Unit>();
+        unitDataArray = new Array<UnitData>();
+
         setupCamera();//sets up the camera
 
         //this also sets up this stages panelArray
-        GameUtils.Map.setupGridElements(this);//get Table & Actors from GameBoard class
+        GameUtils.Map.setupGridElements(this); //get Table & Actors from GameBoard class
 
-        addUnits();
+        //TODO: this is temporary setup, maybe add parameter in constructor for game/test type
+        if (GameData.testType < 3)
+            addUnits();
 
     }
 	
@@ -115,57 +118,128 @@ public class GameStage extends Stage {
 		else if (GameData.testType == 2){
             TestUtils.testBoardSetup2_16x12(this); //test setup b/w humans & reptoids
         }
-        else{
-            this.currentState = Constants.STAGE_STATES[2]; //=3
-        }
 
 	}
 
+    /** adds all player's units to stage
+     *
+     * @param unitArray
+     * @param playerName
+     */
+    public void addUnits(Array<Unit> unitArray, String playerName){
+        for (Unit u : unitArray){
 
-    public void addUnitsToStage(int player){
-        for (Unit u : p1Units){
             addActor(u);
-        }
 
-        for (Unit u: p2Units){
-
-        }
-    }
-
-    public void updateUnitData(int player, Array<Unit> units){
-        if (player == 1){
-            for (int i = 0; i < units.size; i++){
-                p1Units.get(i).setX(units.get(i).getX());
-                units.get(i).getY();
+            if (GameData.playerName.equals(playerName)){
+                UnitData unitData = setUnitData(u);
+                unitDataArray.add(unitData);
+                playerUnits.add(u);
+            }
+            else{
+                enemyUnits.add(u);
             }
         }
     }
 
-    public void initialPlayerSetup(int player, String name){
-        Array<UnitInfo> unitInfoArray = new Array<UnitInfo>();
 
+    /** writes & sends a JSONObject with updated unit states
+     *
+     * @param player : current player
+     * @param score : player's score
+     *
+     */
+    public void sendPlayerData(int player, int score){
 
+        try {
+            Array<UnitData> unitDatas = getPlayerUnitData();
 
-        if (player == 1){
-            playerUnits = UnitUtils.Setup.setupUnits(name, unitInfoArray, player, Constants.UNITS_POS_LEFT, this);
-        }
-        else{
-            playerUnits = UnitUtils.Setup.setupUnits(name, unitInfoArray, player, Constants.UNITS_POS_LEFT, this);
+            UserData userData = new UserData();
+            userData.setPlayer(player);
+            userData.setScore(score);
+            userData.setUnitList(unitDatas);
+            userData.setName(GameData.playerName);
+            userData.setPlayerTurn(GameData.playerTurn);
+
+            Json json = new Json();
+            json.setIgnoreUnknownFields(true);
+            String data = json.toJson(userData);
+
+            WarpController.getInstance().sendGameUpdate(data);
+
+        } catch (Exception e) {
+            // exception in sendPlayerData
+            System.out.println("Error writing json! ");
+            e.printStackTrace();
         }
     }
 
 
-    public void initialEnemySetup(int player, String name, Array<UnitData> unitDataArr){
-        Array<UnitInfo> unitInfoArray = new Array<UnitInfo>();
-        for (UnitData unitData : unitDataArr) {
-            UnitInfo unitInfo = Assets.unitInfoArray.get(unitData.getUnitID() - 1);
-            unitInfoArray.add(unitInfo);
-        }
+    public Array<UnitData> getPlayerUnitData(){
+        Array<UnitData> unitDatas = new Array<UnitData>();
+        Array<Unit> playerUnits = GameUtils.StageUtils.findPlayerUnits(GameData.playerName, this);
 
-        if (player == 1){
-            enemyUnits = UnitUtils.Setup.setupUnits(name, unitInfoArray, player, Constants.UNITS_POS_LEFT, this);
-        }
+        for (Unit unit: playerUnits)
+            unitDatas.add(unit.getUnitData());
 
+        return unitDatas;
+    }
+
+
+    /** updates stage units based on name
+     *
+     * @param unitDataArray
+     * @param playerName
+     */
+    public void updateStageUnits(Array<UnitData> unitDataArray, String playerName){
+        Array<Unit> playerUnits = GameUtils.StageUtils.findPlayerUnits(playerName, this);
+
+        for (int i = 0; i < playerUnits.size; i++){
+
+            if (playerUnits.get(i).moving || playerUnits.get(i).underattack){
+                System.out.println("Unit updated with unitdata");
+
+                float x = unitDataArray.get(i).getUnitPosition().x;
+                float y = unitDataArray.get(i).getUnitPosition().y;
+
+                playerUnits.get(i).state.setValue(unitDataArray.get(i).getState());
+                playerUnits.get(i).setPosition(x, y);
+            }
+        }
+    }
+
+
+    public UnitData setUnitData(Unit unit){
+
+        UnitData unitData = new UnitData();
+        unitData.setUnitID(unit.getUnitID());
+        unitData.setSize(unit.getUnitSize());
+
+        unitData.setOwner(GameData.playerName);
+        unitData.setState(unit.state.getValue());
+        unitData.setDamage(unit.damage);
+        unitData.setHealth(unit.health);
+        unitData.setUnitPosition(new Vector2(unit.getX(), unit.getY()));
+
+        unit.setUnitData(unitData);
+
+        return unitData;
+    }
+
+
+
+    public void updateUnit(UnitData data){
+        Array<Unit> playerUnits = GameUtils.StageUtils.findPlayerUnits(GameData.enemyName, this);
+
+        String name = data.getOwner();
+        int unitID = data.getUnitID();
+
+        for (Unit u : playerUnits){
+            if (name.equals(GameData.enemyName) && unitID==u.getUnitID()){
+                u.updateUnit(data);
+                break;
+            }
+        }
     }
 
 
@@ -184,40 +258,6 @@ public class GameStage extends Stage {
 
 
 
-    public void updateStage(Array<Unit> updatedUnits, int currPlayer){
-        if (currPlayer == 1){
-            if (p1Units != null)
-                p1Units.clear();
-            else
-                p1Units = updatedUnits;
-
-            for (Unit u: updatedUnits){
-                p1Units.add(u);
-            }
-        }
-        else{
-            if (p2Units != null)
-                p2Units.clear();
-            else
-                p1Units = updatedUnits;
-
-            for (Unit u: updatedUnits){
-                p2Units.add(u);
-            }
-        }
-
-    }
-
-
-    public void updateEnemyUnits(Array<Unit> updatedUnits){
-
-        for (int i = 0; i < updatedUnits.size; i++){
-
-
-        }
-    }
-
-
 
     /* stage maps draw method */
     @Override
@@ -233,6 +273,8 @@ public class GameStage extends Stage {
      *  */
     @Override
     public void act(float delta) {
+
+
 
      	super.act(delta);
 
@@ -271,5 +313,11 @@ public class GameStage extends Stage {
 		this.panelArray = panelArray;
 	}
 
+    public Array<UnitData> getUnitDataArray() {
+        return unitDataArray;
+    }
 
+    public void setUnitDataArray(Array<UnitData> unitDataArray) {
+        this.unitDataArray = unitDataArray;
+    }
 }

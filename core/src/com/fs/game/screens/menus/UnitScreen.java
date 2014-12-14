@@ -56,7 +56,7 @@ public class UnitScreen implements Screen{
         this.game = game;
         this.gameState = GameState.UNIT_SELECT;
         this.currPlayer = GameData.currPlayer;
-        this.currFaction = GameData.currFaction;
+        this.currFaction = GameData.playerFaction;
 
         setupCamera();
         setupStage();

@@ -1,6 +1,7 @@
 package com.fs.game.units;
 
 
+import appwarp.WarpController;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -12,10 +13,12 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.actions.ParallelAction;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pool;
 import com.fs.game.assets.Assets;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UnitData;
+import com.fs.game.data.UserData;
 import com.fs.game.enums.UnitState;
 import com.fs.game.maps.Panel;
 import com.fs.game.utils.GameUtils;
@@ -42,23 +45,14 @@ public class Unit extends Actor {
 	public Array<Vector2> panelPath; //the actual path unit takes when moving 
   
 	/**ANIMATION OBJECTS**/
+    //Array stores all animations adsfas
+    // 0=Still; 1=MoveRight; 2=MoveLeft; 3=MoveUp; 4=MoveDown
+    // 5=AttackRight; 6=AttackLeft; 7=AttackUp; 8=AttackDown
     Array<Animation> animations; //stores all animations
-	Animation stillAnim;
-	//move animations
-	Animation moveLeftAnim;	
-	Animation moveRightAnim;
-	Animation moveUpAnim;
-	Animation moveDownAnim;
-	//attack animations
-	Animation attackLeftAnim;
-	Animation attackRightAnim;
-	Animation attackUpAnim;
-	Animation attackDownAnim;
-	Animation deathAnim;	//death animation
       
 	float timeInterval = 0.1f; //stores delta time for animations
 	float aniTime = .1f; //stores data related to animation between panels
-	float attackTime = 0f;
+	float attackTime = 0.2f;
 
 	//unit information
  	public UnitInfo unitInfo; //sets unit's information
@@ -72,7 +66,7 @@ public class Unit extends Actor {
 	public boolean crossWater = false;
 	public boolean crossLand = false; 
  	
-	public float health = 4; //each unit has 4 health
+	public int health = 4; //each unit has 4 health
 	public Texture healthBar; // the texture which is drawn with the unit
 	public int damage = 0; //the damage this unit IS dealt
 
@@ -101,8 +95,10 @@ public class Unit extends Actor {
 
 
     //for online multiplayer data
-    public UnitData unitData;
-    public String owner;
+    private UnitData unitData;
+    private String owner;
+    private int updateState; //what kind of update should be done
+
 
 	//place to recycle allocated move actions (max of 16)
 	public Pool<SequenceAction> actionPool = new Pool<SequenceAction>(){
@@ -126,8 +122,10 @@ public class Unit extends Actor {
         this.unitInfo = unitInfo;
         this.player = player; //sets the player
 
+
         setupUnit(posX, posY);
         this.animations = UnitUtils.Setup.setupAnimations(this, aniTime);
+
 
         this.damageText = Assets.uiSkin.getFont("retro1");
         this.damageText.setColor(Color.YELLOW);
@@ -136,15 +134,13 @@ public class Unit extends Actor {
         this.healthBar = Assets.uiSkin.get("healthBar", Texture.class);
 
         this.state = UnitState.STILL;
+        setupUnitData();
 
         this.addListener(UnitUtils.Listeners.actorGestureListener);
-
-
         this.otherUnits = new Array<Unit>(13); //all other units except this one
         this.enemyUnits = new Array<Unit>(7);	//all enemy units
 
         this.pathGen = new PathGenerator(this, getOriginX(), getOriginY());
-
 
         this.moveSequence = new SequenceAction();
         this.panelArray = new Array<Panel>();
@@ -166,12 +162,8 @@ public class Unit extends Actor {
 		setUnitSize(unitInfo.size);
         setMaxMoves(unitInfo.getMaxMoves());
 
+        setPosition(getX(), getY());
         setOrigin(getX(), getY()); //original positions for determining where unit has moved
-
-        if (player == 1)
-            this.state = UnitState.STILL_RIGHT;
-        else
-            this.state = UnitState.STILL_LEFT;
 
         if (this.getUnitInfo().isCrossLandObst().equals("Yes")){
 			this.crossLand = true;
@@ -180,101 +172,31 @@ public class Unit extends Actor {
 			this.crossWater = true;
 		}
 	}
- 
-//	/**initially set to .01 (slow)
-//	 * sets up the animations for this unit
-//	 */
-// 	public void setupAnimations(){
-//   		this.stillAnim = UnitUtils.Setup.createAnimation(aniTime, texture, getWidth(), getHeight());
-//
-//		//gets textures from assetmanager
-//		for(String fs : unitInfo.getTexPaths()){
-//
-////            Gdx.app.log(LOG, "unit name : " + getName() + " , framesheet is " + fs);
-//            Texture tex = Assets.assetManager.get(fs, Texture.class);
-//
-//            if (fs.equals(unitInfo.getUnitPath() + Constants.UNIT_MOVE_RIGHT)){
-//                moveRightAnim = UnitUtils.Setup.createAnimation(aniTime, tex, getWidth(), getHeight());
-//            }
-//            else if (fs.equals(unitInfo.getUnitPath() + Constants.UNIT_MOVE_LEFT)){
-//                moveLeftAnim = UnitUtils.Setup.createAnimation(aniTime, tex, getWidth(), getHeight());
-//            }
-//            else if (fs.equals(unitInfo.getUnitPath() + Constants.UNIT_MOVE_UP)){
-//                moveUpAnim = UnitUtils.Setup.createAnimation(aniTime, tex, getWidth(), getHeight());
-//            }
-//            else if (fs.equals(unitInfo.getUnitPath() + Constants.UNIT_MOVE_DOWN)){
-//                moveDownAnim = UnitUtils.Setup.createAnimation(aniTime, tex, getWidth(), getHeight());
-//            }
-//            else if (fs.equals(unitInfo.getUnitPath()+ Constants.UNIT_ATTACK_RIGHT)){
-//                attackRightAnim = UnitUtils.Setup.createAnimation(aniTime, tex, getWidth(), getHeight());
-//            }
-//            else if (fs.equals(unitInfo.getUnitPath() + Constants.UNIT_ATTACK_LEFT)){
-//                attackLeftAnim = UnitUtils.Setup.createAnimation(aniTime, tex, getWidth(), getHeight());
-//            }
-//            else if (fs.equals(unitInfo.getUnitPath() + Constants.UNIT_ATTACK_UP)){
-//                attackUpAnim = UnitUtils.Setup.createAnimation(aniTime, tex, getWidth(), getHeight());
-//            }
-//            else if (fs.equals(unitInfo.getUnitPath() + Constants.UNIT_ATTACK_UP)) {
-//                attackUpAnim = UnitUtils.Setup.createAnimation(aniTime, tex, getWidth(), getHeight());
-//            }
-//        }
-//
-//        if (this.moveUpAnim==null || this.moveDownAnim == null){
-//            moveUpAnim = moveRightAnim;
-//            moveDownAnim = moveLeftAnim;
-//        }
-//
-//
-//	}
-//
+
+    public void setupUnitData(){
+        this.unitData = new UnitData();
+        unitData.setUnitID(unitID);
+        unitData.setSize(unitSize);
+        unitData.setState(state.getValue());
+        unitData.setDamage(damage);
+        unitData.setHealth(health);
+        unitData.setUnitPosition(new Vector2(getX(), getY()));
+    }
+
 
 	@Override
 	public void draw(Batch batch, float alpha) {
 
  		super.draw(batch, alpha);
 
+        state = UnitUtils.Movement.unitDirection(this, getX(), getY()); //sets the unit state if moving
+        int aniIndex = state.getValue();
 
-        batch.draw(animations.get(state.getValue()).getKeyFrame(timeInterval, true), getX(), getY());
+        if (aniIndex > animations.size)
+            aniIndex = 0;
 
 
-//		switch(state){
-//			case MOVE_RIGHT:
-//				batch.draw(moveRightAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//				break;
-//			case MOVE_LEFT:
-//				batch.draw(moveLeftAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//				break;
-//			case MOVE_UP:
-//				batch.draw(moveUpAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//				break;
-//			case MOVE_DOWN:
-//				batch.draw(moveDownAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//				break;
-//			case STILL:
-//				batch.draw(stillAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//				break;
-//
-//            case ATTACK_RIGHT:
-//                batch.draw(attackRightAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//                break;
-//			case ATTACK_LEFT:
-//                batch.draw(attackLeftAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//                break;
-//			case ATTACK_UP:
-//                batch.draw(attackUpAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//				break;
-//			case ATTACK_DOWN:
-//                batch.draw(attackDownAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//				break;
-//            case DEAD:
-//                this.remove();
-//                this.clear();
-//                break;
-//            default:
-//				batch.draw(stillAnim.getKeyFrame(timeInterval, true), getX(), getY());
-//				break;
-//		}
-
+        batch.draw(animations.get(aniIndex).getKeyFrame(timeInterval, true), getX(), getY());
 
 		//POSSIBLE temporary draw setup for healthbar
 		float healthBarWidth = healthBar.getWidth() * (health/4f); 
@@ -318,7 +240,6 @@ public class Unit extends Actor {
 		else{
             if (chosen){
                 //other units deselected
-// 		 	GameUtils.StageUtils.deselectUnits(otherUnits); //in listener
                 updateGameData();
 
                 //only gets panel array doesn't contain any panels
@@ -332,32 +253,56 @@ public class Unit extends Actor {
             }
             if (moving) {
                 addAction(UnitUtils.Movement.createMoveAction(moveSequence, this));
-                state = UnitUtils.Movement.unitDirection(this, getX(), getY()); //sets the unit state
-                //updateRectangle();
+                updateRectangle();
+
+                if (unitData!= null)
+                    selfUpdateData();
 
                 if (getX()==targetPan.getX() && getY()==targetPan.getY())
-                    updateUnit();
-
+                    resetUnit();
             }
             else {
                 state = UnitState.STILL;
             }
+
+
 			
 		}
-
-
-		
 		 
 	}
 
-    //this will get sent into a json object via appwarp api
-    public UnitData updateUnitData(){
+    public void selfUpdateData(){
+        unitData.setOwner(owner);
+        unitData.setState(state.getValue());
+        unitData.setDamage(damage);
+        unitData.setHealth(health);
+        unitData.setUnitPosition(new Vector2(getX(), getY()));
 
-        return unitData;
+        UserData userData = new UserData();
+        userData.setUnitData(unitData);
+        userData.setUpdateState(1);
+
+        try{
+            Json json = new Json();
+
+            String data = json.toJson(userData, UserData.class);
+            WarpController.getInstance().sendGameUpdate(data);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
+    public void updateUnit(UnitData unitData){
+        setX(unitData.getUnitPosition().x);
+        setY(unitData.getUnitPosition().y);
 
+        state.setValue(unitData.getState());
+        health = unitData.getHealth();
+        damage = unitData.getDamage();
 
+        //selfUpdateData(); //updates unit's data
+    }
 
     public void updateGameData(){
 
@@ -377,7 +322,7 @@ public class Unit extends Actor {
 	 * arrays which contain ally/enemy unit info
 	 *  
 	 */
-	public void updateUnit(){
+	public void resetUnit(){
         //update unit position, animation & selection information
  		setOrigin(getX(), getY());
 		updateRectangle();
@@ -385,9 +330,9 @@ public class Unit extends Actor {
 		moving = false;
 		standing = true;
         done = true;
+        lock = true;
 
 		this.state = UnitState.STILL;
-
 
         //reset path finder variables
 	 	pathGen.getOriginPanel(getX(), getY());
@@ -418,15 +363,16 @@ public class Unit extends Actor {
 	public void updateUnitDataArrays(Array<Actor> allActors){
 		//arrays which update the other units on stage so this unit knows about them
 		Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(allActors);
-		this.otherUnits = GameUtils.StageUtils.otherUnits(allUnits, this);
+		this.otherUnits = GameUtils.StageUtils.findOtherUnits(allUnits, this);
 
 		//updates the enemies on the board based on player
-		if (this.player == 1){
-			this.enemyUnits = GameUtils.StageUtils.findPlayerUnits(allUnits, 2);
-		}
-		else{
-			this.enemyUnits = GameUtils.StageUtils.findPlayerUnits(allUnits, 1);
-		}
+//		if (this.player == 1){
+//			this.enemyUnits = GameUtils.StageUtils.findPlayerUnits(allUnits, 2);
+//		}
+//		else{
+//			this.enemyUnits = GameUtils.StageUtils.findPlayerUnits(allUnits, 1);
+//		}
+        this.enemyUnits = GameData.enemyUnits;
 	}
 
 
@@ -559,5 +505,29 @@ public class Unit extends Actor {
 		
 		this.unitSize = unitSize;
 	}
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public UnitData getUnitData() {
+        return unitData;
+    }
+
+    public void setUnitData(UnitData unitData) {
+        this.unitData = unitData;
+    }
+
+    public int getUpdateState() {
+        return updateState;
+    }
+
+    public void setUpdateState(int updateState) {
+        this.updateState = updateState;
+    }
 }
  

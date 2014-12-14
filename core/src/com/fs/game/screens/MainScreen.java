@@ -1,7 +1,6 @@
 package com.fs.game.screens;
 
 import appwarp.WarpController;
-import appwarp.WarpListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -10,6 +9,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.BitmapFont.HAlignment;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -21,20 +21,19 @@ import com.fs.game.enums.GameState;
 import com.fs.game.main.MainGame;
 import com.fs.game.utils.MultiUtils;
 
-public class MainScreen implements Screen, WarpListener {
+
+public class MainScreen implements Screen {
 	
 	final MainGame game;
 
 	OrthographicCamera camera;
     Stage stage; //screen stage for click buttons
 
-    //normally, player(s) go thru menu to setup game
-    public GameScreen gameScreen;
-    public MultiplayerScreen multiplayerScreen;
-
     public GameState gameState;
 
     Vector3 touchPoint;
+
+    //for main button/texture to start menu screens
     TextButton welcomeBtn;
     Texture welcomeTex;
     Rectangle welcomeBounds;
@@ -44,18 +43,9 @@ public class MainScreen implements Screen, WarpListener {
     private final float[][] testTexPos = {{50f, 200f}, {500f, 200f}, {275f, 75f}};
     Rectangle[] bounds;
 
-
     BitmapFont font;
     private final String[] testMgs = Constants.TEST_MGS;
-    private String msg[]; //message displayed when connecting/disconnecting
-    private final String[] tryingToConnect = {"Connecting","to AppWarp"};
-    private final String[] waitForOtherUser = {"Waiting for","other user"};
-    private final String[] errorInConnection = Constants.ERROR_CONNECT_MSGS;
 
-    //messages for when won, lose or disconnecting
-    private final String[] game_win = {"Congrats You Win!", "Enemy Defeated"};
-    private final String[] game_loose = {"You Lose!","Target Achieved","By Enemy"};
-    private final String[] enemy_left = {"Congrats You Win!", "Enemy Left the Game"};
 
     public MainScreen(final MainGame game) {
 		this.game = game;
@@ -65,11 +55,10 @@ public class MainScreen implements Screen, WarpListener {
         this.font = Assets.uiSkin.getFont("retro2");
         this.font.setColor(Color.BLUE);
 
-        //GameData.playerName = MultiUtils.setupUsername();
+        GameData.playerName = MultiUtils.setupUsername();
         setupTextures();
         setupCamera();
         setupStage();
-
     }
 
     public void setupTextures(){
@@ -80,6 +69,7 @@ public class MainScreen implements Screen, WarpListener {
         bounds = new Rectangle[3];
         for (int i = 0; i < 3; i++){
             testTextures[i] = Assets.uiSkin.get("testTex", Texture.class);
+
             bounds[i] = new Rectangle(testTexPos[i][0], testTexPos[i][1],
                     testTextures[i].getWidth(), testTextures[i].getHeight());
         }
@@ -100,6 +90,15 @@ public class MainScreen implements Screen, WarpListener {
 
         stage.addActor(welcomeBtn);
 
+    }
+
+    public void startMultiplayer(){
+        Gdx.app.postRunnable(new Runnable() {
+            @Override
+            public void run() {
+                game.setScreen(new StartMultiplayerScreen(game, MainScreen.this));
+            }
+        });
     }
 
 
@@ -155,7 +154,7 @@ public class MainScreen implements Screen, WarpListener {
         }
         else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)){
             GameData.testType = 3;
-            gameState = GameState.MULTIPLAYER;
+            startMultiplayer();
 
         }
         else{
@@ -181,8 +180,12 @@ public class MainScreen implements Screen, WarpListener {
                 game.setScreen(new GameScreen(game));
                 break;
             case MULTIPLAYER:
-                MultiUtils.initApp42Services(); //initalize cloud multiplayer API
-                game.setScreen(new MultiplayerScreen(game, this));
+
+                WarpController.getInstance().startApp(GameData.playerName); //starts appwarp
+
+                System.out.println("Player name: " + GameData.playerName);
+                game.setScreen(new StartMultiplayerScreen(game, MainScreen.this));
+                //startMultiplayer();
                 break;
             case QUIT:
                 WarpController.getInstance().handleLeave();
@@ -210,18 +213,17 @@ public class MainScreen implements Screen, WarpListener {
         font.draw(game.batch, Constants.WELCOME, Constants.SCREENWIDTH/2 - 350/2 + 40f, Constants.SCREENHEIGHT - 80f);
 
         for (int i = 0; i < 3; i++){
+
+            game.batch.draw(testTextures[i], testTexPos[i][0], testTexPos[i][1]);
+
             float x = testTexPos[i][0] + testTextures[i].getWidth()/4;
             float y = testTexPos[i][1] + testTextures[i].getHeight()/2;
-            game.batch.draw(testTextures[i], x, y);
-            font.draw(game.batch, testMgs[i], x, y);
+            font.drawMultiLine(game.batch, testMgs[i], x, y, (float)testTextures[i].getWidth()-20f, HAlignment.CENTER);
         }
 
-//        game.font.draw(game.batch, Constants.START_NORMAL, 100, 350);
-//        game.font.draw(game.batch, Constants.START_TEST_1, 75, 200);
-//        game.font.draw(game.batch, Constants.START_TEST_2, 75, 170);
-//        game.font.draw(game.batch, Constants.START_TEST_MULTI, 75, 100);
         game.batch.end();
 
+        //draw the stage TODO: keep either stage or Textures w/ Rectangles
         stage.draw();
 
 	}
@@ -250,54 +252,6 @@ public class MainScreen implements Screen, WarpListener {
 
     @Override
     public void resize(int width, int height) {
-
-    }
-
-
-    @Override
-    public void onWaitingStarted(String message) {
-        this.msg = waitForOtherUser;
-        updateScreen();
-    }
-
-    @Override
-    public void onError(String message) {
-        this.msg = errorInConnection;
-        updateScreen();
-    }
-
-    @Override
-    public void onGameStarted(String message) {
-        Gdx.app.postRunnable(new Runnable() {
-            @Override
-            public void run () {
-                game.setScreen(new MultiplayerScreen(game, MainScreen.this));
-            }
-        });
-    }
-
-    @Override
-    public void onGameFinished(int code, boolean isRemote) {
-        if(code==WarpController.GAME_WIN){
-            this.msg = game_loose;
-        }else if(code==WarpController.GAME_LOST){
-            this.msg = game_win;
-        }else if(code==WarpController.ENEMY_LEFT){
-            this.msg = enemy_left;
-        }
-        gameState = GameState.START_SCREEN;
-        updateScreen();
-
-        Gdx.app.postRunnable(new Runnable() {
-            @Override
-            public void run () {
-                game.setScreen(MainScreen.this);
-            }
-        });
-    }
-
-    @Override
-    public void onGameUpdateReceived(String message) {
 
     }
 }
