@@ -3,7 +3,7 @@ package com.fs.game.data;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.fs.game.units.Unit;
+import com.fs.game.actors.Unit;
 
 //TODO: put Unit Data in here
 
@@ -17,13 +17,12 @@ public class UserData implements Json.Serializable{
     private int score;
     private int player;
     private String name; //player's name
-    private int playerID; //player's unique identifier
+    private float playerID; //player's unique identifier
     private String faction; // player's faction
     private Array<UnitData> unitList; //unit data list
     private boolean isPlayerTurn; //players turn if true
     private int updateState;
     private UnitData unitData; //for updating individual units
-
 
     public UserData(){
 
@@ -77,11 +76,11 @@ public class UserData implements Json.Serializable{
         this.isPlayerTurn = isTurn;
     }
 
-    public int getPlayerID() {
+    public float getPlayerID() {
         return playerID;
     }
 
-    public void setPlayerID(int playerID) {
+    public void setPlayerID(float playerID) {
         this.playerID = playerID;
     }
 
@@ -92,7 +91,6 @@ public class UserData implements Json.Serializable{
     public void setUpdateState(int updateState) {
         this.updateState = updateState;
     }
-
 
     public UnitData getUnitData() {
         return unitData;

@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.fs.game.assets.Assets;
 import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
+import com.fs.game.screens.InfoScreen;
 import com.fs.game.screens.MainScreen;
 import com.fs.game.screens.menus.FactionScreen;
 import com.fs.game.screens.menus.MapScreen;
@@ -26,6 +27,7 @@ public class MainGame extends Game{
  	
 	/*All the screens that will be used*/
 	public MainScreen mainScreen;
+    public InfoScreen infoScreen;
     public MenuScreen menuScreen;
 
     public FactionScreen factionScreen;
@@ -35,7 +37,7 @@ public class MainGame extends Game{
 	@Override
 	public void create() {
 
-        Assets.initializeAssets();
+        Assets.loadAssets();
         GameData.initGameData();
         manager = Assets.assetManager;
 
@@ -49,35 +51,12 @@ public class MainGame extends Game{
 
     }
 
-
-
     public void setupScreens(){
         setMainScreen(new MainScreen(this));
         setMenuScreen(new MenuScreen(this));
         setFactionScreen(new FactionScreen(this));
         setMapScreen(new MapScreen(this));
-    }
-
-
-    public void setMainScreen(){
-        Gdx.app.postRunnable(new Runnable(){
-
-            /**
-             * When an object implementing interface <code>Runnable</code> is used
-             * to create a thread, starting the thread causes the object's
-             * <code>run</code> method to be called in that separately executing
-             * thread.
-             * <p/>
-             * The general contract of the method <code>run</code> is that it may
-             * take any action whatsoever.
-             *
-             * @see Thread#run()
-             */
-            @Override
-            public void run() {
-
-            }
-        });
+        setInfoScreen(new InfoScreen(this));
     }
 
     @Override
@@ -107,8 +86,8 @@ public class MainGame extends Game{
 
     @Override
 	public void dispose() {
-
-        getScreen().dispose();
+        if (getScreen()!=null)
+            getScreen().dispose();
 
         batch.dispose();
         font.dispose();
@@ -135,6 +114,14 @@ public class MainGame extends Game{
         this.mainScreen = mainScreen;
     }
 
+    public InfoScreen getInfoScreen() {
+        return infoScreen;
+    }
+
+    public void setInfoScreen(InfoScreen infoScreen) {
+        this.infoScreen = infoScreen;
+    }
+
     public MenuScreen getMenuScreen() {
         return menuScreen;
     }
@@ -158,5 +145,7 @@ public class MainGame extends Game{
     public void setMapScreen(MapScreen mapScreen) {
         this.mapScreen = mapScreen;
     }
+
+
 
 }

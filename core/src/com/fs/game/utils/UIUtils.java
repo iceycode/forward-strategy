@@ -9,21 +9,17 @@ package com.fs.game.utils;
 
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.scenes.scene2d.Event;
-import com.badlogic.gdx.scenes.scene2d.EventListener;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
-import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Align;
 import com.fs.game.assets.Assets;
 import com.fs.game.assets.Constants;
-import com.fs.game.data.GameData;
-import com.fs.game.stages.GameStage;
+import com.fs.game.enums.GameState;
+import com.fs.game.screens.MainScreen;
 
 
 public class UIUtils {
@@ -50,8 +46,27 @@ public class UIUtils {
         return scrollTable;
     }
 
+    /** the table which sets Label layout of ScrollPane
+     *
+     * @param unitDetail
+     * @param unitDamageList
+     * @return
+     */
+    public static Table createInfoTable(ScrollPane unitDetail, ScrollPane unitDamageList) {
+        Table scrollTable = new Table();
+        //scrollTable.setFillParent(true);
 
-	/** creates a scroll pane for insertion into the main info panel table
+        //add the labels to the table   width(unitDetail.getWidth()).height(unitDetail.getWidth()).align(Align.left);
+        scrollTable.add(unitDetail).width(unitDetail.getWidth()).height(unitDetail.getHeight()) ;
+        scrollTable.add(unitDamageList).width(unitDamageList.getWidth()).height(unitDamageList.getHeight());
+        scrollTable.setBounds(Constants.INFO_X, Constants.INFO_Y, Constants.INFO_W*2, Constants.INFO_H);
+
+        return scrollTable;
+    }
+
+
+
+    /** creates a scroll pane for insertion into the main info panel table
 	 * 
 	 * @param scrollTable
 	 * @param posX
@@ -77,6 +92,58 @@ public class UIUtils {
 	}
 
 
+    public static Table rulesScrollPane(String rules){
+        //Window window = new Window("GAME RULES", Assets.uiSkin.get("ruleWinStyle", WindowStyle.class));
+        Table scrollTable = new Table();
+        scrollTable.setFillParent(false);
+
+        ScrollPaneStyle scrollStyle = Assets.uiSkin.get("ruleScrollStyle", ScrollPaneStyle.class);
+        Table table = new Table();
+
+        //create rules as a label
+        Label rulesLabel = new Label(rules, Assets.uiSkin.get("ruleLabelStyle", LabelStyle.class));
+        rulesLabel.setWrap(true);
+        rulesLabel.setWidth(rulesLabel.getTextBounds().width);
+        rulesLabel.setHeight(rulesLabel.getTextBounds().height);
+        rulesLabel.setAlignment(Align.top, Align.left);
+        rulesLabel.setLayoutEnabled(true);
+        rulesLabel.setFillParent(false);
+
+        table.add(rulesLabel).width(rulesLabel.getWidth()).height(rulesLabel.getHeight());
+
+        ScrollPane ruleScrollPane = new ScrollPane(table, scrollStyle);
+        ruleScrollPane.setWidth(rulesLabel.getTextBounds().width);
+        ruleScrollPane.setHeight(Constants.RULES_SCROLL_SIZE[1]);
+        ruleScrollPane.setFillParent(false);
+        ruleScrollPane.setScrollingDisabled(true, false); //enables both vertical & horiz scrolling
+
+        //add button to table containing scrollpane
+        TextButton backBtn = new TextButton("BACK", Assets.uiSkin, "backBtnStyle");
+        backBtn.addListener(new InputListener() {
+
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                try{
+                    MainScreen.getInstance().scrollTable.remove();
+                    MainScreen.getInstance().gameState = GameState.START_SCREEN;
+                }
+                catch(NullPointerException e){
+                    e.printStackTrace();
+                }
+
+                return true;
+            }
+        });
+
+        scrollTable.add(ruleScrollPane).width(ruleScrollPane.getWidth()).height(ruleScrollPane.getHeight());
+        scrollTable.row();
+
+        scrollTable.add(backBtn).bottom().align(Align.left).width(Constants.BACK_SIZE[0]).height(Constants.BACK_SIZE[1]);
+        scrollTable.setBounds(40f, 40f, rulesLabel.getTextBounds().width, Constants.RULES_SCROLL_SIZE[1]);
+
+        return scrollTable;
+    }
+
+
  
 	/** creates a timer as a Label
 	 * 
@@ -99,24 +166,7 @@ public class UIUtils {
 	}
 
 
-	/** the table which sets Label layout of ScrollPane
-	 * 
-	 * @param unitDetail
-	 * @param unitDamageList
-	 * @return
-	 */
-	public static Table createInfoTable(ScrollPane unitDetail, ScrollPane unitDamageList) {
-		Table scrollTable = new Table();
-		//scrollTable.setFillParent(true);
 
-		//add the labels to the table   width(unitDetail.getWidth()).height(unitDetail.getWidth()).align(Align.left);
-		scrollTable.add(unitDetail).width(unitDetail.getWidth()).height(unitDetail.getHeight()) ;
-		scrollTable.add(unitDamageList).width(unitDamageList.getWidth()).height(unitDamageList.getHeight());
-		scrollTable.setBounds(Constants.INFO_X, Constants.INFO_Y, Constants.INFO_W*2, Constants.INFO_H);
-  		
-		return scrollTable;
-	}
- 
  
 	/** for the labels which are added to ScrollTable
 	 * 
@@ -163,7 +213,7 @@ public class UIUtils {
  		styleDamage.font = Assets.uiSkin.getFont("retro2");
 		styleDamage.fontColor = Color.RED;
 //		styleDamage.font.scale(.01f);
-		
+
 		Label unitDamageList = new Label("Attack", styleDamage);
 	//	unitDamageList.setTouchable(Touchable.disabled);
 		unitDamageList.setAlignment(Align.top, Align.left);
@@ -184,8 +234,6 @@ public class UIUtils {
 	 * @return
 	 */
 	public static TextButton createSideButton(String player, float posX, float posY) {
-		//go is when player goes
-
 		//creating actors out of circles
 		TextButtonStyle buttonStyle = new TextButtonStyle();
 		buttonStyle.up = Assets.uiSkin.getDrawable("go-tex");
@@ -204,8 +252,8 @@ public class UIUtils {
 	 *
 	 * @return
 	 */
-	public static TextButton createGoButton(final GameStage stageMap){
-		TextButtonStyle style = new TextButtonStyle();
+	public static TextButton createGoButton(){
+        TextButtonStyle style = new TextButtonStyle();
 		style.up = Assets.uiSkin.getDrawable("lets-go-tex");
 		style.down = Assets.uiSkin.getDrawable("lets-go-tex");
 		style.font = Assets.uiSkin.getFont("retro2");
@@ -215,14 +263,15 @@ public class UIUtils {
 
 		goButton.setBounds(100, 100, 32, 32);
 
-        //add a listener to the go button so player turn changes
-        goButton.addListener(new ActorGestureListener(){
-            @Override
-            public void touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                GameData.playerTurn = false;  //player is manually finished turn (timer did not reset)
-                GameUtils.StageUtils.clearBoard(stageMap);	//clears board of selected panels
-            }
-        });
+//        //add a listener to the go button so player turn changes
+//        goButton.addListener(new ActorGestureListener(){
+//            @Override
+//            public void touchDown (InputEvent event, float x, float y, int pointer, int button) {
+//                if (GameData.getInstance().playerTurn)
+//                    GameData.getInstance().playerTurn = false;  //player is manually finished turn (timer did not reset)
+//            }
+//        });
+
 
 		return goButton;
 

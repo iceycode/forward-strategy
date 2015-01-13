@@ -4,38 +4,34 @@ package appwarp;
  *
  */
 
-import com.fs.game.assets.Constants;
+import com.fs.game.data.GameData;
 import com.shephertz.app42.gaming.multiplayer.client.WarpClient;
 import com.shephertz.app42.gaming.multiplayer.client.command.WarpResponseResultCode;
 import com.shephertz.app42.gaming.multiplayer.client.events.RoomEvent;
 
 import java.util.HashMap;
 
-//from SJDTutorial; organization: mytutorials; appwarp realtime multiplayer
+//from SJDTutorial; organization: mcom.fs.game.appwarpals; appwarp realtime multiplayer
 public class WarpController {
 
 	private static WarpController instance;
-//    public static WarpController instance;
 	
 	private boolean showLog = true;
-
-
-    private final String apiKey = Constants.App42.API_KEY;
-    private final String secretKey = Constants.App42.SECRET_KEY;
-    private final String roomA_ID = Constants.App42.ROOM_A;
+    private final String apiKey = "ae7493bafe3ef380323eb41c1032f62b5ddd0b940017648c62a7ea183471c408";
+    private final String secretKey = "55e85dd41157782e533246712d06b7913c3d56c2eec0d615f19c6ec08f942e66";
+    //private final String roomA_ID = Constants.App42.ROOM_A;
 
 	private WarpClient warpClient;
 	
 	private String localUser;
 
-    //Id for RoomA (Owner: admin) = 223097003 (max players=3)
     private String roomId;
 	
 	private boolean isConnected = false;
 	boolean isUDPEnabled = false;
 	
 	private WarpListener warpListener ;
-    private WarpListener turnListener;
+//    private WarpListener turnListener;
 	
 	private int STATE;
 
@@ -51,16 +47,13 @@ public class WarpController {
 	public static final int ENEMY_LEFT = 7;
 	
 	public WarpController() {
-		initAppwarp();
+        initAppwarp();
 		warpClient.addConnectionRequestListener(new ConnectionListener(this));
 		warpClient.addChatRequestListener(new ChatListener(this));
 		warpClient.addZoneRequestListener(new ZoneListener(this));
 		warpClient.addRoomRequestListener(new RoomListener(this));
 		warpClient.addNotificationListener(new NotificationListener(this));
-
-//
-//        warpClient.addTurnBasedRoomListener(new TurnRoomListener(this));
-
+		warpClient.addTurnBasedRoomListener(new TurnRoomListener(this));
 	}
 	
 	public static WarpController getInstance(){
@@ -77,7 +70,8 @@ public class WarpController {
 	}
 	
 	public void setListener(WarpListener listener){
-		this.warpListener = listener;
+
+        this.warpListener = listener;
 	}
 
 
@@ -101,6 +95,7 @@ public class WarpController {
 
 	
 	public void sendGameUpdate(String msg){
+        System.out.println("Local user (warpcontroller) sending update: " + localUser);
 		if(isConnected){
 			if(isUDPEnabled){
 				warpClient.sendUDPUpdatePeers((localUser+"#@"+msg).getBytes());
@@ -109,6 +104,32 @@ public class WarpController {
 			}
 		}
 	}
+
+
+
+    public void sendGameStartUpdate(String msg){
+        System.out.println("Local user (warpcontroller) sending update: " + localUser);
+        if(isConnected && localUser.equals(GameData.getInstance().playerName)){
+            if(isUDPEnabled){
+                warpClient.sendUDPUpdatePeers((localUser+"#@"+msg).getBytes());
+            }else{
+                warpClient.sendUpdatePeers((localUser+"#@"+msg).getBytes());
+            }
+        }
+    }
+
+//	public void sendPrivateGameUpdate(String msg){
+//        System.out.println("Local user (warpcontroller) sending private update: " + localUser);
+//        System.out.println("message is "+ msg);
+//		if (isConnected){
+//			if (isUDPEnabled){
+//				warpClient.sendUDPPrivateUpdate(localUser, (localUser+"#@"+msg).getBytes());
+//			}
+//			else{
+//				warpClient.sendPrivateUpdate(localUser, (localUser+"#@").getBytes());
+//			}
+//		}
+//	}
 	
 	public void updateResult(int code, String msg){
 		if(isConnected){
@@ -123,7 +144,7 @@ public class WarpController {
 
 		log("onConnectDone: "+status );
 		if(status){
-			warpClient.initUDP();
+			warpClient.initUDP(); //initializes UDP unless NAT does not allow
 			warpClient.joinRoomInRange(1, 1, false);
 		}else{
 			isConnected = false;
@@ -143,19 +164,17 @@ public class WarpController {
 		}
 	}
 
-    /** creates a turn based room
-     *
-     * @param event
-     */
+	
 	public void onJoinRoomDone(RoomEvent event){
 		log("onJoinRoomDone: "+event.getResult());
 		if(event.getResult()==WarpResponseResultCode.SUCCESS){// success case
 			this.roomId = event.getData().getId();
 			warpClient.subscribeRoom(roomId);
+			//updateRoomProperties may help in future //<---does not fix problem i'm having
 		}else if(event.getResult()==WarpResponseResultCode.RESOURCE_NOT_FOUND){// no such room found
 			HashMap<String, Object> data = new HashMap<String, Object>();
             data.put("result", "");
-			warpClient.createRoom("ForwardStrategy Room", "ADMIN", 2, data);
+			warpClient.createRoom("forwardstrategy", "game", 2, data);
 		}else{
 			warpClient.disconnect();
 			handleError();
@@ -196,15 +215,51 @@ public class WarpController {
 			startGame();
 		}
 	}
+	
+    public void updateRoomProperties(String roomId){
+    	warpClient.getLiveRoomInfo(roomId);
+    	
+    }
 
 	public void onSendChatDone(boolean status){
 		log("onSendChatDone: "+status);
 	}
 
 
-	int counter = 0;
+    public void onPlayersInRoom(String message){
+        log("player in room: " + message);
+
+        String userName = message.substring(0, message.indexOf("#@"));
+        String data = message.substring(message.indexOf("#@"), message.length());
+        if (!localUser.equals(userName)){
+            warpListener.onGameUpdateReceived(data);
+        }
+    }
+    
+    //might need this in future
+//    public void onPrivateUpdateReceived(String message){
+//        log("onMoveUpdateReceived: " + message );
+//
+//        String userName = message.substring(0, message.indexOf("#@"));
+//        String data = message.substring(message.indexOf("#@")+2, message.length());
+//        if(!localUser.equals(userName)){
+//            warpListener.onPrivateUpdateReceived(data);
+//        }
+//    }
+
+    public void onGameSetupUpdateReceived(String message){
+        log("setup data recieved: " + message);
+
+        String userName = message.substring(0, message.indexOf("#@"));
+        String data = message.substring(message.indexOf("#@")+2, message.length());
+        if(!localUser.equals(userName)){
+            warpListener.onGameUpdateReceived(data);
+        }
+    }
+
+
 	public void onGameUpdateReceived(String message){
-        log("onMoveUpdateReceived: " + message );
+        //log("onMoveUpdateReceived: " + message );
 
 		String userName = message.substring(0, message.indexOf("#@"));
 		String data = message.substring(message.indexOf("#@")+2, message.length());
@@ -241,6 +296,7 @@ public class WarpController {
 	
 	private void startGame(){
 		STATE = STARTED;
+		
 		warpListener.onGameStarted("Start the Game");
 	}
 	
@@ -267,6 +323,11 @@ public class WarpController {
 		}
 	}
 	
+//	public void onUpdatePeersReceived(UpdateEvent event) {  
+//	    callBack.onGameUpdateReceived(new String(event.getUpdate()));  
+//	}  
+
+	
 	private void disconnect(){
 		warpClient.removeConnectionRequestListener(new ConnectionListener(this));
 		warpClient.removeChatRequestListener(new ChatListener(this));
@@ -275,4 +336,8 @@ public class WarpController {
 		warpClient.removeNotificationListener(new NotificationListener(this));
 		warpClient.disconnect();
 	}
+
+    public String getLocalUser() {
+        return localUser;
+    }
 }

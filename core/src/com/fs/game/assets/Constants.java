@@ -18,13 +18,49 @@ public class Constants {
 	
 
 
-//---------------GAME MESSAGES/LOGS-----------------//
+//---------------Skin screen dimensions, positions, messages-----------------//
+
+    public static final String BACK_TO_PREVIOUS = "BACK";
+    public static final float[] BACK_TEX_POS = {5f, 5f};
+    public static final float[] BACK_SIZE = {70f, 50f};
 
     //-----------start screen-----------------//
     public static final String WELCOME = "Forward Strategy \n click anywhere to begin";
-    public static final String[] TEST_MGS = {"Click here or press 1 for Test 1: \n 2 Units on Board",
-            "Click here or press 2 for Test 2: " + "\n Humans vs Arthroid Setup",
-            "Click here or press 3 for Test 3: " + "\n Multiplayer setup "};
+    public static final String[] TEST_MGS = {"Click here for Test 1: \n 2 Units on Board",
+            "Click here for Test 2: " + "\n Humans vs Arthroid Setup",
+            "Click here for Test 3: " + "\n Multiplayer setup "};
+    public static final String TO_RULES = "Game Rules";
+
+    public static final float TEST_TEX_WIDTH = 325f;
+    public static final float TEST_TEX_HEIGHT = 60f;
+    public static final float[][] TEST_TEX_POSITIONS = {{15f, 220f}, {460f, 220f},
+            {400f - TEST_TEX_WIDTH/2, 75f}}; //x padding from side of screen =15f
+    public static final float[] RULE_TEX_POS = {350f, 150f};
+
+
+    //----------Rules -----------------//
+    public static final float[] RULES_POS = {100f, 100f};
+    public static final String RULES = "GAME RULES\n" +
+            "-----------" +
+            "\nGAMEPLAY\n " +
+            " Each player moves units on their side of the board.\n" +
+            " - the circles on the left & right side represent players\n" +
+            " - if it is green, it is your turn\n" +
+            " Score boards keep track of score & are on side of player\n" +
+            " - every time a unit is killed, player gets 10 points (this will probably change)\n" +
+            "\nMOVING:\n" +
+            " - clicking on unit will highlight panels it can move to on board\n" +
+            " - clicking on a highlighted panel will move chosen unit to it \n" +
+            "\nATTACKING:\n" +
+            " - enemy units will have a number over them indicating damage\n " +
+            "that the chosen unit can inflict damage\n" +
+            " - whenever a unit is adjacent to an enemy unit, it attacks\n" +
+            " - each unit can only attack after they move & only once a turn\n";
+    public static final float[] RULES_SIZE = {800f, 900f};
+    public static final float[] RULES_SCROLL_SIZE = {600f, 400f};
+
+    public static final String PAUSE_GAME = "PAUSE";
+
 
 
     //-----------multiplayer connection/game status---------------//
@@ -33,8 +69,7 @@ public class Constants {
     public static final String ERROR_CONNECT_MSG = "Error in \n Connection \n Go Back";
     public static final String GAME_WIN_MSG = "Congrats You Win!\nEnemy Defeated";
     public static final String GAME_LOSE_MSG = "You Lose!\nEnemy Won";
-    public static final String PLAYER_LEFT_MSG = "Congrats You Win!\nEnemy Left the Game";
-
+    public static final String PLAYER_LEFT_MSG = "Congrats You Win!\nEnemy Left the Game\nLeaving in ";
 
 
 
@@ -56,6 +91,8 @@ public class Constants {
     public static final float GRID_HEIGHT = 384;
     public static final float GRID_X = 800/2 - 512/2;
     public static final float GRID_Y = 100;
+    public static final float[] GRID_BTM_LEFT = {GRID_X, GRID_Y};
+    public static final float[] GRID_TOP_RIGHT = {GRID_X + GRID_WIDTH, GRID_Y + GRID_HEIGHT};
     public static final float GAMEBOARD_X = 144f;
     public static final float GAMEBOARD_Y = 100f;
 
@@ -93,6 +130,8 @@ public class Constants {
     public static final String FONT_DEFAULT1 = "fonts/default1.fnt";
     public static final String FONT_BATTLENET = "fonts/battlenet.ttf";
     public static final String FONT_MEGAMAN = "fonts/MEGAMAN10.ttf";
+    public static final String FONT_BATTLENET_FNT1 = "fonts/battlenet_FNT1.fnt";
+    public static final String FONT_MEGAMAN_FNT1 = "fonts/megaman10_FNT1.fnt";
 
 
     public static final String[] FACTION_LIST = {"Human", "Arthroid", "Reptoid"};
@@ -121,16 +160,24 @@ public class Constants {
 	public static final String UNIT_ATTACK_UP = "attack/attackUp.png";
 	public static final String UNIT_ATTACK_DOWN = "attack/attackDown.png";
 
+    public static final String ATTACK_FRAME_SMALL = "misc/attack_frame_32x32.png";
+    public static final String ATTACK_FRAME_MED = "misc/attack_frame_64x32.png";
+    public static final String ATTACK_FRAME_LARGE = "misc/attack_frame_64x64.png";
+
 	//an array of the paths of unit textures
 	public static final String[] UNIT_TEX_PATHS = 
 		{UNIT_STILL_RIGHT, UNIT_STILL_LEFT, UNIT_MOVE_RIGHT, UNIT_MOVE_LEFT, UNIT_MOVE_UP, UNIT_MOVE_DOWN, UNIT_ATTACK_RIGHT,
         UNIT_ATTACK_LEFT, UNIT_ATTACK_UP, UNIT_ATTACK_DOWN};
 
     //positions for small, medium, large units IN ORDER of appearance in unit info list
+
+    public static final float UNIT_POS_X_LEFT = 144f;
+    public static final float UNIT_POS_X_RIGHT = 624f;
     public static final float[][] UNITS_POS_LEFT = {{144f, 452f}, {144f, 420f}, {144f, 100f}, {144f, 132f}, {144f, 388f},
             {144f, 164f}, {144f, 228f}};
     public static final float[][] UNITS_POS_RIGHT = {{624f, 452f}, {624f, 420f}, {624f, 100f}, {624f, 132f}, {592f, 388f},
             {592f, 164f}, {592f, 228f}};
+
 
     //IDENTIFIERS for small, med & large untis in arrays (NOT UNIT IDs)
     //add 10 to get Reptoids, 20 to get Arthroid
@@ -169,9 +216,10 @@ public class Constants {
 /*--------------GAME HUD INFO--------------------
  * 
  */
+    //text for when player goes
+    public static final float[] TURN_MSG_COORD = {Constants.SCREENWIDTH / 4, Constants.SCREENHEIGHT / 2};
 
-
-	/*unit information
+	/* unit information
 	 * 
 	 */
 	//health
@@ -216,10 +264,6 @@ public class Constants {
 	 *  
 	 */
 	public static final double[][] GRID_SCREEN_VECTORS = {{}};
-	
-	
-
-
 
 
 /**--------------AUDIO File Paths------------
@@ -242,9 +286,6 @@ public class Constants {
         public static final int[] UPDATE_STATES = {0, 1, 2, 3, 4, 5};
 
     }
-
-
-
 
 
 

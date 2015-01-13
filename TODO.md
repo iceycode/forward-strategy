@@ -1,14 +1,19 @@
 TODO
 ==
+###Bugs###
+- in certain situations, pathfinder not working correctly - ie, unit is surrounded by map boundaries & other units
+
 ###Code###
-- fix screen and stage resizing
+- create rules screen
+- figure out better (more noticeable) graphicical represenation of whose turn it is (ie, transparent font: YOU vs ENEMY, side panel color green, etc)
+- remove redundencies in player turn logic
 - create class for preferences & saving game state
 - create more maps for game play
-- get rid of redundencies 
+- get rid of redundencies in map
 - fix player turn changing (multiplayer)
 - set unit damage over unit textures (multiplayer)
 - create AI for solo gameplay
-- figure out & fix menu layouts
+- figure out & fix menu layouts. 
 
 ###Game Mechanics###
 - figure out pause menu implementation in online play (if needed)

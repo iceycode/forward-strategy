@@ -1,4 +1,4 @@
-package com.fs.game.units;
+package com.fs.game.actors;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -19,7 +19,7 @@ public class UnitImage extends Image {
     final String LOG = "UNITIMAGE LOG: ";
 
     public UnitInfo unitInfo;
-    public int key; //for key in hashmap (combination of currUnit & player number*100)
+    public String key; //for key in hashmap (combination of currUnit & player number*100)
     public String size;
     public String drawableName;
 
@@ -41,7 +41,7 @@ public class UnitImage extends Image {
     public UnitImage(UnitInfo unitInfo) {
         this.unitInfo = unitInfo;
         this.size = unitInfo.getSize();
-        this.key = GameData.currPlayer  ;
+        this.key = GameData.getInstance().playerName;
         this.setName(unitInfo.getUnit());
         this.copy = false; //initail state is false
 
@@ -87,7 +87,7 @@ public class UnitImage extends Image {
     public void imageActs(){
         if (chosen){
             GameData.playerUnitChoices.add(unitInfo);
-            Gdx.app.log(LOG, "Now selected unit with key = " + Integer.toString(key));
+            Gdx.app.log(LOG, "Now selected unit with key = " + key);
         }
         else if (GameData.playerUnitChoices.contains(unitInfo, true) && !chosen){
             GameData.playerUnitChoices.removeValue(unitInfo, true);

@@ -3,13 +3,17 @@
 <module rename-to="html">
 	<inherits name='com.badlogic.gdx.backends.gdx_backends_gwt' />
 	<inherits name='com.badlogic.gdx.physics.box2d.box2d-gwt' />
+    <!--<inherits name="com.badlogic.gdx.ai"/>-->
+	<!--<inherits name='com.shephertz.app42.gaming.multiplayer-client' />-->
 
-    <inherits name='ForwardStrategy' />
-	<entry-point class='com.fs.game.client.HtmlLauncher' />
-	
+	<inherits name='com.fs.game.GdxDefinition' />
+	<inherits name="App42"/>
+
+	<collapse-all-properties />
+
 	<add-linker name="xsiframe"/>
-	<set-configuration-property name='xsiframe.failIfScriptTag' value='FALSE'/>
 	<set-configuration-property name="devModeRedirectEnabled" value="true"/>
-	
-	<set-configuration-property name="gdx.assetpath" value="../android/assets" />
+	<set-configuration-property name='xsiframe.failIfScriptTag' value='FALSE'/>
+
+	<!--<set-configuration-property name="gdx.assetpath" value="../android/assets" />-->
 </module>

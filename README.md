@@ -7,6 +7,15 @@ The TODO list is [here](TODO.md).
 
 ####*Change Log*:####
 --
+*1-13-14*
+
+- began work on the game AI for single player mode
+- see todo for more info
+
+*12-30-14*
+
+- first working jar in build/lib/jar created (see configuration for packaging details)
+
 *12-14-14*
 
 - got online multiplayer movements working
@@ -34,17 +43,19 @@ The TODO list is [here](TODO.md).
 
 
 --
-
-
-<small><small>
+<small>
 #####*About this project*
-Currently a work in progress & mainly for self-learning purposes. Code is not very pretty at the moment, game runs but doesn't properly work only on desktop, and there still exist a lot of deprecated classes. I only recently started working on it after taking a small hiatus to pursue other unrelated projects. But I'm back and on top of it now, so more updates will come soon. </small></small>
-##Development Info
-####*Configuration*
-- <normal>Eclipse Kepler for MacOSX
-- For github commits, egit plugin is used 
-- see libgdx wiki on github for more detailed info
+Currently a work in progress & mainly for self-learning purposes. Code is not very pretty at the moment, game runs but doesn't properly work only on desktop, and there still exist a lot of deprecated classes. I only recently started working on it after taking a small hiatus to pursue other unrelated projects. But I'm back and on top of it now, so more updates will come soon. </small>
+##Configuration Info
+####*Deploying Desktop*
+- DESKTOP:
+	- need to add all jars in core under libs (including libs/lib) to desktop/lib as libararies
+- make sure to add the depenencies to main project build.gradle
 
+####*Configuration*
+- Current project is setup in IntelliJ 14 but also can be built in properly setup eclipse environment
+- For github tasks in Eclipse, egit is used
+- see libgdx wiki on github for more detailed info on setup
 
 ####*Dependencies & Database config*
 - libgdx engine, gradle, Android SDK, RoboVM

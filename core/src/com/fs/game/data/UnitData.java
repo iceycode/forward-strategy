@@ -10,7 +10,6 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class UnitData {
 
-    //units ID
     private int unitID;
     private String owner;
     private String size;
@@ -21,7 +20,7 @@ public class UnitData {
 
 
     public UnitData(){
-
+        
     }
 
     public int getUnitID() {
@@ -81,19 +80,4 @@ public class UnitData {
         this.health = health;
     }
 
-//    @Override
-//    public void write(Json json) {
-//        json.writeValue("unitID", unitID);
-//        json.writeValue("owner", owner);
-//        json.writeValue("size", size);
-//        json.writeValue("state", state);
-//        json.writeValue("unitPosition", unitPosition);
-//        json.writeValue("damage", damage);
-//        json.writeValue("health", health);
-//    }
-//
-//    @Override
-//    public void read(Json json, JsonValue jsonData) {
-//
-//    }
 }

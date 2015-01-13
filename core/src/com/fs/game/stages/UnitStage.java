@@ -14,8 +14,8 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.enums.GameState;
-import com.fs.game.units.Unit;
-import com.fs.game.units.UnitImage;
+import com.fs.game.actors.Unit;
+import com.fs.game.actors.UnitImage;
 import com.fs.game.utils.MenuUtils;
 import com.fs.game.utils.UIUtils;
 
@@ -64,7 +64,7 @@ public class UnitStage extends Stage {
 
 
 	public UnitStage() {
-        this.currPlayer = GameData.currPlayer;
+
 		this.faction = GameData.factions[currPlayer-1];
         this.gameState = GameState.UNIT_SELECT;
 
@@ -128,11 +128,11 @@ public class UnitStage extends Stage {
 //    public void updateGame(){
 //        if (GameData.p1Faction!=null && GameData.p1Units!=null && GameData.p2Faction==null){
 //            gameState = GameState.MAIN_MENU;
-//            GameData.currPlayer = 2;
+//            GameData.player = 2;
 //        }
 //        else if (GameData.p2Faction!=null && GameData.p2Units!=null && GameData.p1Faction==null){
 //            gameState = GameState.MAIN_MENU;
-//            GameData.currPlayer = 1;
+//            GameData.player = 1;
 //        }
 //    }
 //

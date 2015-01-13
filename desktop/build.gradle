@@ -1,7 +1,9 @@
 apply plugin: "java"
 sourceCompatibility = 1.6
 sourceSets.main.java.srcDirs = ["src/"]
-project.ext.mainClassName = "com.fs.game.desktop.DesktopLauncher"
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+project.ext.mainClassName = "com.fs.game.desktop.FSDesktopLauncher"
 project.ext.assetsDir = new File("../android/assets");
 task run(dependsOn: classes, type: JavaExec) {
     main = project.mainClassName
@@ -36,6 +38,4 @@ task afterEclipseImport(description: "Post processing after project generation",
         printer.setPreserveWhitespace(true)
         printer.print(classpath)
     }
-}
-dependencies {
 }

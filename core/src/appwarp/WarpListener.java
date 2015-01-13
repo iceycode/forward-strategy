@@ -11,5 +11,5 @@ public interface WarpListener {
 	public void onGameFinished(int code, boolean isRemote);
 	
 	public void onGameUpdateReceived(String message);
-	
+
 }
