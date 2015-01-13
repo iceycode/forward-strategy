@@ -30,12 +30,13 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.*;
-import com.fs.game.units.UnitInfo;
+import com.fs.game.actors.UnitInfo;
 import com.fs.game.utils.UnitUtils;
 
 
@@ -50,10 +51,10 @@ public class Assets {
     public static Array<int[]> damageListArray;
 
 	/** this returns the asset manager
- 	 * TODO: organize, organize, organize
+ 	 * TODO: organize, optimize, organize...
 	 * @return
 	 */
-	public static void initializeAssets(){
+	public static void loadAssets(){
         //holds unitinfo which will be put into a HashMap
         unitInfoMap = new OrderedMap<String, Array<UnitInfo>>();
         unitInfoArray = new Array<UnitInfo>();
@@ -64,11 +65,9 @@ public class Assets {
         Array<UnitInfo> arthroidInfoArr = new Array<UnitInfo>();
 
         Array<UnitInfo> unitInfoArray = new Array<UnitInfo>();
-        Array<int[]> damageListArray = new Array<int[]>();
 
 		assetManager = new AssetManager();
 		
-        //TODO: instead of 1 giant arry with unitInfo, put into a HashMap with factions as keys
         Json json = new Json();
         JsonValue root = unitInfoFromJSON(json);
 
@@ -102,7 +101,6 @@ public class Assets {
                     dlentry = dlentry.next;
                 }
 
-
                 if (uInfo.getFaction().equals("Human")) {
                     humanInfoArr.add(uInfo); //store in temporary Array, if 10 units stored, adds to HashMap & clears
                 }
@@ -121,12 +119,16 @@ public class Assets {
         unitInfoMap.put("Reptoid", reptoidInfoArr);
         unitInfoMap.put("Arthroid", arthroidInfoArr);
 
+
+        assetManager.load(Constants.ATTACK_FRAME_SMALL, Texture.class);
+        assetManager.load(Constants.ATTACK_FRAME_MED, Texture.class);
+        assetManager.load(Constants.ATTACK_FRAME_LARGE, Texture.class);
+
+
  		//loading the textures for grids on game board
         assetManager.load(Constants.GRID_DOWN_PATH, Texture.class);
         assetManager.load(Constants.GRID_PATH, Texture.class);
         loadAudio(); //loads the audio into asset manager
-
-
 
 
 		//creates info about units
@@ -185,7 +187,6 @@ public class Assets {
     }
 
 
-
 	/** creates the skins for unit UI
 	 * 
 	 * @return skin
@@ -195,6 +196,7 @@ public class Assets {
 
 		loadFonts(skin); //for fonts
         loadStartScreenAssets(skin);
+        loadRuleWindowAssets(skin);
         loadGameScreenAssets(skin); //for gamescreen ui (game play)
         loadMapAssets(skin);
 
@@ -209,56 +211,99 @@ public class Assets {
 
 
     public static void loadFonts(Skin skin){
-        /* font acknoledgments from
-		 * Res: www.pentacom.jp/pentacom/bitfontmaker2/gallery/
+        /* font acknoledgments from www.pentacom.jp/pentacom/bitfontmaker2/gallery/
 		 *  - battlenet by Tom Israels
 		 *  - MEGAMAN10 by YahooXD
-		 *
 		 */
         BitmapFont defaultFont = new BitmapFont();
         skin.add("default", defaultFont); //default regular font via libgdx
 
-        defaultFont.scale(.1f); //smaller default font
+        defaultFont.scale(.5f); //smaller default font
         skin.add("default-small", defaultFont);
 
-        //adding some truetypefont's as BitmapFont
-        BitmapFont retro1 = AssetHelper.fontGenerator(Constants.FONT_BATTLENET, 16, Color.GREEN);
+        //For HTML, gdx freetype will not work, so need fnt format with tga images
+        //NOTE: when creating fnt from ttf need to set following options in order to process fonts here
+        // In font settings: just open the ttf or other font file, make sure font is same as file name, 12-16 bit
+        // In Export options: check 32 bit, pack text and outline in same channel, tga texture type
+        BitmapFont retro1 = new BitmapFont(Gdx.files.internal(Constants.FONT_BATTLENET_FNT1));
+        //BitmapFont retro1 = AssetHelper.fontFNTGenerator(Constants.FONT_BATTLENET, 12, Color.GREEN);
+        retro1.setColor(Color.GREEN);
         skin.add("retro1", retro1);
 
-        BitmapFont retro2 = AssetHelper.fontGenerator(Constants.FONT_MEGAMAN, 16, Color.RED);
+        //BitmapFont retro2 = AssetHelper.fontGenerator(Constants.FONT_MEGAMAN, 16, Color.RED);
+        BitmapFont retro2 = new BitmapFont(Gdx.files.internal(Constants.FONT_MEGAMAN_FNT1));
+        //BitmapFont retro2 = AssetHelper.fontFNTGenerator(Constants.FONT_MEGAMAN, 12, Color.RED);
+        retro2.setColor(Color.RED);
         skin.add("retro2", retro2);
 
         skin.add("font1", new BitmapFont(Gdx.files.internal(Constants.FONT_DEFAULT1))); //adding custom font (made with BMFont)
 
-        //for damage label of units
-        BitmapFont damageFont = AssetHelper.fontGenerator(Constants.FONT_MEGAMAN, 12, Color.RED);
-        skin.add("damageFont", damageFont);
+        //for damage label of units use retro2
+        skin.add("damageFont", retro2);
 
     }
 
     public static void loadStartScreenAssets(Skin skin){
-        Pixmap pixmap = AssetHelper.createPixmap(350, 100, Color.CYAN);
+
+        Pixmap pixmap = AssetHelper.createPixmap(60, 30, Color.ORANGE); //back button
+        skin.add("backTex", new Texture(pixmap));
+        pixmap.setColor(Color.BLACK);
+        skin.add("backTexDown", new Texture(pixmap));
+
+        pixmap = AssetHelper.createPixmap(350, 100, Color.CYAN);
         skin.add("welcomeTex", new Texture(pixmap));
 
-        pixmap = AssetHelper.createPixmap(250, 60, Color.CYAN);
+        pixmap = AssetHelper.createPixmap(100, 50, Color.CYAN);
+        skin.add("rulesTex", new Texture(pixmap));
+
+        pixmap = AssetHelper.createPixmap(325, 60, Color.CYAN);
         skin.add("testTex", new Texture(pixmap));
+
+        TextButtonStyle backStyle = new TextButtonStyle();
+        backStyle.up = skin.getDrawable("backTex");
+        backStyle.down = skin.getDrawable("backTexDown");
+        backStyle.font = skin.getFont("default-small");
+        skin.add("backBtnStyle", backStyle);
+
 
         TextButtonStyle btnStyle1 = new TextButtonStyle();
         btnStyle1.up = new TextureRegionDrawable(new TextureRegion(new Texture(pixmap)));
-        btnStyle1.font = skin.getFont("retro1");
-        btnStyle1.fontColor = Color.BLUE;
+        btnStyle1.font = skin.getFont("retro2");
+//        btnStyle1.font.scale(.7f);
+        btnStyle1.fontColor = Color.RED;
         skin.add("startStyle1", btnStyle1);
-
 
         TextButtonStyle btnStyle2 = new TextButtonStyle();
         btnStyle2.down = new TextureRegionDrawable(new TextureRegion(new Texture(pixmap)));
         btnStyle2.font = skin.getFont("retro1");
         btnStyle2.fontColor = Color.BLUE;
         skin.add("startStyle2", btnStyle2);
-
     }
 
+    public static void loadRuleWindowAssets(Skin skin){
+        Pixmap pixmap = AssetHelper.createPixmap(600, 400, Color.GRAY);
+        skin.add("rulesBackground", new Texture(pixmap));
 
+        ScrollPane.ScrollPaneStyle style = new ScrollPane.ScrollPaneStyle();
+        style.background = new TextureRegionDrawable(new TextureRegion(new Texture(pixmap)));
+        style.vScroll = new TextureRegionDrawable(new TextureRegion(new Texture(AssetHelper.createPixmap(7, 400, Color.BLACK))));
+        style.hScroll = new TextureRegionDrawable(new TextureRegion(new Texture(AssetHelper.createPixmap(600, 7, Color.BLACK))));
+        style.vScrollKnob = new TextureRegionDrawable(new TextureRegion(new Texture(AssetHelper.createPixmap(9, 9, Color.DARK_GRAY))));
+        style.hScrollKnob = style.vScrollKnob; //same as vScrollKnob
+        skin.add("ruleScrollStyle", style);
+
+        LabelStyle labelRuleStyle = new LabelStyle();
+        labelRuleStyle.background = new TextureRegionDrawable(new TextureRegion(new Texture(AssetHelper.createPixmap(7, 400, Color.GRAY))));
+        labelRuleStyle.font = skin.getFont("default-small");
+        skin.add("ruleLabelStyle", labelRuleStyle);
+
+        Window.WindowStyle winStyle = new Window.WindowStyle();
+        winStyle.titleFont = skin.getFont("default-small");
+        winStyle.titleFont.scale(.01f); //scale it down a bit
+        winStyle.stageBackground = new TextureRegionDrawable(new TextureRegion(new Texture(pixmap)));
+        skin.add("ruleWinStyle", winStyle);
+
+    }
 
     public static void loadMapAssets(Skin skin){
         skin.add("panelDown", new Texture(Gdx.files.internal("maps/tiles/gridDown.png")));
@@ -270,7 +315,7 @@ public class Assets {
 
     public static void loadGameScreenAssets(Skin skin){
         //TODO: place these into styles for widgets (will allow for easier widget creation)
-        // All UI textures
+        // All UI textures for game screens (GameScreen & MultiplayerScreen)
         skin.add("infoPanDown", new Texture(Gdx.files.internal("infopanel/infoPanelUp.png")));
         skin.add("enemyUInfo", new Texture(Gdx.files.internal("infopanel/enemyUInfo.png")));
         skin.add("mainPanel", new Texture(Gdx.files.internal("infopanel/mainpanel.png")));
@@ -310,6 +355,10 @@ public class Assets {
 
 
         skin.add("dmgTex", new Texture(Gdx.files.internal(Constants.DMG_LABL_TEX)));
+
+
+        Texture textBackTex = new Texture(AssetHelper.createPixmap(100, 100, Color.LIGHT_GRAY));
+        skin.add("textBackTex", textBackTex);
     }
 
 
@@ -467,7 +516,8 @@ public class Assets {
 
     public static class AssetHelper{
         //------GameManager helper methods----------
-        public static BitmapFont fontGenerator(String fontPath, int size, Color color){
+        //FreeType will not work in HTML5
+        public static BitmapFont fontFNTGenerator(String fontPath, int size, Color color){
             FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(fontPath));
             FreeTypeFontParameter parameter = new FreeTypeFontParameter();
             parameter.size = size;
@@ -480,7 +530,6 @@ public class Assets {
             return font;
         }
 
-
         public static Pixmap createPixmap(int width, int height, Color color) {
             Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
 
@@ -491,12 +540,7 @@ public class Assets {
             return pixmap;
         }
 
-
-
     }
-
-
-
 
 
     /**
