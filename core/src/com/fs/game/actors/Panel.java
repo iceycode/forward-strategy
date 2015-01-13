@@ -1,4 +1,4 @@
-package com.fs.game.maps;
+package com.fs.game.actors;
 /** Panel class
  * a gameboard panel component that lies under the tiled map 
  * guides the Unit's movements & lights up path it can take
@@ -6,7 +6,6 @@ package com.fs.game.maps;
  * @author Allen
  */
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
@@ -84,8 +83,7 @@ public class Panel extends Actor{
 			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 				clickCount++;
 
-				if (clickCount == 1) {
-					Gdx.app.log(LOG, "panel " +	getName() + " is now being viewed");
+				if (clickCount == 1 && moveableTo) {
 					selected = true;
  				}
 				
@@ -94,7 +92,7 @@ public class Panel extends Actor{
 
 			@Override
 			public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-				if (clickCount == 2) {
+				if (clickCount == 2 && moveableTo) {
 					selected = false;
  					clickCount = 0;
 				}

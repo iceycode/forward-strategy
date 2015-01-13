@@ -4,28 +4,27 @@
 package com.fs.game.utils;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
-import com.badlogic.gdx.scenes.scene2d.actions.ParallelAction;
-import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.actions.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Assets;
 import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.data.UnitData;
 import com.fs.game.enums.UnitState;
-import com.fs.game.maps.Panel;
+import com.fs.game.actors.Panel;
+import com.fs.game.screens.MultiplayerScreen;
 import com.fs.game.stages.GameStage;
-import com.fs.game.units.Unit;
-import com.fs.game.units.UnitImage;
-import com.fs.game.units.UnitInfo;
+import com.fs.game.actors.Unit;
+import com.fs.game.actors.UnitImage;
+import com.fs.game.actors.UnitInfo;
 import com.fs.game.utils.pathfinder.PathFinder;
 
 
@@ -44,8 +43,6 @@ import com.fs.game.utils.pathfinder.PathFinder;
  * - unit death actions
  * - unit move actions
  *
- * 
- * 
  * MOVEMENTS
  * - left, right, up, down
  * - finds movement range on board
@@ -58,6 +55,22 @@ import com.fs.game.utils.pathfinder.PathFinder;
 public class UnitUtils  {
 
 	final static String LOG = Constants.LOG_UNIT_UTILS;
+
+    public static int getUnitIndex(Unit unit){
+        int index;
+        if (unit.getFaction().equals("Arthroid")){
+            index = unit.getUnitID() - 21;
+
+        }
+        else if (unit.getFaction().equals("Reptoid")){
+            index = unit.getUnitID() - 11;
+        }
+        else{
+            index = unit.getUnitID() -1;
+        }
+
+        return index;
+    }
 
 
     public static class Setup {
@@ -83,6 +96,15 @@ public class UnitUtils  {
             return chosenUnits;
         }
 
+        /** adds into an array all the units with positions
+         * adds info to units: name & player number
+         *
+         * @param chosenUnits
+         * @param player
+         * @param playerName
+         * @param positions
+         * @return
+         */
         public static Array<Unit> setupUnits(Array<UnitInfo> chosenUnits, int player, String playerName, float[][] positions) {
             Array<Unit> unitArray = new Array<Unit>();
 
@@ -90,35 +112,20 @@ public class UnitUtils  {
                 float x = positions[i][0];
                 float y = positions[i][1];
                 Unit unit = new Unit(chosenUnits.get(i), x, y, player);
+
+                if (!GameData.getInstance().playerName.equals(playerName))
+                    unit.setTouchable(Touchable.disabled);
+
                 unit.setOwner(playerName);
                 unitArray.add(unit);
+
+                if (player == 2)
+                    unit.setLock(true);
             }
 
             return unitArray;
         }
 
-        public static Array<Unit> setupUnits(Array<UnitInfo> chosenUnits, int player, float[][] positions,  GameStage stage){
-            Array<Unit> currUnits = new Array<Unit>();
-
-            for (int i = 0; i < chosenUnits.size; i++){
-                float x = positions[i][0];
-                float y = positions[i][1];
-                Unit unit = new Unit(chosenUnits.get(i), x, y, player);
-                stage.addActor(unit);
-                currUnits.add(unit);
-            }
-
-            if (player == 1) {
-                stage.p1Units = currUnits;
-                GameData.unitsInGame.put(1, currUnits);
-            }
-            else{
-                stage.p2Units = currUnits;
-                GameData.unitsInGame.put(2, currUnits);
-            }
-
-            return currUnits;
-        }
 
 
         public static Array<Unit> setupUnits(String playerName, Array<UnitInfo> chosenUnits, int player, float[][] positions,  GameStage stage){
@@ -141,6 +148,61 @@ public class UnitUtils  {
             }
 
             return currUnits;
+        }
+
+        public static void cloneUnit(Unit unit){
+            Unit clone = unit;
+            GameStage stage = ((GameStage)unit.getStage());
+
+            float x;
+            float y = unit.getY();
+
+            if (unit.player == 2){
+                x = Constants.UNIT_POS_X_LEFT;
+            }
+            else{
+                x = Constants.UNIT_POS_X_RIGHT;
+            }
+
+            if (unit.getUnitSize().equals("64x64")){
+                y += 64f;
+            }
+            else{
+                y += 32f;
+            }
+            Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
+            Array.ArrayIterator<Unit> iter = new Array.ArrayIterator<Unit>(allUnits);
+            positionClonedUnit(clone, x, y, iter);
+
+            stage.addActor(clone);
+
+        }
+
+        /** recursively checks to see whether unit can fit in position
+         *
+         * @param unit
+         * @param x
+         * @param y
+         * @param iter
+         */
+        public static void positionClonedUnit(Unit unit, float x, float y, Array.ArrayIterator<Unit> iter){
+
+            while (iter.hasNext()){
+                Unit u = iter.next();
+                if (!u.unitBox.contains(x, y) && !u.unitBox.contains(x + unit.getWidth(), y + unit.getHeight())){
+                    if (GameUtils.StageUtils.isPastTop(y)){
+                        y -= y;
+                        positionClonedUnit(unit, x, y, iter);
+                    }
+
+                    if (GameUtils.StageUtils.isPastBottom(y)){
+                        y += y;
+                        positionClonedUnit(unit, x, y, iter);
+                    }
+                }
+            }
+
+            unit.setPosition(x, y);
         }
 
 
@@ -181,25 +243,6 @@ public class UnitUtils  {
 
             //NOTE: all units have a stillLeft.png & stillRight.png file paths
             if (flip){
-                unitPicPath = info.getTexPaths().get(1);
-                if (Gdx.files.internal(unitPicPath).exists())
-                    return Assets.assetManager.get(unitPicPath, Texture.class);
-            }
-
-            return Assets.assetManager.get(unitPicPath, Texture.class);
-        }
-
-        /** an alternative method which uses player to set unit still animation
-         *
-         * @param info
-         * @param player
-         * @return the still animation (when unit is standing)
-         */
-        public static Texture getUnitStill(UnitInfo info, int player){
-            String unitPicPath = info.getTexPaths().get(0);
-
-            //NOTE: all units have a stillLeft.png & stillRight.png file paths
-            if (player == 2){
                 unitPicPath = info.getTexPaths().get(1);
                 if (Gdx.files.internal(unitPicPath).exists())
                     return Assets.assetManager.get(unitPicPath, Texture.class);
@@ -249,11 +292,14 @@ public class UnitUtils  {
             float height = unit.getHeight();
 
             //the still animation (from main unit texture)
-            animations.insert(0, UnitUtils.Setup.createAnimation(aniTime, unit.texture, width, height));
+            //since player 1 still faces right & player 2 left, subtract by 1 to get still_left or right
+            Texture stillTex = Assets.assetManager.get(unitInfo.getTexPaths().get(unit.getPlayer()-1), Texture.class);
+            animations.insert(0, createAnimation(aniTime, stillTex, width, height));
+
+            //animations.insert(0, UnitUtils.Setup.createAnimation(aniTime, unit.texture, width, height));
             //gets textures from assetmanager
             for(String fs : unitInfo.getTexPaths()){
 
-//            Gdx.app.log(LOG, "unit name : " + getName() + " , framesheet is " + fs);
                 Texture tex = Assets.assetManager.get(fs, Texture.class);
 
                 if (fs.equals(unitInfo.getUnitPath() + Constants.UNIT_MOVE_RIGHT)){
@@ -280,7 +326,7 @@ public class UnitUtils  {
                 else if (fs.equals(unitInfo.getUnitPath() + Constants.UNIT_ATTACK_UP)) {
                     animations.insert(8, UnitUtils.Setup.createAnimation(aniTime, tex, width, height));
                 }
-                //more animations may come later
+                //more animations to come...
             }
 
             //since not all animations have up & down movements
@@ -289,9 +335,7 @@ public class UnitUtils  {
                 animations.insert(4, animations.get(0));
             }
 
-
             return animations;
-
         }
 
         /** since size is always ##x##, index of x is always 2
@@ -384,23 +428,6 @@ public class UnitUtils  {
             return unitNames;
         }
 
-
-        /** returns the unit damage which is shown next to unit image
-         *
-         * @param unit
-         * @return
-         */
-        public static int setUnitDamageText(Unit unit, String playerName){
-            int damage = 0;
-
-            for (Unit u : unit.enemyUnits){
-                if (u.chosen){
-                    damage = -Assets.damageListArray.get(u.getUnitID()-1)[unit.getUnitID()-1];
-                }
-            }
-
-            return damage;
-        }
 
     }
 
@@ -624,106 +651,79 @@ public class UnitUtils  {
      */
     public static class Attack {
 
-        /** returns the damage unit inflicts (or takes, if negative)
+        /** when unit finished moving & becomes adjacent to another
          *
          * @param unit
-          * @return
+         * @param stage
          */
-        public static int getUnitDamage(Unit unit){
-            int damage = 0;
-            //float damageTest = -1; //for testing attack mechanics of units
-            int[] damageList = unit.unitInfo.getDamageList();
+        public static void attackNearbyUnits(Unit unit, GameStage stage){
+            Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
+            Array.ArrayIterator<Unit> unitIter = new Array.ArrayIterator<Unit>(allUnits);
+//        OrderedMap<Integer, Unit> unitsInRange = new OrderedMap<Integer, Unit>();
+//
+//            int highDamage = 1; //the highest damage dealt; set at 1 since they are negative
+//            Unit unitToAttack = unitIter.next(); //unit that will be attacked
 
-            for (int i = 0; i < damageList.length; i++) {
-                //find unit which is being fought
-                if (unit.getUnitID() == i + 1) {
-                    damage += damageList[i];
-                    Gdx.app.log(LOG, "damage is " + damage);
-                    break;
+            log("unit " + unit.getName() + " trying to find nearby units to attack");
+
+            while (unitIter.hasNext() && !unit.isAttacking){
+                Unit u = unitIter.next();
+                if (UnitUtils.Attack.isEnemy(u) && UnitUtils.Attack.unitAdjacent(unit, u) && !u.underattack){
+                    int damage = Assets.damageListArray.get(unit.getUnitID()-1)[u.getUnitID()-1];
+                    u.isAttackable = true;
+                    u.damage = damage;
                 }
-            }
 
-            return damage;
-        }
-
-
-        /** another method to set unit damage
-         *
-         * @param unit
-         */
-        public static void setUnitDamage(Unit unit){
-
-            for (Unit u : unit.enemyUnits){
-                if (u.chosen){
-                    unit.damage = Assets.damageListArray.get(getUnitIndex(u))[getUnitIndex(unit)];
-                    unit.damageSet = true;
-                }
+                if (!unitIter.hasNext())
+                    unit.isAttacking = true;
             }
         }
 
-        public static int getUnitIndex(Unit unit){
-            int index = 0;
-            if (unit.getFaction().equals("Arthroid")){
-                index = unit.getUnitID() - 21;
-
-            }
-            else if (unit.getFaction().equals("Reptoid")){
-                index = unit.getUnitID() - 11;
-            }
-            else{
-                index = unit.getUnitID() -1;
-            }
-
-            return index;
-        }
-
-        /** finds any and all attackers
-         *
-         * @param unit
-         */
-        public static void findAttackers(Unit unit){
-            if (!unit.underattack) {
-                for (Unit u : unit.enemyUnits) {
-                    if (unitAdjacent(unit, u)) {
-                        unit.underattack = true;
-                        setUnitDamage(u);
-                        unitAttacked(unit);
-                    }
-                }
-            }
-        }
-
-        /** when unit is attacked, damage dealt
-         * if unit health < 4, it disappears
+        /** another (possibly outdated) unit attack method
          *
          * @param unit
          */
         public static void unitAttacked(Unit unit){
-            //attackTime += timeInterval; //for attack animations
-            if (unit.lock && unit.standing) {
+            Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(unit.getStage().getActors());
+            Array.ArrayIterator<Unit> iterator = new Array.ArrayIterator<Unit>(allUnits);
 
-                Gdx.app.log(LOG, "Unit " + unit.getName() + " health is at " + unit.health);
-
-                if (unit.health <= 0) {
-                    unit.addAction(Actions.alpha(0f, 2f));
-                    unit.state = UnitState.DEAD;
-
-                    //update score upon death
-                    if (unit.player == 1)
-                        GameUtils.Player.updateScore(GameData.scoreP2, unit);
-                    else
-                        GameUtils.Player.updateScore(GameData.scoreP1, unit);
-
-                    unit.remove(); //removed from stage
-                    unit.clear();
-                }
-                else {
+            while (iterator.hasNext()){
+                Unit u = iterator.next();
+                if (isEnemy(u) && unitAdjacent(unit, u)){
+                    unit.damage = Assets.damageListArray.get(u.getUnitID()-1)[unit.getUnitID()-1];
                     unit.health += unit.damage;
-                    ParallelAction attackAction = Actions.parallel(Actions.color(Color.RED), Actions.alpha(.2f));
-                    unit.addAction(attackAction);
+                    unit.underattack = true;
+
+                    if (unit.health <= 0){
+                        MultiplayerScreen.getInstance().playerScore += 10;
+                        MultiplayerScreen.getInstance().unitCounts[unit.getPlayer()-1]--;
+                    }
                 }
+                else{
+                    unit.underattack = false;
+                }
+
             }
         }
+
+
+        /** checks whether panel is next to unit
+         *  for movement of AI
+         *
+         * @param panel : the panel
+         * @param  unit: the unit
+         * @return
+         */
+        public static boolean panelAdjacent(Panel panel, Unit unit){
+
+            return (unit.getX()==panel.getX() && unit.getY()+unit.getHeight()==panel.getY()) ||  	//check right & up
+                    (unit.getX() + unit.getWidth()==panel.getX() && unit.getY()==panel.getY())
+                    ||
+                    (unit.getX()==panel.getX() && unit.getY()-unit.getHeight()==panel.getY()) //check left & down
+                    || (unit.getX()-unit.getWidth()==panel.getX() && unit.getY()==panel.getY());
+
+        }
+
 
         /** checks whether units are adjacent for when attacking
          *
@@ -740,6 +740,47 @@ public class UnitUtils  {
                     || (uni1.getX()-uni1.getWidth()==uni2.getX() && uni1.getY()==uni2.getY());
 
         }
+
+        public static boolean isEnemy(Unit unit){
+            if (!unit.getOwner().equals(GameData.getInstance().playerName)){
+                return true;
+            }
+            return false;
+        }
+
+        /** takes in a name also, for AI use
+         *
+         * @param unit
+         * @param name
+         * @return
+         */
+        public static boolean isEnemy(Unit unit, String name){
+            if (!unit.getOwner().equals(name)){
+                return true;
+            }
+            return false;
+        }
+
+        /** unit is dealt damage
+         *
+         * @param damage
+         * @param u
+         */
+        public static void damageUnit(int damage, Unit u){
+            u.unitDamaged(damage);
+            u.underattack = true;
+
+            if (u.health <= 0){
+                MultiplayerScreen.getInstance().playerScore += 10;
+                MultiplayerScreen.getInstance().unitCounts[u.getPlayer()-1]--;
+            }
+
+            Gdx.app.log(LOG, "unit " + u.getName() + " damage inflicted = " + damage
+                    + " \n health = " + u.health);
+
+        }
+
+
     }
 
 
@@ -762,11 +803,18 @@ public class UnitUtils  {
 
                     currUnit.clickCount++;
                     currUnit.chosen = true;
+                    ((GameStage)currUnit.getStage()).setChosenUnit(currUnit);
                     Gdx.app.log(LOG, currUnit.getName() + " selected (touchDown - ActorGestureListener)");
                 }
                 else if (currUnit.clickCount >= 2 && !currUnit.lock && !currUnit.done){
                     currUnit.chosen = false;
                     currUnit.clickCount = 0; //reset clickCount
+                }
+
+
+                if (currUnit.isAttackable){
+                    currUnit.underattack = true;
+                    currUnit.isAttackable = false;
                 }
 
             }
@@ -781,6 +829,16 @@ public class UnitUtils  {
                     UnitUtils.Movement.hideMoves(currUnit);
                     Gdx.app.log(LOG, currUnit.getName() +" UNSELECTED (touchUp - ActorGestureListener)");
                 }
+
+
+            }
+        };
+
+
+        public static ChangeListener unitChangeListener = new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Unit unit = ((Unit)actor);
 
 
             }
@@ -805,8 +863,6 @@ public class UnitUtils  {
                     Gdx.app.log(LOG, " unit selected: " + currUnit.getName() + ", KEY = " + currUnit.key);
                 }
 
-
-
             }
 
             @Override
@@ -820,9 +876,6 @@ public class UnitUtils  {
                 }
                 else if (clickCount == 3){
                     currUnit.selected = false;
-
-
-
                     Gdx.app.log(LOG, " unit DESELECTED: " + currUnit.getName() + ", KEY = " + currUnit.key);
 
                     clickCount = 0;
@@ -835,9 +888,8 @@ public class UnitUtils  {
 
     }
 
-    public static void updateUnitData(UnitData unitData, Unit unit){
-
+    private static void log(String message){
+        Gdx.app.log(LOG, message);
     }
-
 
 }

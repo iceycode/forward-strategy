@@ -1,7 +1,8 @@
-package com.fs.game.units;
+package com.fs.game.actors;
 
 
 import appwarp.WarpController;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -16,12 +17,13 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pool;
 import com.fs.game.assets.Assets;
+import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UnitData;
 import com.fs.game.data.UserData;
 import com.fs.game.enums.UnitState;
-import com.fs.game.maps.Panel;
-import com.fs.game.utils.GameUtils;
+import com.fs.game.screens.MultiplayerScreen;
+import com.fs.game.stages.GameStage;
 import com.fs.game.utils.UnitUtils;
 import com.fs.game.utils.pathfinder.PathGenerator;
 
@@ -54,12 +56,14 @@ public class Unit extends Actor {
 	float aniTime = .1f; //stores data related to animation between panels
 	float attackTime = 0.2f;
 
+    Texture attackFrame; //frame for when unit can be attacked
+
 	//unit information
  	public UnitInfo unitInfo; //sets unit's information
  	public int[] damageList;  //lists how much damage done to or recieved by opponent
 	protected int unitID;
     public BitmapFont damageText;
-    public Texture texture; //unit main texture (framesheet for animation)
+    //public Texture texture; //unit main texture (framesheet for animation)
 	//store player & faction info
 	public int player = 0;
 	String faction; //
@@ -76,11 +80,18 @@ public class Unit extends Actor {
 	public boolean standing = true; //whether the unit is still or not
 	public boolean lock = false; //this value is for 
 	public boolean chosen = false; //if unit is chosen
-    public boolean underattack = false;
-	public boolean done = false; //unit has finished moving/attacking
+
+    //for attacking
+    public boolean isAttackable = false; //unit is attackable
+    public boolean underattack = false; //unit is under attack
+    public boolean isAttacking = false; //unit can attack
+    public boolean attacked = false; //unit has attacked another
+
+
+    public boolean done = false; //unit has finished moving/attacking
 	public boolean panelsFound = false;
-    public boolean damageSet = false;
-	
+    public boolean enemyUnit = false; //whether this is enemy unit or not
+
  	public int clickCount = 0; //if unit selected or not still
 
  	//related to unit moving on board
@@ -118,22 +129,12 @@ public class Unit extends Actor {
 	 */
 	public Unit(UnitInfo unitInfo, float posX, float posY, int player) {
         //set texture, coordinates & other info
-        this.texture = UnitUtils.Setup.getUnitStill(unitInfo, player); //main unit texture for still animation
+        //this.texture = UnitUtils.Setup.getUnitStill(unitInfo, player); //main unit texture for still animation
         this.unitInfo = unitInfo;
         this.player = player; //sets the player
 
-
         setupUnit(posX, posY);
-        this.animations = UnitUtils.Setup.setupAnimations(this, aniTime);
-
-
-        this.damageText = Assets.uiSkin.getFont("retro1");
-        this.damageText.setColor(Color.YELLOW);
-
-        this.unitBox = new Rectangle(getX(), getY(), this.getWidth(), this.getHeight()); //for collision detection
-        this.healthBar = Assets.uiSkin.get("healthBar", Texture.class);
-
-        this.state = UnitState.STILL;
+        setupUnitTextures();
         setupUnitData();
 
         this.addListener(UnitUtils.Listeners.actorGestureListener);
@@ -144,6 +145,7 @@ public class Unit extends Actor {
 
         this.moveSequence = new SequenceAction();
         this.panelArray = new Array<Panel>();
+
  	}
 
 
@@ -173,6 +175,25 @@ public class Unit extends Actor {
 		}
 	}
 
+    public void setupUnitTextures(){
+        this.animations = UnitUtils.Setup.setupAnimations(this, aniTime);
+
+        if (unitSize.equals("32x32"))
+            this.attackFrame = Assets.assetManager.get(Constants.ATTACK_FRAME_SMALL, Texture.class);
+        else if (unitSize.equals("64x32"))
+            this.attackFrame = Assets.assetManager.get(Constants.ATTACK_FRAME_MED, Texture.class);
+        else
+            this.attackFrame = Assets.assetManager.get(Constants.ATTACK_FRAME_LARGE, Texture.class);
+
+        this.damageText = Assets.uiSkin.getFont("retro1");
+        this.damageText.setColor(Color.YELLOW);
+
+        this.unitBox = new Rectangle(getX(), getY(), this.getWidth(), this.getHeight()); //for collision detection
+        this.healthBar = Assets.uiSkin.get("healthBar", Texture.class);
+
+        this.state = UnitState.STILL;
+    }
+
     public void setupUnitData(){
         this.unitData = new UnitData();
         unitData.setUnitID(unitID);
@@ -189,8 +210,9 @@ public class Unit extends Actor {
 
  		super.draw(batch, alpha);
 
+        int aniIndex;
         state = UnitUtils.Movement.unitDirection(this, getX(), getY()); //sets the unit state if moving
-        int aniIndex = state.getValue();
+        aniIndex = state.getValue();
 
         if (aniIndex > animations.size)
             aniIndex = 0;
@@ -203,10 +225,17 @@ public class Unit extends Actor {
   		batch.draw(healthBar, this.getX(), this.getY(), healthBarWidth, healthBar.getHeight());
 
         if (lock){
-            UnitUtils.Attack.setUnitDamage(this);
-            this.damageText.draw(batch, Integer.toString(-damage) + "", getX()+getWidth()-10f, getY()+getHeight()-10f);
-        }
+            Unit chosenUnit = ((GameStage)getStage()).getChosenUnit();
+            if (chosenUnit != null){
+                damage = Assets.damageListArray.get(chosenUnit.getUnitID()-1)[getUnitID()-1];
+                this.damageText.draw(batch, Integer.toString(-damage) + "", getX()+getWidth()-10f, getY()+getHeight()-10f);
+            }
 
+            if (isAttackable){
+                batch.draw(attackFrame, getX(), getY());
+            }
+
+        }
  	}
 
 	/** overridden act method
@@ -216,9 +245,6 @@ public class Unit extends Actor {
 	public void act(float delta){
         timeInterval += delta; //get time for animations in draw method
         // attackTime += delta; //for attack animations (could differ) <---need to get attack anims first
-//
-//        if (this.getStage()!=null) //in case unit is last actor on board
-//            updateUnitDataArrays(this.getStage().getActors());
 
         unitActs();
 
@@ -231,19 +257,27 @@ public class Unit extends Actor {
 	 * 
 	 */
 	public void unitActs() {
-
-        updateUnitDataArrays(this.getStage().getActors());
-
-        if (lock) {
-            UnitUtils.Attack.findAttackers(this);
+        if (owner!=null && !owner.equals(GameData.getInstance().playerName)){
+            lock = true; //always keep it locked
+            enemyUnit = true;
         }
-		else{
-            if (chosen){
-                //other units deselected
-                updateGameData();
 
-                //only gets panel array doesn't contain any panels
-                if (!panelsFound){
+        if (underattack){
+            unitDamaged(damage);
+            underattack = false;
+        }
+
+        if (chosen){
+            if (((GameStage)getStage()).getChosenUnit()!=this){
+                chosen = false;
+                UnitUtils.Movement.hideMoves(this);
+            }
+            else{
+                //other units deselected
+                updateStage();
+
+                //only gets panel array if doesn't contain any panels
+                if (!panelsFound) {
                     panelArray = pathGen.findPaths();
                     panelsFound = true;
                 }
@@ -251,27 +285,42 @@ public class Unit extends Actor {
                 UnitUtils.Movement.showMoves(this); //shows possible moves
                 UnitUtils.Movement.checkTargetPanel(this);
             }
-            if (moving) {
-                addAction(UnitUtils.Movement.createMoveAction(moveSequence, this));
-                updateRectangle();
+        }
 
-                if (unitData!= null)
-                    selfUpdateData();
-
-                if (getX()==targetPan.getX() && getY()==targetPan.getY())
-                    resetUnit();
-            }
-            else {
-                state = UnitState.STILL;
-            }
+        if (done && !isAttacking){
+            UnitUtils.Attack.attackNearbyUnits(this, ((GameStage)getStage()));
+            isAttacking = true;
+        }
 
 
-			
-		}
-		 
+        if (moving) {
+            addAction(UnitUtils.Movement.createMoveAction(moveSequence, this));
+            updateRectangle();
+            selfUpdateData();
+
+            if (getX()==targetPan.getX() && getY()==targetPan.getY())
+                updateAfterMoving();
+        }
+        else if (!moving && MultiplayerScreen.getInstance().currPlayer != player){
+            lock = true;
+            standing = true;
+            clickCount = 0;
+            chosen = false;
+            attacked = false;
+            underattack = false;
+        }
+        else {
+            state = UnitState.STILL;
+        }
 	}
 
+    public void unitDamaged(int damageDone){
+        health += damageDone;
+        selfUpdateData();
+    }
+
     public void selfUpdateData(){
+
         unitData.setOwner(owner);
         unitData.setState(state.getValue());
         unitData.setDamage(damage);
@@ -284,7 +333,6 @@ public class Unit extends Actor {
 
         try{
             Json json = new Json();
-
             String data = json.toJson(userData, UserData.class);
             WarpController.getInstance().sendGameUpdate(data);
         }
@@ -296,15 +344,14 @@ public class Unit extends Actor {
     public void updateUnit(UnitData unitData){
         setX(unitData.getUnitPosition().x);
         setY(unitData.getUnitPosition().y);
+        this.unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
 
-        state.setValue(unitData.getState());
+        //state.setValue(unitData.getState());
         health = unitData.getHealth();
         damage = unitData.getDamage();
-
-        //selfUpdateData(); //updates unit's data
     }
 
-    public void updateGameData(){
+    public void updateStage(){
 
         if (chosen) {
             String[] unitDetails = {UnitUtils.Info.unitDetails(this), UnitUtils.Info.unitDamageList(this)};
@@ -322,7 +369,7 @@ public class Unit extends Actor {
 	 * arrays which contain ally/enemy unit info
 	 *  
 	 */
-	public void resetUnit(){
+	public void updateAfterMoving(){
         //update unit position, animation & selection information
  		setOrigin(getX(), getY());
 		updateRectangle();
@@ -330,7 +377,7 @@ public class Unit extends Actor {
 		moving = false;
 		standing = true;
         done = true;
-        lock = true;
+
 
 		this.state = UnitState.STILL;
 
@@ -340,12 +387,27 @@ public class Unit extends Actor {
 		panelPath.clear();
 		panelArray.clear();
 
+        clickCount = 0;
+
         //reset/clear movement actions
 		moveSequence.reset(); //NOTE: this is required to reset sequence so it doesn't cause infinite loop
 		actionPool.free(moveSequence);
 		actionPool.clear();
+
+        isAtEnemyBorder();
   	}
-	
+
+
+    public void isAtEnemyBorder(){
+        if (getX() == Constants.GRID_TOP_RIGHT[0] && player == 1 ){
+            UnitUtils.Setup.cloneUnit(this);
+        }
+        else if (getX() == Constants.GRID_BTM_LEFT[0] && player == 2){
+            UnitUtils.Setup.cloneUnit(this);
+        }
+    }
+
+
 	/** updates unit position location variables on board
 	 * important for finding panels units can move to
 	 */
@@ -354,28 +416,10 @@ public class Unit extends Actor {
             this.unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
         }
 	}
-	
-	/** updates all other units this unit sees on board
-	 * takes in this.getStage().getActors() to see everything on board
-	 * 
-	 * @param  allActors
-	 */
-	public void updateUnitDataArrays(Array<Actor> allActors){
-		//arrays which update the other units on stage so this unit knows about them
-		Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(allActors);
-		this.otherUnits = GameUtils.StageUtils.findOtherUnits(allUnits, this);
 
-		//updates the enemies on the board based on player
-//		if (this.player == 1){
-//			this.enemyUnits = GameUtils.StageUtils.findPlayerUnits(allUnits, 2);
-//		}
-//		else{
-//			this.enemyUnits = GameUtils.StageUtils.findPlayerUnits(allUnits, 1);
-//		}
-        this.enemyUnits = GameData.enemyUnits;
-	}
-
-
+    private void log(String message){
+        Gdx.app.log(LOG, message);
+    }
 
 	/**
 	 * @return the maxmoves
@@ -425,13 +469,6 @@ public class Unit extends Actor {
 	}
 
 	/**
-	 * @return the targetPan
-	 */
-	public Panel getTargetPan() {
-		return targetPan;
-	}
-
-	/**
 	 * @param targetPan the targetPan to set
 	 */
 	public void setTargetPan(Panel targetPan) {
@@ -467,10 +504,6 @@ public class Unit extends Actor {
 		this.lock = lock;
 	}
 
-	public int[] getDamageList() {
-		return damageList;
-	}
-
 	public void setDamageList(int[] damageList) {
 		this.damageList = damageList;
 	}
@@ -487,14 +520,6 @@ public class Unit extends Actor {
 	 */
 	public void setPlayer(int player) {
 		this.player = player;
-	}
-
-	public Vector2 getGridLocation() {
-		return gridLocation;
-	}
-
-	public void setGridLocation(Vector2 gridLocation) {
-		this.gridLocation = gridLocation;
 	}
 
 	public String getUnitSize() {
@@ -514,20 +539,5 @@ public class Unit extends Actor {
         this.owner = owner;
     }
 
-    public UnitData getUnitData() {
-        return unitData;
-    }
-
-    public void setUnitData(UnitData unitData) {
-        this.unitData = unitData;
-    }
-
-    public int getUpdateState() {
-        return updateState;
-    }
-
-    public void setUpdateState(int updateState) {
-        this.updateState = updateState;
-    }
 }
  

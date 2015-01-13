@@ -3,8 +3,8 @@ package com.fs.game.unused_old_classes;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Constants;
-import com.fs.game.maps.MapActor;
-import com.fs.game.maps.Panel;
+import com.fs.game.actors.MapActor;
+import com.fs.game.actors.Panel;
 
 /** @deprecated ... replaced by methods in @link MapUtils 
  * 

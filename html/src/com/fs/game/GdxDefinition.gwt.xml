@@ -3,8 +3,18 @@
 <module rename-to="html">
 	<inherits name='com.badlogic.gdx.backends.gdx_backends_gwt' />
 	<inherits name='com.badlogic.gdx.physics.box2d.box2d-gwt' />
+    <!--<inherits name="com.badlogic.gdx.ai"/>-->
+	<!--<inherits name='com.shephertz.app42.gaming.multiplayer-client'/>-->
+
+
+	<source path='core'/>
+	<source path='html'/>
+
+
 
 	<inherits name='ForwardStrategy' />
+
+
 	<entry-point class='com.fs.game.client.HtmlLauncher' />
 	
 	<set-configuration-property name="gdx.assetpath" value="../android/assets" />

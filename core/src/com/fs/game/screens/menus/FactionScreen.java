@@ -68,7 +68,7 @@ public class FactionScreen implements Screen {
     public void updateMenu(){
 
         for (String s : Constants.FACTION_LIST){
-            if (GameData.playerFaction.equals(s)){
+            if (GameData.getInstance().playerFaction.equals(s)){
                 unitMenu();
             }
         }

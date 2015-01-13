@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.fs.game.units;
+package com.fs.game.actors;
 
 import com.badlogic.gdx.utils.Array;
 

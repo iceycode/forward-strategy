@@ -1,17 +1,37 @@
-//for adding non-mavenized file dependencies see:
-//    https://github.com/libgdx/libgdx/wiki/Dependency-management-with-Gradle#file-dependencies
+//
+/**for adding non-mavenized file dependencies see:
+ * https://github.com/libgdx/libgdx/wiki/Dependency-management-with-Gradle#file-dependencies
+ * those edited out are from previous version(s) being used:
+ *   1.0
+ *   1.4.1
+ * Current libgdx version: 1.5.0
+ *
+ */
 
 buildscript {
     repositories {
         mavenCentral()
+        jcenter()
         mavenLocal()
-        maven { url 'https://github.com/steffenschaefer/gwt-gradle-plugin/raw/maven-repo/' }
+        //maven { url 'https://github.com/steffenschaefer/gwt-gradle-plugin/raw/maven-repo/' }
 
     }
     dependencies {
-        classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.3'
-        classpath 'com.android.tools.build:gradle:0.12+'
-        classpath 'com.github.jtakakura:gradle-robovm-plugin:0.0.7'
+        classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.6'
+        classpath 'com.android.tools.build:gradle:1.0.0'
+        classpath 'org.robovm:robovm-gradle-plugin:1.0.0-beta-01'
+
+        //extra classpaths for Appwarp API
+        classpath 'org.apache.commons:commons-lang3:3.3.2'
+        classpath 'org.apache.httpcomponents:httpclient:4.1'
+        classpath 'commons-logging:commons-logging:1.1.1'
+        classpath 'org.json:json:20141113'
+        classpath 'org.apache.httpcomponents:httpcore:4.1'
+        classpath 'commons-logging:commons-logging-api:1.1'
+
+//        classpath 'com.android.tools.build:gradle:0.12+'
+//        classpath 'com.android.tools.build:gradle:1.0.0'
+//        classpath 'com.github.jtakakura:gradle-robovm-plugin:0.0.7'
 
     }
 }
@@ -23,14 +43,17 @@ allprojects {
     version = '1.0'
     ext {
         appName = 'forward-strategy'
-        gdxVersion = '1.4.1'
-        roboVMVersion = '0.0.11'
+        gdxVersion = '1.5.0'
+        roboVMVersion = '1.0.0-beta-01'
+        //        gdxVersion = '1.4.1'
+//        roboVMVersion = '0.0.11'
     }
 
     repositories {
         mavenLocal()
         mavenCentral()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
     }
 }
 
@@ -43,10 +66,10 @@ project(":desktop") {
         compile "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         compile "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
-        
         compile "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+//        compile "com.shephertz.app42.gaming:multiplayer-client:1.5.6"
 
-//        compile fileTree(dir: 'libs', include: '*.jar')
+        compile fileTree(dir: 'libs', include: '*.jar')
 
     }
 }
@@ -73,7 +96,9 @@ project(":android") {
         natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi-v7a"
         natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86"
 
-        compile fileTree(dir: 'libs', include: '*.jar') //appwarp dependency location for android
+//        compile "com.badlogicgames.gdx:gdx-ai:$gdxVersion"
+
+        compile fileTree(dir: 'libs', include: '*.jar')
 
     }
 }
@@ -91,7 +116,7 @@ project(":ios") {
         compile "com.badlogicgames.gdx:gdx-backend-robovm:$gdxVersion"
         natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-ios"
         natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-ios"
-        
+
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-ios"
 
@@ -102,7 +127,6 @@ project(":html") {
     apply plugin: "gwt"
     apply plugin: "war"
 
-
     dependencies {
         compile project(":core")
         compile "com.badlogicgames.gdx:gdx-backend-gwt:$gdxVersion"
@@ -110,22 +134,32 @@ project(":html") {
         compile "com.badlogicgames.gdx:gdx-backend-gwt:$gdxVersion:sources"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion:sources"
         compile "com.badlogicgames.gdx:gdx-box2d-gwt:$gdxVersion:sources"
+//        compile "com.badlogicgames.gdx:gdx-ai:$gdxVersion:sources"
+
+//        compile "com.shephertz.app42.gaming:multiplayer-client:1.5.6"
+        compile fileTree(dir: 'libs', include: '*.jar')
+
     }
 }
 
 project(":core") {
     apply plugin: "java"
 
-
     dependencies {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-        
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+//        compile "com.badlogicgames.gdx:gdx-ai:$gdxVersion"
 
+        //added App42MultiPlayerGamingSDK.jar to local maven repo
+//        compile "com.shephertz.app42.gaming:multiplayer-client:1.5.6"
+
+        // this method, you add jar to libs ---NOTE: also need commons (json, http, etc)
         compile fileTree(dir: 'libs', include: '*.jar')
     }
 }
+
+
 
 tasks.eclipse.doLast {
     delete ".project"

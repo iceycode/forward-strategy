@@ -50,8 +50,8 @@ end
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.maps.Panel;
-import com.fs.game.units.Unit;
+import com.fs.game.actors.Panel;
+import com.fs.game.actors.Unit;
 import com.fs.game.assets.Constants;
 
 public class PathFinder {

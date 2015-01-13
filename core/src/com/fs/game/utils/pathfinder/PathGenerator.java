@@ -1,6 +1,7 @@
 package com.fs.game.utils.pathfinder;
 
-/** an alternative path finding class
+/**TODO: consolidate methods into 1 class
+ *  an alternative path finding class
  * - Unit uses this instead of own methods
  * - finds all possible paths here
  * - algorithm creates an ordered graph + A* scores for each calculated
@@ -11,12 +12,12 @@ package com.fs.game.utils.pathfinder;
  * 
  * Algorithm:
  * 	Find adjacent panel	<=================\\
- * 		|| 									\\
- * 		||									 \\
- *      ||									  \\
- *      \/									   \\
- *  Add to list, count distance from unit		\\
- *   - also, calculate F-score					||
+ * 		|| 								   \\
+ * 		||									\\
+ *      ||									 \\
+ *      \/									  \\
+ *  Add to list, count distance from unit	   \\
+ *   - also, calculate F-score				    ||
  * 		|| 										 \\
  * 		||										  \\
  *      ||										   ||
@@ -35,11 +36,12 @@ package com.fs.game.utils.pathfinder;
  * 
  */
 
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.data.GameData;
-import com.fs.game.maps.Panel;
+import com.fs.game.actors.Panel;
 import com.fs.game.stages.GameStage;
-import com.fs.game.units.Unit;
+import com.fs.game.actors.Unit;
 import com.fs.game.utils.GameUtils;
 
 public class PathGenerator {
@@ -91,7 +93,6 @@ public class PathGenerator {
 		for (Panel p : allPanels){
 			if (p.getX() == panX && p.getY() == panY){
 				this.origin = p;
-
 				break;
 			}
 		}
@@ -123,7 +124,8 @@ public class PathGenerator {
 			
 		}
 		
-		checkForSpace(); //for larger units
+		if (unit.getUnitSize().equals("64x32")||unit.getUnitSize().equals("64x64"))
+            checkForSpace(); //for larger units
 		
 		
 		return possibleMoves;
@@ -152,35 +154,14 @@ public class PathGenerator {
  	
 	
 	/** Makes sure larger units have enough room to move
-	 * 
-	 * 
+	 *   by adding width/height to costs to account for size
 	 */
 	private void checkForSpace(){
-		float tempValue = 0f;
-		for (Panel p : openList){
-			
-			if (unitSize.equals("64x32")){
-				if (p.panelLeft==null || p.panelRight ==null || isObstacle(p.panelRight) || isObstacle(p.panelLeft)){
-					possibleMoves.removeValue(p, false);
-					tempValue = p.getCostFromStart();
-				}
-				
-				if (tempValue>=p.getCostFromStart() || tempValue<=p.getCostFromStart()){
-					possibleMoves.removeValue(p, false);
-				}
-				
-			}
-			else if (unitSize.equals("64x64")){
-				possibleMoves.removeValue(p, false);
- 			}
-			else{
-				possibleMoves.add(p); //move options that will be returns	
-			}
-			
-			
+		for (Panel p : possibleMoves){
+            if (unitObstruction(p, unit)){
+                possibleMoves.removeValue(p, false);
+            }
 		}
-		
-			
 		
 	}
 	
@@ -273,23 +254,9 @@ public class PathGenerator {
 		return parent.getCostFromStart() + (x + y);
  	}
 	
-	/** returns a Manhattan distance Heuristic  
-	 *   H = Math.abs(start.x-destination.x) + Math.abs(start.y-destination.y));
-	 *   
-	 * @parent : current node in queue
-	 * @neighbor : neighbor node whose Heuristic is being calculated
-	 * @return
-	 */
-	public float calculateHeuristic(Panel current, Panel goal){
-		
-		float x = Math.abs(current.getX() - goal.getX());
-		float y = Math.abs(current.getY() - goal.getY());
+
 	
-		return x + y;
-	}
-	
-	/** ----------Method that checks for obstacles & other units in the way------------------
-	 * TODO: Figure out what to do about the panels which are neighbors of 
+	/** Method that checks for obstacles & other units in the way for all units
 	 * 
 	 * @param pan : Panel
 	 * @return obstacle : boolean
@@ -309,7 +276,7 @@ public class PathGenerator {
 		
 		//checks for any units are overlapping panels
 		for (Unit u : otherUnits){
-				//check to see that another unit is not occupying space
+			//check to see that another unit is not occupying space
 			if (u.unitBox.overlaps(pan.panelBox)){
 				unitObstacle = true;
 			}
@@ -317,6 +284,44 @@ public class PathGenerator {
 		
 		return unitObstacle || mapObstacle;
 	}
+
+    //checks around to make sure larger units cannot overalap others
+    public boolean unitObstruction(Panel panel, Unit unit){
+        GameStage stage = (GameStage)this.unit.getStage();
+        Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
+        Array<Unit> otherUnits = GameUtils.StageUtils.findOtherUnits(allUnits, unit);
+        Array.ArrayIterator<Unit> unitIter = new Array.ArrayIterator<Unit>(otherUnits);
+
+        //creates a hypothetical rectangle of where the chosen unit
+        // would be on panel in order to check for overlap against other units
+        while(unitIter.hasNext()){
+            Rectangle r = new Rectangle(panel.getX(), panel.getY(), unit.getWidth(), unit.getHeight());
+            Unit u = unitIter.next();
+            if (r.overlaps(u.unitBox)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
+//These are in PathFinder class
+    //	/** returns a Manhattan distance Heuristic
+//	 *   H = Math.abs(start.x-destination.x) + Math.abs(start.y-destination.y));
+//	 *
+//	 * @parent : current node in queue
+//	 * @neighbor : neighbor node whose Heuristic is being calculated
+//	 * @return
+//	 */
+//	public float calculateHeuristic(Panel current, Panel goal){
+//
+//		float x = Math.abs(current.getX() - goal.getX());
+//		float y = Math.abs(current.getY() - goal.getY());
+//
+//		return x + y;
+//	}
 	
 //	/** method for finding the shortest path NOTE: using a seperate class for shortest path finding
 //	 * - uses A* algorithm to find best path

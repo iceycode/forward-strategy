@@ -5,11 +5,11 @@ package com.fs.game.data;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.OrderedMap;
-import com.fs.game.maps.MapActor;
-import com.fs.game.maps.Panel;
-import com.fs.game.units.Unit;
-import com.fs.game.units.UnitImage;
-import com.fs.game.units.UnitInfo;
+import com.fs.game.actors.MapActor;
+import com.fs.game.actors.Panel;
+import com.fs.game.actors.Unit;
+import com.fs.game.actors.UnitImage;
+import com.fs.game.actors.UnitInfo;
 
 /**
  * stores data that is relevant to current Units on the grid board
@@ -19,7 +19,7 @@ import com.fs.game.units.UnitInfo;
  * @author Allen Jagoda
  */
 public class GameData {
-
+	private static GameData instance;
 
     //-------Game play info--------
     public static Unit chosenUnit; //current unit chosen
@@ -31,25 +31,23 @@ public class GameData {
 
     public static Array<Unit> playerUnits;
     public static OrderedMap<Integer, Array<Unit>> unitsInGame; //all units, p1Units, p2Units
-    public static String playerName; //player name
-    public static String enemyName;  //enemy's name
-    public static int playerPosition; //1 : left, 2 : right
-    public static int enemyPosition;
-    public static int updateState;
 
-    public static int currPlayer; //current player (1 or 2)
+    public String enemyName;  //enemy's name
+    public String playerName; //player name
+    public int player; //current player (1 or 2)
+    public boolean playerTurn; //if true, next player goes
+    public String playerFaction;
+    public String enemyFaction;
+
     public static boolean isChosen; //whether a unit is chosen
-    public static boolean playerTurn; //if true, next player goes
 
     //------data to/from menu screens (or tests)----
     public static String[] factions;
-    public static String playerFaction;
-    public static String enemyFaction; //could be obtained from multiplayer json
+
     public static Array<UnitImage> factUnitImages;
     public static Array<UnitInfo> playerUnitChoices;
     public static int mapChoice; //level choice (for tiled map)
     public static int testType; //type of test that will be implemented
-
 
     //------for Map (TiledMap & Panel) data------
     //TODO: need to fix redudencies in these
@@ -60,7 +58,7 @@ public class GameData {
 
     //for audio
     public static float[] volumes;
-
+    
 
     //initialize all of the fields here
     public static void initGameData(){
@@ -73,13 +71,24 @@ public class GameData {
         gamePanels = new Array<Panel>();
         mapActorArr = new Array<MapActor>();
 
-        float[] vols = {.5f, .5f}; //temporary, TODO: get these from preferences
+        float[] vols = {.5f, .5f}; //temporary
         volumes = vols;
 
         //initalize scores
         scoreP1 = 0;
         scoreP2 = 0;
     }
+    
+    public static GameData getInstance(){
+    	if (instance == null){
+    		instance = new GameData();
+            initGameData();
+    	}
+    	return instance;
+    }
+
+
+
 
 
 }

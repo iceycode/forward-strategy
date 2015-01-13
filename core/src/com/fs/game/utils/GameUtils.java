@@ -16,10 +16,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.maps.MapActor;
-import com.fs.game.maps.Panel;
+import com.fs.game.actors.MapActor;
+import com.fs.game.actors.Panel;
 import com.fs.game.stages.GameStage;
-import com.fs.game.units.Unit;
+import com.fs.game.actors.Unit;
 
 import java.util.Random;
 
@@ -33,7 +33,7 @@ import java.util.Random;
  */
 public class GameUtils {
 
-	final static private String LOG = "MapUtils log: ";
+	final static private String LOG = "GameUtils log: ";
 
 
     //----------------------GAME MAP TOOLS--------------------------//
@@ -161,9 +161,7 @@ public class GameUtils {
 
             for (int x = 0; x < rows; x ++) 	{
                 String panelName = "x"+x;
-                if (x%2==0){
-                    System.out.println();
-                }
+
 
                 for (int y = 0; y < columns; y++) 	 {
                     float stagePosX = x*width + Constants.GAMEBOARD_X;
@@ -196,18 +194,15 @@ public class GameUtils {
          * @param buttons
          * @param labels
          * @param stage
-         * @param stageMap
-         * @param firstPlayer
          */
-        public static void setupUI(TextButton[] buttons, Label[] labels, Stage stage, GameStage stageMap, int firstPlayer) {
+        public static void setupUI(TextButton[] buttons, Label[] labels, Stage stage) {
 
             //The side panel buttons indicating whose turn it is
             buttons[1] = UIUtils.createSideButton("P1", Constants.BT1_X, Constants.BT_Y);
             buttons[2] = UIUtils.createSideButton("P2", Constants.BT2_X, Constants.BT_Y);
 
-
             //for test purposes
-            buttons[0] = UIUtils.createGoButton(stageMap);
+            buttons[0] = UIUtils.createGoButton();
 
             //add the actors
             for (TextButton tb : buttons){
@@ -231,15 +226,6 @@ public class GameUtils {
             //scrollTable is the Table which holds the ScrollPane objects
             Table scrollTable = UIUtils.createUnitScrollTable(labels[1], labels[2]);
             stage.addActor(scrollTable);
-
-
-            //locks those player units whose turn it is not
-            GameData.playerTurn = false;
-
-            int player = GameUtils.Player.randPlayer();
-            buttons[player].toggle();
-
-            GameUtils.Player.nextPlayer(firstPlayer, buttons[1], buttons[2], stageMap);
 
         }
 
@@ -268,44 +254,23 @@ public class GameUtils {
         }
 
 
-        /** returns timercount of 0
-         *
-         * @param p1Button
-         * @param p2Button
-         * @param stage
-         * @return
-         */
-        public static float changePlayer(int player, Button p1Button, Button p2Button, GameStage stage) {
-//		int temp = player; //temp value for player when checking
-
-            if (GameData.playerTurn) {
-                //decides based on player which player to lock
-                nextPlayer(player, p1Button, p2Button, stage);
-                GameData.playerTurn = false;
-            }
-
-            return 0;
-        }
-
-
-
         public static int nextPlayer(int player, Button p1Button, Button p2Button, GameStage stageMap){
             if (player == 1) {
-                StageUtils.lockPlayerUnits(player, stageMap);  //lock these player units
 
                 if (!p1Button.isChecked())
                     p1Button.toggle(); //toggle
 
+                StageUtils.lockPlayerUnits(player, stageMap);  //lock these player units
                 player = 2; //next player
                 StageUtils.unlockPlayerUnits(player, stageMap); 	//unlock player units
                 p2Button.toggle();	//toggle checked state p2
             } //player 2 goes
-            else {
-                StageUtils.lockPlayerUnits(player, stageMap);
+            else if (player == 2){
 
                 if (!p2Button.isChecked())
                     p2Button.toggle(); //if it is not checked
 
+                StageUtils.lockPlayerUnits(player, stageMap);
                 player = 1; //next player
                 StageUtils.unlockPlayerUnits(player, stageMap); 	//unlock player units
                 p1Button.toggle();
@@ -338,6 +303,39 @@ public class GameUtils {
 
             return currScore;
         }
+
+        /** for setting up which side player is on
+         * max value needs to be high enough so that there
+         *  is virtually no chance 2 random numbers in range
+         *   of 1000 multiplied by each other will
+         *    be the same (not even worth calculating probability)
+         *
+         * @return the int random number
+         */
+        public static int randomLengthPlayerID(){
+            Random rand = new Random();
+            int id = rand.nextInt(1000) * rand.nextInt(1000);
+
+            return id;
+        }
+
+        public static String setupUsername(){
+            Random rand = new Random();
+            int idLength = rand.nextInt(6)+1;
+
+            String uniqueID = getRandomHexString(idLength);
+
+            return "tester" + uniqueID;
+        }
+
+        private static String getRandomHexString(int numchars){
+            Random r = new Random();
+            StringBuffer sb = new StringBuffer();
+            while(sb.length() < numchars){
+                sb.append(Integer.toHexString(r.nextInt()));
+            }
+            return sb.toString().substring(0, numchars);
+        }
     }
 
 
@@ -363,71 +361,73 @@ public class GameUtils {
 
         public static Array<Unit> findOtherUnits(Array<Unit> allUnits, Unit u){
             Array<Unit> tempArr = allUnits; //the array to be created each iteration
-             tempArr.removeValue(u, false); //remove it from temporary array
+            tempArr.removeValue(u, false); //remove it from temporary array
 
             return tempArr;
         }
-
-        /** finds all units of certain player
-         * - finds all units of a certain player
+        /** returns a unit iterator from stage actors
          *
-         * @param unitArr
-         * @param player
+         * @param actors
+         * @return
          */
-        public static Array<Unit> findPlayerUnits(Array<Unit> unitArr, int player){
-            Array<Unit> playerUnits = new Array<Unit>();
+        public static Array.ArrayIterator<Unit> unitIterator(Array<Actor> actors){
+            Array.ArrayIterator<Actor> actorIterator = new Array.ArrayIterator<Actor>(actors);
+            Array<Unit> units = new Array<Unit>();
 
-            for (Unit u : unitArr) {
-                if (u.getPlayer() == player) {
-                    playerUnits.add(u);
+            while (actorIterator.hasNext()){
+                Actor a = actorIterator.next();
+                if (a instanceof Unit){
+                    units.add((Unit)a);
                 }
             }
 
-            return playerUnits;
+            Array.ArrayIterator<Unit> iterator = new Array.ArrayIterator<Unit>(units);
+
+            return iterator;
         }
 
-        /** finds all units of certain player
-         * - finds all units of a certain player
+
+        /** ArrayIterator method for finding all units on stage
+         * NOTE: this allows for multithreaded & nested iteration
          *
-         * @param playerName: player id as String (players name)
-         * @param stage : GameStage on which units exist
+         * @param actors
+         * @return
          */
-        public static Array<Unit> findPlayerUnits(String playerName, GameStage stage){
-            Array<Actor> actors = stage.getActors();
-            Array<Unit> playerUnits = new Array<Unit>();
+        public static Array.ArrayIterator<Unit> playerUnitIterator(Array<Actor> actors, String name){
+            Array<Unit> units = new Array<Unit>();
+            Array.ArrayIterator<Actor> iter = new Array.ArrayIterator<Actor>(actors);
 
-            for (int i = 0; i< actors.size; i++) {
-                Actor a = actors.get(i);
-                if (a instanceof Unit) {
-                    Unit uni = (Unit)a;
-                    if (uni.getOwner() == playerName)
-                        playerUnits.add(uni);
-
+            while(iter.hasNext()){
+                Actor a = iter.next();
+                if (a instanceof Unit){
+                    Unit u = (Unit)a;
+                    if (u.getOwner().equals(name))
+                        units.add(u);
                 }
             }
 
-            return playerUnits;
+            return new Array.ArrayIterator<Unit>(units);
         }
 
-        /** finds the enemy units on board
-         * - this needs to be reset every time units change positions
-         *
-         */
-        public static Array<Unit> findEnemyUnits(Unit unit, com.badlogic.gdx.scenes.scene2d.Stage stage){
-            Array<Unit> enemyUnits = new Array<Unit>();
-            Array<Unit> otherUnits = findOtherUnits(findAllUnits(stage.getActors()), unit);
 
-            //look through other units
-            // if does not equal to this player, then it is enemy
-            for (Unit u : otherUnits) {
-                if (u.player != unit.player) {
-                    enemyUnits.add(u);
+
+        public static void checkIfUnitClose(Unit unit, Array<Actor> actors){
+            Array.ArrayIterator<Actor> iter = new Array.ArrayIterator<Actor>(actors);
+
+            while (iter.hasNext()){
+                Actor a = iter.next();
+                if (a instanceof Unit){
+                    Unit u = (Unit)a;
+                    if (UnitUtils.Attack.unitAdjacent(unit, u) && unit.player != u.player){
+
+                    }
                 }
             }
 
-            return enemyUnits;
-
         }
+
+
+
 
         /** update player turn
          * - int value to determine which player's units to lock
@@ -490,11 +490,6 @@ public class GameUtils {
             }
         }
 
-
-        public static void updateUnit(Unit unit, int state){
-
-        }
-
         /** clears the stage of any active (selected) panels
          *
          */
@@ -507,6 +502,41 @@ public class GameUtils {
                 }
             }
         }
+
+        public static boolean isWithinBorder(float x, float y){
+            if (!isPastBottom(y) && !isPastTop(y) && !isPastLeft(x) && !isPastRight(x))
+                return true;
+            return false;
+        }
+
+        public static boolean isPastTop(float y){
+            if (y >= Constants.GRID_TOP_RIGHT[1])
+                return true;
+
+            return false;
+        }
+
+        public static boolean isPastBottom(float y){
+            if (y <= Constants.GRID_BTM_LEFT[1])
+                return true;
+            return false;
+        }
+
+        public static boolean isPastRight(float x){
+            if (x >= Constants.GRID_TOP_RIGHT[0])
+                return true;
+            return false;
+        }
+
+        public static boolean isPastLeft(float x){
+            if (x <= Constants.GRID_BTM_LEFT[0]){
+                return true;
+            }
+            return false;
+        }
+
+
+
     }
 
 

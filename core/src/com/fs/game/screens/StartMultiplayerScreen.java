@@ -2,17 +2,17 @@ package com.fs.game.screens;
 
 import appwarp.WarpController;
 import appwarp.WarpListener;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.fs.game.assets.Assets;
 import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.enums.GameState;
 import com.fs.game.main.MainGame;
 import com.fs.game.utils.GameUtils;
+
+import java.util.Random;
 
 /** the start screen for multiplayer
  * - manages waiting & game over states
@@ -23,11 +23,9 @@ import com.fs.game.utils.GameUtils;
 public class StartMultiplayerScreen implements Screen, WarpListener{
 
     final MainGame game;
-    MainScreen prevScreen;
+//    MainScreen prevScreen;
 
     OrthographicCamera camera;
-    Stage stage; //screen stage for click buttons
-
     GameState gameState;
 
     BitmapFont font;
@@ -38,17 +36,16 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
     private final String errorInConnection = Constants.ERROR_CONNECT_MSG;
 
     //messages for when won, lose or disconnecting
-    private final String game_win = Constants.GAME_WIN_MSG;
-    private final String game_lose = Constants.GAME_LOSE_MSG;
-    private final String enemy_left = Constants.PLAYER_LEFT_MSG;
-    private final String[] gameOver = {game_win, game_lose, "Tied Game! Going to main screen in "};
+    private final String game_win = "Congrats You Win!\nEnemy Defeated";
+    private final String game_lose = "You Lose!\nEnemy Won";
+    private final String enemy_left = "Congrats You Win!\nEnemy Left the Game";
+    private final String game_tied = "Tied Game! Going to main screen in ";
+    private final String[] gameOver = {game_win, game_lose, game_tied, enemy_left};
+    private final String leavingMsg = "\n" + "Leaving in ";
 
-
-    private String startMsg = "Game Starting for player: "+GameData.playerName;
-    private String startCount = startMsg + "\n Game Starting in ";
     private int playerID; //for position purposes only (id length tested)
 
-    float counter = 0;  //countdown after game finished till go back to main screen
+    float counter = 0;  //count down after game finished till go back to main screen
     boolean returnToMain = false; //return to main screen
 
 
@@ -56,20 +53,19 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
     boolean playerLeft = false;
 
 
-    public StartMultiplayerScreen(final MainGame game, MainScreen mainScreen){
+    public StartMultiplayerScreen(final MainGame game){
         this.game = game;
         this.gameState = GameState.WAITING;
-        this.prevScreen = mainScreen;
         this.font = Assets.uiSkin.getFont("retro1");
         this.font.scale(1.5f);
+        this.msg = "Connecting to Server"; //initial message, before connected
 
         setupCamera();
 
-        GameData.currPlayer = 0; //set to 0 at first
-        GameData.playerFaction = GameUtils.Player.randomFaction(); //pick random faction (or will get elsewhere)
-
+        GameData.getInstance().playerFaction = GameUtils.Player.randomFaction();
 
         WarpController.getInstance().setListener(this);
+
     }
 
     public void setupCamera(){
@@ -88,43 +84,27 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
     }
 
 
-    public void gameIsStarting(){
-
-        if (counter > 3.5) {
-            counter = 0;
-            Gdx.app.postRunnable(new Runnable() {
-                @Override
-                public void run() {
-                    game.setScreen(new MultiplayerScreen(game, StartMultiplayerScreen.this));
-
-                }
-            });
-        }
-        else{
-            this.msg = startCount + Integer.toString((int)counter);
-            drawMessage();
-        }
-    }
-
-
     public void gameOver(){
-        if (GameData.scoreP1 > GameData.scoreP1){
-            this.msg = gameOver[0] + Integer.toString((int)counter);
-        }
-        else if (GameData.scoreP2 > GameData.scoreP1){
-            this.msg = gameOver[1] + Integer.toString((int)counter);
-        }
-        else if (GameData.scoreP2 == GameData.scoreP1){
-            this.msg = gameOver[2] + Integer.toString((int)counter);
+        if (!playerLeft){
+            if (GameData.scoreP1 > GameData.scoreP1){
+                this.msg = gameOver[0] + leavingMsg + Integer.toString(5 - (int)counter);
+            }
+            else if (GameData.scoreP2 > GameData.scoreP1){
+                this.msg = gameOver[1] + leavingMsg + Integer.toString(5 - (int)counter);
+            }
+            else {
+                this.msg = gameOver[2] + leavingMsg + Integer.toString(5 - (int)counter);
+            }
         }
         else{
-            this.msg = "Player left the game " + Integer.toString(5 - (int)counter);
+            this.msg = gameOver[3] + Integer.toString(5 - (int)counter);
         }
 
         if (counter > 5.5){
             counter = 0;
-            prevScreen.gameState = GameState.START_SCREEN;
-            gameState = gameState.START_SCREEN;
+            this.font.scale(0.5f);
+            WarpController.getInstance().stopApp(); //stop the appwarp api
+            gameState = GameState.START_SCREEN;
         }
         else{
             drawMessage();
@@ -145,15 +125,14 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
                 drawMessage();
                 break;
             case STARTING:
-                counter += delta;
-                gameIsStarting();
+                game.setScreen(new MultiplayerScreen(game, StartMultiplayerScreen.this));
                 break;
             case GAME_OVER:
                 counter += delta;
                 gameOver();
                 break;
             case START_SCREEN:
-                game.setScreen(prevScreen);
+                game.setScreen(new MainScreen(game));
                 this.dispose();
                 break;
 
@@ -197,8 +176,8 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
     @Override
     public void onWaitingStarted(String message) {
-
-        this.msg = WAITING_FOR_USER  + "Player Name: " + GameData.playerName;
+        System.out.println(" player waiting is " + WarpController.getInstance().getLocalUser());
+        this.msg = WAITING_FOR_USER  + "Player Name: " + GameData.getInstance().playerName;
 
     }
 
@@ -209,8 +188,9 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
     @Override
     public void onGameStarted(String message) {
+//    	sendSetupData();
+    	gameState = GameState.STARTING;
 
-        gameState = GameState.STARTING;
 
     }
 
@@ -222,10 +202,10 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
             this.msg = game_win;
         }else if(code==WarpController.ENEMY_LEFT){
             this.msg = enemy_left;
+            playerLeft = true;
         }
         game.setScreen(this);
         gameState = GameState.GAME_OVER;
-
     }
 
     @Override
@@ -233,7 +213,39 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
     }
 
+//    boolean setupDone = false; //so that sendSetupData does not happen twice
+//    private void sendSetupData(){
+//        try{
+//            if (!setupDone){
+//                playerID = randomLengthPlayerID(10000);
+//
+//                UserData userData = new UserData();
+//                userData.setName(GameData.getInstance().playerName);
+//                userData.setPlayerID(playerID);
+//                userData.setFaction(GameData.getInstance().playerFaction);
+//                userData.setUpdateState(0);
+//
+//                Json json = new Json();
+//                json.setIgnoreUnknownFields(true);
+//                String data = json.toJson(userData);
+//                setupDone = true;
+//
+//                WarpController.getInstance().sendGameUpdate(data);
+//            }
+//        }
+//        catch(Exception e){
+//            System.out.println("exception while writing to json & sending setupData");
+//            e.printStackTrace();
+//        }
+//    }
+    
+    private int randomLengthPlayerID(int max){
+        Random rand = new Random();
+        int id = rand.nextInt(max);
 
+        return id;
+    }
+    
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
     }

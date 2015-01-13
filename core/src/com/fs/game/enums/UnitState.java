@@ -20,6 +20,7 @@ public enum UnitState {
 	MOVE_LEFT(2),
 	MOVE_UP(3),
 	MOVE_DOWN(4),
+
 	ATTACK_RIGHT(5),
 	ATTACK_LEFT(6),
 	ATTACK_UP(7),

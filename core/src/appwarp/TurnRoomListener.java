@@ -15,10 +15,10 @@ public class TurnRoomListener implements TurnBasedRoomListener{
         this.callBack = callBack;
     }
 
-
+    
     @Override
     public void onSendMoveDone(byte b) {
-
+		
     }
 
     @Override

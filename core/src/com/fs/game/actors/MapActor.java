@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.fs.game.maps;
+package com.fs.game.actors;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
