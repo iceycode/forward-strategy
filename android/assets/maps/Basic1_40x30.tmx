@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="40" height="30" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="Terrain" tilewidth="32" tileheight="32">
+  <image source="tilesets/dg_edging132.gif" width="256" height="512"/>
+ </tileset>
+ <tileset firstgid="129" name="Panels" tilewidth="32" tileheight="32">
+  <image source="tilesets/Tileset-Panels_32x32.png" width="192" height="192"/>
+  <terraintypes>
+   <terrain name="NONE" tile="-1"/>
+  </terraintypes>
+  <tile id="0">
+   <properties>
+    <property name="GridFrame" value="5"/>
+   </properties>
+  </tile>
+  <tile id="1" terrain="0,0,0,0">
+   <properties>
+    <property name="GridFrame" value="0"/>
+   </properties>
+  </tile>
+  <tile id="6">
+   <properties>
+    <property name="GridFrame" value="4"/>
+   </properties>
+  </tile>
+  <tile id="7">
+   <properties>
+    <property name="GridFrame" value="3"/>
+   </properties>
+  </tile>
+  <tile id="12">
+   <properties>
+    <property name="GridFrame" value="6"/>
+   </properties>
+  </tile>
+  <tile id="13">
+   <properties>
+    <property name="GridFrame" value="2"/>
+   </properties>
+  </tile>
+  <tile id="14">
+   <properties>
+    <property name="GridFrame" value="1"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="grass" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt0kEKACAIBMB9t6/vGoGUlmS2wRwCW9ISAELUwaG61ZzXVO0ru8pz3+lNO2vNrDzfn40rSy6Q+35aXuT73P4rRNlhsrecJaoEAbWWTE89kVcD4dgp4w==
+  </data>
+ </layer>
+ <layer name="water" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJztzjEKACAQA8GrxEbttPP/zzSCTzhFjh3YNsQMAABEVNU8tQ93u0oqq+Lw69bu3hsOO692AQAAIlqjygFv
+  </data>
+ </layer>
+ <layer name="obstacles" width="40" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt1kEKACAMA8H+2897riBaVIhh56yFBgNGAFm7dG53zm9c91LnnPvJbrO71ZnO+UIP7y0jD2Bt7EmlN3QMzl50gX8kVHUejgin
+  </data>
+ </layer>
+</map>

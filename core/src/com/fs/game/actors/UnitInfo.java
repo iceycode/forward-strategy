@@ -10,12 +10,7 @@ import com.badlogic.gdx.utils.Array;
  * - NOTE: json must have exact matching string
  * with that in this class's field
  * 
- * 
- * NOTE:
- *  - missing pics:
- *      troops, pathmaker
- *  - missing frame sheets:
- * 
+ *
  * 
  * @author Allen
  */

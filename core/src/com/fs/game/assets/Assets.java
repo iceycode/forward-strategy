@@ -26,17 +26,14 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.*;
 import com.fs.game.actors.UnitInfo;
+import com.fs.game.constants.Constants;
 import com.fs.game.utils.UnitUtils;
 
 
@@ -45,6 +42,7 @@ public class Assets {
 	//values held in GameManager can be accessed without new instance
 	public static AssetManager assetManager; //asset manager for easy access
 	public static Skin uiSkin; 	//skin for menu/HUD elements
+
 
     public static OrderedMap<String, Array<UnitInfo>> unitInfoMap; //keys are factions, arrays store unitInfo
     public static Array<UnitInfo> unitInfoArray; //1-5 small, 6-8 medium, 9-10 large
@@ -119,7 +117,7 @@ public class Assets {
         unitInfoMap.put("Reptoid", reptoidInfoArr);
         unitInfoMap.put("Arthroid", arthroidInfoArr);
 
-
+        //indicates unit can be attacked since enemy is adjacent
         assetManager.load(Constants.ATTACK_FRAME_SMALL, Texture.class);
         assetManager.load(Constants.ATTACK_FRAME_MED, Texture.class);
         assetManager.load(Constants.ATTACK_FRAME_LARGE, Texture.class);
@@ -128,6 +126,8 @@ public class Assets {
  		//loading the textures for grids on game board
         assetManager.load(Constants.GRID_DOWN_PATH, Texture.class);
         assetManager.load(Constants.GRID_PATH, Texture.class);
+        assetManager.load(Constants.PANELS_32X32, Texture.class);
+
         loadAudio(); //loads the audio into asset manager
 
 
@@ -136,6 +136,9 @@ public class Assets {
 
 		//the assets for anything not related to Unit actor class
 		uiSkin = createSkin();
+
+        //set dark themed skin - mainly for testing
+        setDarkSkin();
  	}
 
 
@@ -280,20 +283,30 @@ public class Assets {
         skin.add("startStyle2", btnStyle2);
     }
 
+    //NOTE: writing to directory works, can write to textures first, then add to skin based on name
     public static void loadRuleWindowAssets(Skin skin){
         Pixmap pixmap = AssetHelper.createPixmap(600, 400, Color.GRAY);
+//        AssetHelper.pixmapToFile(pixmap, Constants.ABSOLUTE_ASSETS_DIR +"/skins/default", "rulesBackground.png");
         skin.add("rulesBackground", new Texture(pixmap));
 
         ScrollPane.ScrollPaneStyle style = new ScrollPane.ScrollPaneStyle();
         style.background = new TextureRegionDrawable(new TextureRegion(new Texture(pixmap)));
         style.vScroll = new TextureRegionDrawable(new TextureRegion(new Texture(AssetHelper.createPixmap(7, 400, Color.BLACK))));
         style.hScroll = new TextureRegionDrawable(new TextureRegion(new Texture(AssetHelper.createPixmap(600, 7, Color.BLACK))));
-        style.vScrollKnob = new TextureRegionDrawable(new TextureRegion(new Texture(AssetHelper.createPixmap(9, 9, Color.DARK_GRAY))));
+
+        Pixmap vKnobPixmap = AssetHelper.createPixmap(9, 9, Color.DARK_GRAY);
+//        AssetHelper.pixmapToFile(vKnobPixmap, Constants.ABSOLUTE_ASSETS_DIR +"/skins/default", "vScrollKnob.png");
+
+        style.vScrollKnob = new TextureRegionDrawable(new TextureRegion(new Texture(vKnobPixmap)));
         style.hScrollKnob = style.vScrollKnob; //same as vScrollKnob
         skin.add("ruleScrollStyle", style);
 
-        LabelStyle labelRuleStyle = new LabelStyle();
-        labelRuleStyle.background = new TextureRegionDrawable(new TextureRegion(new Texture(AssetHelper.createPixmap(7, 400, Color.GRAY))));
+        //pixmap and texture for rules
+        Pixmap ruleLabelBack = AssetHelper.createPixmap(7, 400, Color.GRAY);
+        AssetHelper.pixmapToFile(ruleLabelBack, Constants.ABSOLUTE_ASSETS_DIR + "/textures/default", "ruLabelBack.png");
+
+        LabelStyle labelRuleStyle = new LabelStyle(); //label style for Rules
+        labelRuleStyle.background = new TextureRegionDrawable(new TextureRegion(new Texture(ruleLabelBack)));
         labelRuleStyle.font = skin.getFont("default-small");
         skin.add("ruleLabelStyle", labelRuleStyle);
 
@@ -310,6 +323,7 @@ public class Assets {
         skin.add("panelUp", new Texture(Gdx.files.internal("maps/tiles/grid.png")));
         skin.add("panelView", new Texture(Gdx.files.internal("maps/tiles/gridView.png")));
     }
+
 
 
 
@@ -369,9 +383,9 @@ public class Assets {
         mainMenuAssets(skin);
         factionMenuAssets(skin);
         unitMenuAssets(skin);
-        pauseMenuAssets(skin);
-        unitMenuAssets(skin);
 
+        unitMenuAssets(skin);
+        pauseMenuAssets(skin);
     }
 
 
@@ -408,7 +422,6 @@ public class Assets {
         artStyle.up = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("menu/artButton.png"))));
         skin.add("artStyle", artStyle);
     }
-
 
 
     public static void unitMenuAssets(Skin skin){
@@ -470,6 +483,29 @@ public class Assets {
         skin.add("pause-music-slider", new Texture(Gdx.files.internal("menu/pause menu/pauseMenu-music-slider.png")));
         skin.add("pause-sounds-slider", new Texture(Gdx.files.internal("menu/pause menu/pauseMenu-sounds-slider.png")));
         skin.add("pause-slider-knob", new Texture(Gdx.files.internal("menu/pause menu/pauseMenu-sound-knob.png")));
+
+        //sets the window style for pause menu
+        Window.WindowStyle winStyle = new Window.WindowStyle();
+        winStyle.titleFont = skin.getFont("default-small");
+        winStyle.titleFont.scale(.01f); //scale it down a bit
+        winStyle.background = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("menu/pause menu/pauseMenu-background.png"))));
+
+        Slider.SliderStyle soundStyle = new Slider.SliderStyle();
+        soundStyle.background = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("menu/textures/pauseMenu-sounds-slider.png"))));
+        soundStyle.knob = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("menu/textures/pauseMenu-sound-knob.png"))));
+
+        Slider.SliderStyle musicStyle = new Slider.SliderStyle();
+        musicStyle.background = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("menu/textures/pauseMenu-music-slider.png"))));
+        musicStyle.knob = soundStyle.knob;
+
+        Label.LabelStyle labelStyle = new LabelStyle();
+        labelStyle.font = skin.getFont("retro2");
+        labelStyle.fontColor = Color.BLACK;
+
+        skin.add("label-pause", labelStyle);
+        skin.add("pause-window", winStyle);
+        skin.add("slider-sound", soundStyle);
+        skin.add("slider-music", musicStyle);
     }
 
 
@@ -497,49 +533,20 @@ public class Assets {
         skin.add("confirmStart", startDialog);
 
         //for unit health bar
-        Pixmap healthbar = Assets.AssetHelper.createPixmap(Constants.HLTH_W, Constants.HLTH_H, Color.YELLOW);
+        Pixmap healthbar = AssetHelper.createPixmap(Constants.HLTH_W, Constants.HLTH_H, Color.YELLOW);
         skin.add("healthBar", new Texture(healthbar));
 
     }
 
 
-
-    /** TODO: get user preferences, score & other info here
-     *
-     * @return
-     */
-    public static void createPrefs() {
-
+    //loads json-atlas-png format skins
+    public static void setDarkSkin(){
+        assetManager.load(Constants.DARK_SKIN, Skin.class);
     }
 
-
-
-    public static class AssetHelper{
-        //------GameManager helper methods----------
-        //FreeType will not work in HTML5
-        public static BitmapFont fontFNTGenerator(String fontPath, int size, Color color){
-            FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(fontPath));
-            FreeTypeFontParameter parameter = new FreeTypeFontParameter();
-            parameter.size = size;
-
-            //1st retro font
-            BitmapFont font = generator.generateFont(parameter); // font size 12 pixels
-            font.setColor(color);
-            generator.dispose(); // don't forget to dispose to avoid memory leaks!
-
-            return font;
-        }
-
-        public static Pixmap createPixmap(int width, int height, Color color) {
-            Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
-
-            // pixmap.drawRectangle(200, 200, width, height);
-            pixmap.setColor(color);
-            pixmap.fill(); // fill with the color
-
-            return pixmap;
-        }
-
+    //returns dark skin
+    public static Skin getDarkSkin(){
+        return assetManager.get(Constants.DARK_SKIN);
     }
 
 

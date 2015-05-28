@@ -3,7 +3,7 @@ package com.fs.game.utils;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
+import com.fs.game.constants.Constants;
 
 /**
  * Created by Allen on 11/2/14.

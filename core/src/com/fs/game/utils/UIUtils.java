@@ -17,13 +17,52 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.Align;
 import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
-import com.fs.game.enums.GameState;
+import com.fs.game.constants.Constants;
+import com.fs.game.screens.GameState;
 import com.fs.game.screens.MainScreen;
 
 
 public class UIUtils {
 
+    /** sets up the screen stage widgets & which player goes first
+     *
+     * @param buttons : buttons on screen
+     * @param labels : labels on screen
+     * @param stage : stage on screen
+     */
+    public static void setupUI(TextButton[] buttons, Label[] labels, Stage stage) {
+
+        //The side panel buttons indicating whose turn it is
+        buttons[1] = createSideButton("P1", Constants.BT1_X, Constants.BT_Y);
+        buttons[2] = createSideButton("P2", Constants.BT2_X, Constants.BT_Y);
+
+        //for test purposes
+        buttons[0] = createGoButton();
+
+        //add the actors
+        for (TextButton tb : buttons){
+            stage.addActor(tb);
+        }
+
+        labels[0] = createTimer();
+        //----setup for ScrollPane panels as individual units within table----
+        //the main pop-up window & widgets
+        labels[1] = createLabelInfo();
+        labels[2] = createLabelDamage();
+        //score labels
+        labels[3] = scoreBoard(0, 8f, Constants.SCREENHEIGHT - 40);
+        labels[4] = scoreBoard(0, Constants.SCREENWIDTH - 72, Constants.SCREENHEIGHT - 40);
+
+        for (Label label : labels){
+            stage.addActor(label);
+        }
+
+        //adding labels within ScrollPane within Table to stage
+        //scrollTable is the Table which holds the ScrollPane objects
+        Table scrollTable = createUnitScrollTable(labels[1], labels[2]);
+        stage.addActor(scrollTable);
+
+    }
 
     public static Table createUnitScrollTable(Label unitDetail, Label unitDamage){
         //individual ScrollPane for each Label sets widget to Table to display:
@@ -59,7 +98,7 @@ public class UIUtils {
         //add the labels to the table   width(unitDetail.getWidth()).height(unitDetail.getWidth()).align(Align.left);
         scrollTable.add(unitDetail).width(unitDetail.getWidth()).height(unitDetail.getHeight()) ;
         scrollTable.add(unitDamageList).width(unitDamageList.getWidth()).height(unitDamageList.getHeight());
-        scrollTable.setBounds(Constants.INFO_X, Constants.INFO_Y, Constants.INFO_W*2, Constants.INFO_H);
+        scrollTable.setBounds(Constants.INFO_X, Constants.INFO_Y, Constants.INFO_W * 2, Constants.INFO_H);
 
         return scrollTable;
     }
@@ -92,7 +131,7 @@ public class UIUtils {
 	}
 
 
-    public static Table rulesScrollPane(String rules){
+    public static Table rulesScrollPane(final MainScreen mainScreen, String rules){
         //Window window = new Window("GAME RULES", Assets.uiSkin.get("ruleWinStyle", WindowStyle.class));
         Table scrollTable = new Table();
         scrollTable.setFillParent(false);
@@ -123,8 +162,8 @@ public class UIUtils {
 
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 try{
-                    MainScreen.getInstance().scrollTable.remove();
-                    MainScreen.getInstance().gameState = GameState.START_SCREEN;
+                    mainScreen.scrollTable.remove();
+                    mainScreen.gameState = GameState.START_SCREEN;
                 }
                 catch(NullPointerException e){
                     e.printStackTrace();
@@ -158,9 +197,10 @@ public class UIUtils {
 				
 		//initialize the timer to 0
 		Label timer = new Label(Float.toString(0), timerStyle); 
-		timer.setBounds(Constants.GAMEBOARD_X, 0, Constants.TIMER_WIDTH, Constants.TIMER_HEIGHT);
+		timer.setBounds(Constants.MAP_X, 0, Constants.TIMER_WIDTH, Constants.TIMER_HEIGHT);
 		timer.setAlignment(Align.center);
  		timer.setWrap(true);
+
 		
 		return timer;
 	}

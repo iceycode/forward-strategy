@@ -6,11 +6,10 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
+import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.enums.GameState;
-import com.fs.game.main.MainGame;
-import com.fs.game.utils.GameUtils;
+import com.fs.game.MainGame;
+import com.fs.game.utils.PlayerUtils;
 
 import java.util.Random;
 
@@ -62,7 +61,7 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
         setupCamera();
 
-        GameData.getInstance().playerFaction = GameUtils.Player.randomFaction();
+        GameData.getInstance().playerFaction = PlayerUtils.randomFaction();
 
         WarpController.getInstance().setListener(this);
 

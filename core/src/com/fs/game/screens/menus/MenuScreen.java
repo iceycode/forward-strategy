@@ -9,8 +9,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Assets;
-import com.fs.game.enums.GameState;
-import com.fs.game.main.MainGame;
+import com.fs.game.screens.GameState;
+import com.fs.game.MainGame;
 import com.fs.game.screens.MainScreen;
 import com.fs.game.utils.MenuUtils;
 
@@ -71,7 +71,7 @@ public class MenuScreen implements Screen{
 
 
 
-    /** selects next screen based on game state
+    /** selects next screen based on game animState
      *
      * @param buttonName
      */

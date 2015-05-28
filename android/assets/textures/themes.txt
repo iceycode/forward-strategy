@@ -1,0 +1,5 @@
+Current Textures for Themes:
+Dark Theme - to make things easier for testing, I copied data from my app
+
+Default - textures created by libgdx Pixmap Utility. Can create textures this way and add them to directory, pack them
+and use them in a skin. NOTE: textures need to be created before loading skins.

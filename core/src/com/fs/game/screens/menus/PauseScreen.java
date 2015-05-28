@@ -1,7 +1,7 @@
 package com.fs.game.screens.menus;
 
 import com.badlogic.gdx.Screen;
-import com.fs.game.main.MainGame;
+import com.fs.game.MainGame;
 import com.fs.game.screens.GameScreen;
 import com.fs.game.screens.MultiplayerScreen;
 

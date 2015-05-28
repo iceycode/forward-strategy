@@ -1,10 +1,13 @@
 package com.fs.game.data;
 
 import com.badlogic.gdx.math.Vector2;
+import com.fs.game.map.Locations;
 
-/** Class that stores unit data to be read/written by Json (libgdx)
+/** Class that stores unit data to be read/written by Json (libgdx) for Multiplayer
+ *  Appwarp client send/request protocol
  *
- *
+ *  For AgentManager, this represents updates {@link Locations} and
+ *  {@link com.fs.game.ai.fsm.RiskFactors}.
  *
  * Created by Allen on 11/28/14.
  */
@@ -14,13 +17,22 @@ public class UnitData {
     private String owner;
     private String size;
     private Vector2 unitPosition; //this could be null
-    private int state; //unit state
+    private int state; //unit animState
     private int damage;
     private int health;
 
 
     public UnitData(){
         
+    }
+
+
+    public void updateData(String owner, int stateVal, int damage, int health, Vector2 pos){
+        setOwner(owner);
+        setState(stateVal);
+        setDamage(damage);
+        setHealth(health);
+        setUnitPosition(pos);
     }
 
     public int getUnitID() {
@@ -54,6 +66,10 @@ public class UnitData {
 
     public void setUnitPosition(Vector2 unitPosition) {
         this.unitPosition = unitPosition;
+    }
+
+    public void updateNodePosition(float screenX, float sceenY){
+
     }
 
     public int getState() {

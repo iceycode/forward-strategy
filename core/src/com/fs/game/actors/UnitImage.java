@@ -43,7 +43,7 @@ public class UnitImage extends Image {
         this.size = unitInfo.getSize();
         this.key = GameData.getInstance().playerName;
         this.setName(unitInfo.getUnit());
-        this.copy = false; //initail state is false
+        this.copy = false; //initail animState is false
 
         this.setWidth(unitInfo.getWidth());
         this.setHeight(unitInfo.getHeight());

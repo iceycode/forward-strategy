@@ -50,9 +50,8 @@ end
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.actors.Panel;
 import com.fs.game.actors.Unit;
-import com.fs.game.assets.Constants;
+import com.fs.game.map.Panel;
 
 public class PathFinder {
 	
@@ -67,16 +66,19 @@ public class PathFinder {
 	Array<GridNode> openList;	//the list into which grid adjacent grid nodes go into
 	Array<GridNode> closedList; //the list of nodes within graph
   	
-	Array<GridNode> gridNodeGraph;
-	
-	double[][] graph = Constants.GRID_SCREEN_VECTORS; //all grid vectors from columns 1 to 12
-	
-	public PathFinder(Unit uni, Panel target ) {
-		this.unit = uni;
- 
- 		openList = new Array<GridNode>();
-		closedList = new Array<GridNode>();
+	Array<GridNode> gridNodeGraph; //the graph finder is using to get shortest path
 
+	
+	public PathFinder() {
+
+  	}
+
+
+	public void findBestPath(Unit uni, Panel target){
+		this.unit = uni; //set Unit to determine terrain cross ability
+
+		openList = new Array<GridNode>();
+		closedList = new Array<GridNode>();
 
 		Vector2 startVec = new Vector2(unit.getX(), unit.getY());
 		Vector2 targetVec = target.getLocation();
@@ -88,15 +90,16 @@ public class PathFinder {
 //				", TARGET is at : " + NodeUtils.getBoardPositions(end));
 
 		//create the map of nodes unit needs to navigate
-		gridNodeGraph = NodeUtils.createNodeMap(uni, start, end);
-		
+		gridNodeGraph = createNodeMap(uni.panelArray, start, end);
+
 		//initialize open & closed lists
 		openList.add(start);	//add parent to open list
 		closedList.add(start);
 
 		unitMovePath = findNodePath(start, end);
+	}
 
-  	}
+
  
 	public Array<Vector2> findNodePath(GridNode parent, GridNode end) {
 		//while list is not empty
@@ -257,7 +260,7 @@ public class PathFinder {
 		
 		for (GridNode node : closedList){
 			unitMovePath.add(node.location);
-//			Gdx.app.log(LOG, "this node is on path: " + NodeUtils.getBoardPositions(node) );
+			Gdx.app.log(LOG, "this node is on path: " + node.location.toString() );
 		}
  
 		
@@ -275,5 +278,25 @@ public class PathFinder {
 	public void setUnitMovePath(Array<Vector2> unitMovePath) {
 		this.unitMovePath = unitMovePath;
 	}
- 
+
+
+	/** creates a map out of positions unit can move to
+	 * NOTE: already filtered out other units & obstacles in PathGen
+	 *
+	 * @param panelArray: array of Panels Unit can move to
+	 * @param end : end, which is Unit Target Panel
+	 * @param start : start, or Unit location
+	 * @return
+	 */
+	public Array<GridNode> createNodeMap(Array<Panel> panelArray, GridNode start, GridNode end) {
+		Array<GridNode > gridNodeGraph = new Array<GridNode>();
+
+		for (Panel p : panelArray){
+			GridNode node = new GridNode(p.location, start, end);
+			gridNodeGraph.add(node);
+		}
+
+
+		return gridNodeGraph;
+	}
 }

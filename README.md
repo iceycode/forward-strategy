@@ -5,8 +5,48 @@ This will update after major changes or fixes pushed to branch1 & merged with ma
  
 The TODO list is [here](TODO.md).
 
+Info on game Artificial Intelligence component is [here](FS_AI.md).
+
 ####*Change Log*:####
 --
+
+*05-27-2015*
+
+- some major changes to project code structure and some of the game design
+- created a UML for Unit-State behaviors during player turn cycle
+- GAME MAP CHANGES:
+	- larger grid created to test out how scrollable larger map & minimap could enhance game play
+	- Panels now use a "state" enum for changing texture, similar to how Units change animations
+	- Got rid of MapActor & TiledMapRenderer, all terrain tile texture are put into Panels & it does drawing
+	- Terrain textures moveable panels are animated!
+- UNIT CONTROL:
+	- changed entire structure of Unit control by using a UnitController singleton which takes data
+	directly from Panel & Pathfinder and sends to Unit. Unit Actor only listens for states now. 
+	All the actions are handled by UnitController now! This makes updating any of the game mechanics 
+	much easier in the future. 
+	- Everything Unit does is in UnitState. See source code for details.
+
+
+*05-13-2015*
+
+- GAME MECHANICS CHANGE: instead of automatic attack, players need to click on Unit to attack it
+	- also, moves can be made after or before an attack occurs 
+- MORE CHANGES TO COME:
+	- tiles with special abilities on them 
+		1. increase range of unit
+		2. heals a unit
+		3. increases unit's damage (to all units)
+		4. tile teleports unit (that fits within it)
+		5. kill zones and natural disasters 
+			- unit that steps on a spot, will die 
+			- at certain time, something will occur on board at spot constantly
+			(this last special ability would come in more advanced maps)
+
+
+*05-06-2015*
+
+- Began work on the game AI using gdx-ai StateMachine interface. See [AI markdown](FS_AI.md) for details.
+
 *1-13-14*
 
 - began work on the game AI for single player mode
@@ -84,6 +124,7 @@ territory expansions, strategy outpost, etc.
 
 ###*Basic Gameplay*
 Here are the game specs and rules. More will be coming (ie, minigames when units encounter each other)
+
 - RTS turn-based game
 - occurs on a 12x12 board 
 - players choose factions, units & a map
@@ -97,6 +138,7 @@ Here are the game specs and rules. More will be coming (ie, minigames when units
 	- only being able to attack certain units
 
 For in-game play
+
 - units placed on left & right sides of board
 - each player has 45 seconds to move all their units (this is set to 30 seconds currently for testing purposes, though that value is not set in stone atm)
 - can only move forward
@@ -117,7 +159,9 @@ Future additions:
 ---
 ####Contributions
 
-My cousin for creating all the animations & helping with the game play design. Also, all the online tutorials and free tools I have used so far.
+- My cousin, David, for creating all the animations used so far & helping with the game design & mechanics. 
+
+- Also, all the online tutorials and free tools I have used so far; many available through <https://github.com/libgdx/libgdx/wiki/External-tutorials>
 
 ####Contact Info
 Contact me at <thirdeyemind@gmail.com> via email. 

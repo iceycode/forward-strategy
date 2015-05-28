@@ -4,7 +4,6 @@ import appwarp.WarpController;
 import appwarp.WarpListener;
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -15,38 +14,34 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.fs.game.constants.Constants;
+import com.fs.game.MainGame;
 import com.fs.game.actors.TextActor;
-import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UserData;
-import com.fs.game.enums.GameState;
-import com.fs.game.main.MainGame;
 import com.fs.game.stages.GameStage;
-import com.fs.game.utils.*;
+import com.fs.game.utils.AudioUtils;
+import com.fs.game.utils.PlayerUtils;
 
 /** The multiplayer screen implements Screen and  WarpListener
  * - the online multiplayer version of GameScreen
  *
  * Created by Allen on 11/16/14.
  */
-public class MultiplayerScreen implements Screen, WarpListener{
+public class MultiplayerScreen extends GameScreen implements WarpListener{
 
-    final MainGame game;
     final String LOG = "MultiplayerScreen log: ";
     private static MultiplayerScreen instance;
 
     StartMultiplayerScreen prevScreen; //the previous screen (MainScreen or MenuScreen)
-    GameState gameState; //current game state
+    GameState gameState; //current game animState
 
     final float VIEWPORTWIDTH = Constants.SCREENWIDTH;
     final float VIEWPORTHEIGHT = Constants.SCREENHEIGHT;
 
     //for music & audio TODO: put in some audio for units, movements, finishing, etc
-    Music music; //music that plays (during pause & run state)
+    Music music; //music that plays (during pause & run animState)
     float currVolumeMusic = .5f; //initialize to 1.0f (highest volume)
     float currVolumeSound = 1.0f; //initialize to 1.0f
 
@@ -67,7 +62,7 @@ public class MultiplayerScreen implements Screen, WarpListener{
 
     //stages, widgets & messages
     private GameStage stageMap; //all the units, tiles go here
-    Stage stage; 	//this shows unit info, timer, player turn, etc. (HUD)
+//    Stage stage; 	//this shows unit info, timer, player turn, etc. (HUD)
     Stage pauseStage; //pause menu options
 
     BitmapFont font; //font for in game messages
@@ -90,19 +85,20 @@ public class MultiplayerScreen implements Screen, WarpListener{
     OrthographicCamera camera; //main stage cam
     InputMultiplexer in; //handles input events for stage & stageMap
     Array<InputProcessor> processors; //processors on stages
-    ScreenViewport viewport;
+
 
     public MultiplayerScreen(final MainGame game, StartMultiplayerScreen screen){
-        this.game = game;
+        super(game);
+
         this.prevScreen = screen;
         this.gameState = GameState.STARTING;
-        this.font = Assets.uiSkin.getFont("retro1");
+//        this.font = Assets.uiSkin.getFont("retro1");
         instance = this;
 
-        setupCamera();
-        setupAudio(); //music which is playing
-        setupStages();
-        setupUI();
+//        setupCamera();
+//        setupAudio(); //music which is playing
+//        setupStages();
+//        setupUI();
 
         this.playerFaction = GameData.getInstance().playerFaction;
 
@@ -116,64 +112,61 @@ public class MultiplayerScreen implements Screen, WarpListener{
         return instance;
     }
 
-    //method which sets up the camera for this screen
-    public void setupCamera(){
-        /** the cameras for viewing scene objects**/
-        //camera for stage
-        camera = new OrthographicCamera(VIEWPORTWIDTH/32, VIEWPORTHEIGHT/32);
-        camera.setToOrtho(false, VIEWPORTWIDTH, VIEWPORTHEIGHT);
-        camera.update();
+//    //method which sets up the camera for this screen
+//    public void setupCamera(){
+//        /** the cameras for viewing scene objects**/
+//        //camera for stage
+//        camera = new OrthographicCamera(VIEWPORTWIDTH/32, VIEWPORTHEIGHT/32);
+//        camera.setToOrtho(false, VIEWPORTWIDTH, VIEWPORTHEIGHT);
+//        camera.update();
+//
+//        //viewport.setRotation
+//        scalingViewPort = new ScalingViewport(Scaling.fit, VIEWPORTWIDTH, VIEWPORTHEIGHT);
+//        scalingViewPort.setCamera(camera);
+//    }
 
-    }
 
-
-    //creates stages
+    //sets gameplay stages
     public void setupStages() {
-        viewport = new ScreenViewport();
-        viewport.setWorldHeight(VIEWPORTWIDTH); //sets the camera screen view dimensions
-        viewport.setWorldWidth(VIEWPORTHEIGHT);
-        viewport.setCamera(camera);
-        //viewport.setRotation
-        scalingViewPort = new ScalingViewport(Scaling.fit, VIEWPORTWIDTH, VIEWPORTHEIGHT);
+//        stage = new Stage(scalingViewPort); //stage : create the stage for UI
+//        stageMap = GameMapUtils.getTiledMap(4);
+//        stageMap.setViewport(scalingViewPort); //sets viewport (renderer must have same )
 
-        stage = new Stage(scalingViewPort); //stage : create the stage for UI
-        stageMap = GameUtils.Map.createMap(4);
-        stageMap.setViewport(scalingViewPort); //sets viewport (renderer must have same )
-
-        //set up player turn message
-        textActor = new TextActor(font, Constants.TURN_MSG_COORD);
-        textActor.setText(playerTurnMsg);
-        stage.addActor(textActor);
-
-        //all the processors targets created & combined
-        in = new InputMultiplexer(); //inputmultiplexer allows for multiple inputs
-        processors = new Array<InputProcessor>();
-        processors.add(stage);
-        processors.add(stageMap);
-        in.setProcessors(processors);
-        Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
+        //FIXED: moved to AbstractScreen
+//        //set up player turn message
+//        textActor = new TextActor(font, Constants.TURN_MSG_COORD);
+//        textActor.setText(playerTurnMsg);
+//        stage.addActor(textActor);
+//
+//        //all the processors targets created & combined
+//        in = new InputMultiplexer(); //inputmultiplexer allows for multiple inputs
+//        processors = new Array<InputProcessor>();
+//        processors.add(stage);
+//        processors.add(stageMap);
+//        in.setProcessors(processors);
+//        Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
     }
 
-    /** creates the info panel
-     *
-     */
-    public void setupUI() {
-        GameUtils.Screen.setupUI(uiButtons, labels, stage);
-
-        //an alternative setup for the go button
-        goButton = Assets.uiSkin.get("lets-go-tex", Texture.class);
-        goBounds = new Rectangle(labels[0].getX(), labels[0].getY(), labels[0].getWidth(), labels[0].getHeight());
-
-        setupPauseMenu();
-    }
-
-
-    public void setupPauseMenu(){
-        /** pause stage*/
-        pauseWindow = MenuUtils.PauseMenu.pauseWindow(); //pause window
-        pauseStage = new Stage(scalingViewPort);
-        pauseStage.addActor(pauseWindow);
-    }
+//    /** creates the info panel
+//     *
+//     */
+//    public void setupUI() {
+//        UIUtils.setupUI(uiButtons, labels, stage);
+//
+//        //an alternative setup for the go button
+//        goButton = Assets.uiSkin.get("lets-go-tex", Texture.class);
+//        goBounds = new Rectangle(labels[0].getX(), labels[0].getY(), labels[0].getWidth(), labels[0].getHeight());
+//
+//        setupPauseMenu();
+//    }
+//
+//
+//    public void setupPauseMenu(){
+//        /** pause stage*/
+//        pauseWindow = MenuUtils.PauseMenu.pauseWindow(); //pause window
+//        pauseStage = new Stage(scalingViewPort);
+//        pauseStage.addActor(pauseWindow);
+//    }
 
 
     /**
@@ -189,71 +182,73 @@ public class MultiplayerScreen implements Screen, WarpListener{
 
     }
 
-    /** this method checks to see if player turn is done
-     * either by time running out or player hitting go button
-     *
-     */
-    private void isPlayerDone() {
+//    /** this method checks to see if player turn is done
+//     * either by time running out or player hitting go button
+//     *
+//     */
+//    @Override
+//    protected void isPlayerDone() {
+//
+//        //if the timer reaches max time, playerTurn set to true
+//        if (timerCount > maxTime || uiButtons[0].isPressed() ||
+//                Gdx.input.isKeyJustPressed(Input.Keys.G)) {
+//
+//            if (playerTurn){
+//                playerTurn = false;
+//
+//                //switch the current player
+//                if (player == 1)
+//                    currPlayer = 2;
+//                else if (player == 2)
+//                    currPlayer = 1;
+//
+//                //toggle button to red (should be green if player's turn)
+//                //stageMap.lockPlayerUnits(GameData.getInstance().playerName);  //lock these player units
+//                sendPlayerData(); //send data which notifies others screen & allows player to go
+//                resetTurn();
+//            }
+//        }
+//
+//    }
 
-        //if the timer reaches max time, playerTurn set to true
-        if (timerCount > maxTime || uiButtons[0].isPressed() ||
-                Gdx.input.isKeyJustPressed(Input.Keys.G)) {
+//    @Override
+//    public void resetTurn(){
+//        timerCount = 0;
+//        uiButtons[player].toggle();
+//        if (player == 1)
+//            uiButtons[2].toggle(); //since player is either 1 or 2
+//        else
+//            uiButtons[1].toggle();
+//
+//        textActor.setText(playerTurnMsg);
+//
+//    }
+//
+//    @Override
+//    public void updateWidgets(float delta){
+//        labels[0].setText("" + (int)timerCount);
+//        labels[0].act(delta);
+//
+//        updatePlayerScores();
+//        if (GameData.chosenUnit!=null) {
+//            labels[1].setText(UnitUtils.Info.unitDetails(GameData.chosenUnit));
+//            labels[2].setText(UnitUtils.Info.unitDamageList(GameData.chosenUnit));
+//        }
+//    }
+//
+//    @Override
+//    public void updatePlayerScores(){
+//        if (GameData.getInstance().player == 1){
+//            labels[3].setText(GameData.getInstance().playerName + "\n" + Integer.toString(playerScore));
+//            labels[4].setText(GameData.getInstance().enemyName + "\n" + Integer.toString(enemyScore));
+//        }
+//        else{
+//            labels[3].setText(GameData.getInstance().enemyName + "\n" + Integer.toString(enemyScore));
+//            labels[4].setText(GameData.getInstance().playerName + "\n" + Integer.toString(playerScore));
+//        }
+//    }
 
-            if (playerTurn){
-                playerTurn = false;
-
-                //switch the current player
-                if (player == 1)
-                    currPlayer = 2;
-                else if (player == 2)
-                    currPlayer = 1;
-
-                //toggle button to red (should be green if player's turn)
-                //stageMap.lockPlayerUnits(GameData.getInstance().playerName);  //lock these player units
-                sendPlayerData(); //send data which notifies others screen & allows player to go
-                resetTurn();
-            }
-        }
-
-    }
-
-    public void resetTurn(){
-        timerCount = 0;
-        uiButtons[player].toggle();
-        if (player == 1)
-            uiButtons[2].toggle(); //since player is either 1 or 2
-        else
-            uiButtons[1].toggle();
-
-        textActor.setText(playerTurnMsg);
-
-    }
-
-
-    public void updateWidgets(float delta){
-        labels[0].setText("" + (int)timerCount);
-        labels[0].act(delta);
-
-        updatePlayerScores();
-        if (GameData.chosenUnit!=null) {
-            labels[1].setText(UnitUtils.Info.unitDetails(GameData.chosenUnit));
-            labels[2].setText(UnitUtils.Info.unitDamageList(GameData.chosenUnit));
-        }
-    }
-
-
-    public void updatePlayerScores(){
-        if (GameData.getInstance().player == 1){
-            labels[3].setText(GameData.getInstance().playerName + "\n" + Integer.toString(playerScore));
-            labels[4].setText(GameData.getInstance().enemyName + "\n" + Integer.toString(enemyScore));
-        }
-        else{
-            labels[3].setText(GameData.getInstance().enemyName + "\n" + Integer.toString(enemyScore));
-            labels[4].setText(GameData.getInstance().playerName + "\n" + Integer.toString(playerScore));
-        }
-    }
-
-
+    @Override
     public void updateCurrent(float delta){
 
         timerCount += delta;
@@ -267,8 +262,8 @@ public class MultiplayerScreen implements Screen, WarpListener{
             textActor.showTurnMsg = false;
         }
 
-        updateWidgets(delta); //updates widgets
-        isPlayerDone(); //checks to see if next player will go
+        stage.updateWidgets(delta); //updates widgets
+        stage.isPlayerDone(); //checks to see if next player will go
 
         stageMap.act(delta); //stage with tiled map & units on it
         stage.act(delta); //stage with other UI elements
@@ -285,15 +280,16 @@ public class MultiplayerScreen implements Screen, WarpListener{
 
     }
 
-    public void pauseCurrent(float delta){
-        pauseWindow.act(delta);
-        pauseStage.act(delta);
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
-            Gdx.app.log(LOG, "game is resuming");
-            gameState = GameState.RESUME;
-        }
-    }
+//    @Override
+//    public void pauseCurrent(float delta){
+//        pauseWindow.act(delta);
+//        pauseStage.act(delta);
+//
+//        if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+//            Gdx.app.log(LOG, "game is resuming");
+//            gameState = GameState.RESUME;
+//        }
+//    }
 
 
     public void gameOver(){
@@ -312,32 +308,33 @@ public class MultiplayerScreen implements Screen, WarpListener{
         dispose();
     }
 
-
-    public void clearScreen(){
-        Gdx.graphics.getGL20().glClearColor(0,0,0,1); //sets the color of clear screen
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-    }
-
-
-    //should come after stage draw methods
-    public void drawGameMsg(){
-        game.batch.begin();
-        float y = Constants.SCREENHEIGHT/2;
-        float x = Constants.SCREENWIDTH/4;
-        font.drawMultiLine(game.batch, msg, x, y);
-        game.batch.end();
-    }
+//
+//    public void clearScreen(){
+//        Gdx.graphics.getGL20().glClearColor(0,0,0,1); //sets the color of clear screen
+//        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+//    }
 
 
-    public void draw(){
-        stage.draw();
-        stageMap.draw();
-    }
+    //FIXED: moved to abstract screen
+//    //should come after stage draw methods
+//    public void drawGameMsg(){
+//        game.batch.begin();
+//        float y = Constants.SCREENHEIGHT/2;
+//        float x = Constants.SCREENWIDTH/4;
+//        font.drawMultiLine(game.batch, msg, x, y);
+//        game.batch.end();
+//    }
 
-    float countDown = 0;
+//FIXED: abstract screen takes care of in show
+//    public void draw(){
+//        stage.draw();
+//        stageMap.draw();
+//    }
+
+//    float countDown = 0; //FIXED: in GameScreen
     @Override
     public void render(float delta) {
-        clearScreen();
+//        clearScreen();
         Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
 
         if (music.getVolume() != currVolumeMusic)
@@ -356,15 +353,15 @@ public class MultiplayerScreen implements Screen, WarpListener{
                 break;
             case RUN :
                 updateCurrent(delta);
-                draw();
+                show();
                 break;
             case PAUSE :
-                pauseCurrent(delta);
+                //in GameScreen method
                 pause();
                 break;
             case RESUME :
                 updateCurrent(delta);
-                draw();
+                show();
                 break;
             case QUIT :
                 quitCurrent();
@@ -379,11 +376,6 @@ public class MultiplayerScreen implements Screen, WarpListener{
     }
 
 
-    @Override
-    public void show() {
-
-    }
-
 
     /**
      * Called when this screen is no longer the current screen for a {@link Game}.
@@ -394,45 +386,49 @@ public class MultiplayerScreen implements Screen, WarpListener{
     }
 
 
-    /**
-     */
-    @Override
-    public void pause() {
-        clearScreen();
-        pauseStage.draw();
-    }
+// FIXED: no need for these methods since in GameScreen
+//    @Override
+//    public void show() {
+//
+//    }
+//    /**
+//     */
+//    @Override
+//    public void pause() {
+//        clearScreen();
+//        pauseStage.draw();
+//    }
 
-    /**
-     */
-    @Override
-    public void resume() {
+//    /**
+//     */
+//    @Override
+//    public void resume() {
+//
+//    }
 
-    }
+//    @Override
+//    public void dispose() {
+//        music.dispose();
+//        stage.dispose();
+//        stageMap.dispose();
+//        pauseStage.dispose();
+//    }
 
-    @Override
-    public void dispose() {
-        music.dispose();
-        stage.dispose();
-        stageMap.dispose();
-        pauseStage.dispose();
-    }
-
-    //resize should be managed by MainGame
-    @Override
-    public void resize(int width, int height) {
-        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-        //restore the stage's viewport.
-        viewport.update(width, height);
-        stage.getViewport().update(width, height, true);
-        stageMap.getViewport().update(width, height, true);
-        pauseStage.getViewport().update(width, height, true);
-
-        camera.update();
-        stage.getCamera().update();
-        stageMap.getCamera().update();
-        pauseStage.getCamera().update();
-    }
+//    @Override
+//    public void resize(int width, int height) {
+//        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+//
+//        //restore the stage's viewport.
+//        scalingViewPort.update(width, height);
+//        stage.getViewport().update(width, height, true);
+//        stageMap.getViewport().update(width, height, true);
+//        pauseStage.getViewport().update(width, height, true);
+//
+//        camera.update();
+//        stage.getCamera().update();
+//        stageMap.getCamera().update();
+//        pauseStage.getCamera().update();
+//    }
 
 
     @Override
@@ -481,7 +477,7 @@ public class MultiplayerScreen implements Screen, WarpListener{
             //updateState: 0 = setup units; 1 = update unit; 2 = update player
             int updateState = data.getUpdateState();
             log("Message being received: " + message);
-            log("Update state : "+ updateState);
+            log("Update animState : "+ updateState);
 
             switch (updateState){
                 case 0: //initiate setup
@@ -514,7 +510,7 @@ public class MultiplayerScreen implements Screen, WarpListener{
     public void sendSetupData(){
         timerCount = 0;
         try{
-            playerID = GameUtils.Player.randomLengthPlayerID();
+            playerID = PlayerUtils.randomLengthPlayerID();
 
             UserData userData = new UserData();
             userData.setName(GameData.getInstance().playerName);
@@ -615,7 +611,7 @@ public class MultiplayerScreen implements Screen, WarpListener{
         System.out.println("unlocking player " + currPlayer + " units");
         //stageMap.unlockPlayerUnits(GameData.getInstance().playerName);
         this.currPlayer = player;
-        resetTurn();
+        stage.resetTurn();
     }
 
     //shows message about what is going on

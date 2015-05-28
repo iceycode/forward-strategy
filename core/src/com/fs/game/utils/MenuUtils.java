@@ -13,7 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Align;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
+import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.actors.UnitImage;
 import com.fs.game.actors.UnitInfo;
@@ -424,22 +424,20 @@ public class MenuUtils {
             win.setBounds(ORI_X, ORI_Y, WIDTH, HEIGHT);
             win.setFillParent(false);
 
-
-
-
-            createVolumeSliders(win);
-
-
+//            Table volTable = createVolumeSliders();
+//
+//            win.add(volTable).align(Align.topLeft); //add volume buttons table to window
             return win;
 
         }
 
 
 
-        public static void createVolumeSliders(Window win){
+        //returns a Table holding volume sliders
+        public static void createVolumeSliders(Window window, Skin skin){
 
             //skin = new Skin(Gdx.files.internal("menu/pause_menu/pauseMenu.json"));
-            Table volTable = new Table();
+            Table volTable = new Table(); //this table added to window
 
             InputListener stopTouchDown = new InputListener() {
                 public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
@@ -455,22 +453,21 @@ public class MenuUtils {
 
             volTable.pad(10).defaults().expandX().space(4); //used as defaults for all rows
 
-            Label.LabelStyle labelStyle = new Label.LabelStyle();
-            labelStyle.font = Assets.uiSkin.getFont("retro2");
 
-            //----music control label & slider
-            volTable.add(new Label("Sounds",labelStyle));
+
+//            //----music control label & slider
+            volTable.add(new Label("Sounds", skin));
             volTable.row();
 
-            Slider.SliderStyle style = new Slider.SliderStyle();
-            style.background = Assets.uiSkin.getDrawable("pause-sounds-slider");
-            style.knob = Assets.uiSkin.getDrawable("pause-slider-knob");
-            final Slider soundSlider = new Slider(0, 100, 10, false, style); //false means horizantal scroll
+//            Slider.SliderStyle style = new Slider.SliderStyle();
+//            style.background = Assets.uiSkin.getDrawable("pause-sounds-slider");
+//            style.knob = Assets.uiSkin.getDrawable("pause-slider-knob");
+            final Slider soundSlider = new Slider(0, 100, 10, false, skin); //false means horizantal scroll
             soundSlider.addListener(stopTouchDown); // Stops touchDown events from propagating to the FlickScrollPane.
             soundSlider.addListener(new ChangeListener() {
-                public void changed (ChangeEvent event, Actor actor) {
+                public void changed(ChangeEvent event, Actor actor) {
                     Gdx.app.log(LOG_PAUSE_MENU, "slider at: " + soundSlider.getValue());
-                    GameData.volumes[1] = soundSlider.getValue()/10000f; //volume in range [0,1]
+                    GameData.volumes[1] = soundSlider.getValue() / 1000f; //volume in range [0,1]
 
                 }
             });
@@ -478,20 +475,22 @@ public class MenuUtils {
             volTable.row();
 
             //----music control label & slider
-            volTable.add(new Label("Music", labelStyle));
+            volTable.add(new Label("Music", skin));
             volTable.row();
 
-            style.background = Assets.uiSkin.getDrawable("pause-music-slider"); //change background for music
-            final Slider musicSlider = new Slider(0, 100, 10, false, style);
+//            style.background = Assets.uiSkin.getDrawable("pause-music-slider"); //change background for music
+            final Slider musicSlider = new Slider(0, 100, 10, false, skin);
             musicSlider.addListener(stopTouchDown);
             musicSlider.addListener(new ChangeListener() {
                 public void changed(ChangeEvent event, Actor actor) {
                     Gdx.app.log(LOG_PAUSE_MENU, "slider at: " + musicSlider.getValue());
-                    GameData.volumes[1] = soundSlider.getValue()/10000f; //volume in range [0,1]
+                    GameData.volumes[1] = soundSlider.getValue() / 1000f; //volume in range [0,1]
                 }
             });
             volTable.add(musicSlider).align(Align.left);
-            win.add(volTable).align(Align.topLeft); //add volume buttons table to window
+
+
+            window.add(volTable).center(); //table added to window
         }
 
 

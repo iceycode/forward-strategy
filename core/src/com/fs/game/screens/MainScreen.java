@@ -16,25 +16,22 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
+import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.enums.GameState;
-import com.fs.game.main.MainGame;
-import com.fs.game.utils.GameUtils;
+import com.fs.game.MainGame;
+import com.fs.game.utils.PlayerUtils;
 import com.fs.game.utils.UIUtils;
 
 
 public class MainScreen implements Screen {
 	final MainGame game;
 
-    private static MainScreen instance;
-
 	OrthographicCamera camera;
     Stage stage; //screen stage for click buttons
     InputMultiplexer in; //handles input events for stage & screen
     Array<InputProcessor> processors; //processors
 
-    public GameState gameState;
+    public static GameState gameState; //singleplayer or mulitplayer game
 
     Vector3 touchPoint;
 
@@ -50,17 +47,16 @@ public class MainScreen implements Screen {
 
     //for test buttons
     Texture[] testTextures;
-    final float[][] testTexPos = Constants.TEST_TEX_POSITIONS;
+    final float[][] testTexPos = Constants.MAIN_TEX_POSITIONS;
     Rectangle[] bounds;
 
     BitmapFont font;
     private final String welcomeMsg = Constants.WELCOME;
-    private final String[] testMgs = Constants.TEST_MGS;
+    private final String[] mainMsgs = Constants.MAIN_MSGS;
     private final String rulesMsg = Constants.TO_RULES;
 
     public MainScreen(final MainGame game) {
 		this.game = game;
-        instance = this;
 
         this.gameState = GameState.START_SCREEN;
         this.touchPoint = new Vector3();
@@ -69,33 +65,25 @@ public class MainScreen implements Screen {
         this.font.scale(.03f); //scale to 3/4 original size
         this.font.setColor(Color.RED);
 
-        GameData.getInstance().playerName = GameUtils.Player.setupUsername();
+        GameData.getInstance().playerName = PlayerUtils.setupUsername();
         setupTextures();
         setupCamera();
         setupStage();
 
-        in = new InputMultiplexer();
-        processors = new Array<InputProcessor>();
-        processors.add(stage);
-        processors.add(Gdx.input.getInputProcessor());
-        Gdx.input.setInputProcessor(in);
+        Gdx.input.setInputProcessor(stage);
 
-    }
-
-    public static MainScreen getInstance(){
-        return instance;
     }
 
     public void setupTextures(){
         welcomeTex = Assets.uiSkin.get("welcomeTex", Texture.class);
-        welcomeBounds = new Rectangle(Constants.SCREENWIDTH/2 - 350/2, Constants.SCREENHEIGHT - 120f, 350, 100);
+        welcomeBounds = new Rectangle(Constants.SCREENWIDTH/2 - 250/2, Constants.SCREENHEIGHT - 120f, 350, 50);
 
         rulesTex = Assets.uiSkin.get("rulesTex", Texture.class);
         rulesBounds = new Rectangle(rulesPos[0], rulesPos[1], 100, 50);
 
-        testTextures = new Texture[3]; //currently 3 tests
-        bounds = new Rectangle[3];
-        for (int i = 0; i < 3; i++){
+        testTextures = new Texture[4]; //currently 3 tests
+        bounds = new Rectangle[4];
+        for (int i = 0; i < 4; i++){
             testTextures[i] = Assets.uiSkin.get("testTex", Texture.class);
 
             bounds[i] = new Rectangle(testTexPos[i][0], testTexPos[i][1],
@@ -106,18 +94,16 @@ public class MainScreen implements Screen {
 
     public void setupCamera(){
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 800, 500);
+        camera.setToOrtho(false, Constants.SCREENWIDTH, Constants.SCREENHEIGHT);
     }
 
     public void setupStage(){
         stage = new Stage();
 
-
-
         welcomeBtn = new TextButton(Constants.WELCOME, Assets.uiSkin, "startStyle1");
         welcomeBtn.setBounds(Constants.SCREENWIDTH/2 - 350/2, Constants.SCREENHEIGHT - 120f, 350f, 100f);
 
-        scrollTable = UIUtils.rulesScrollPane(Constants.RULES);
+        scrollTable = UIUtils.rulesScrollPane(this, Constants.RULES);
 
 
         stage.addActor(welcomeBtn);
@@ -136,10 +122,18 @@ public class MainScreen implements Screen {
     }
 
     public void startSingleplayer(){
-        GameData.getInstance().playerName = GameUtils.Player.setupUsername();
+        GameData.getInstance().playerName = PlayerUtils.setupUsername();
         GameData.getInstance().enemyName = "testerAI";
         GameData.getInstance().playerFaction = "Human";
         GameData.getInstance().enemyFaction = "Arthroid";
+
+//        Gdx.app.postRunnable(new Runnable() {
+//            @Override
+//            public void run() {
+//                game.setScreen(new AbstractScreen(game));
+//            }
+//        });
+
     }
 
 
@@ -172,44 +166,49 @@ public class MainScreen implements Screen {
 
             if (bounds[0].contains(touchPoint.x, touchPoint.y)){
                 GameData.testType = 1;
-                gameState = GameState.SINGLEPLAYER;
+                gameState = GameState.TEST_SCREEN;
             }
 
-            if (bounds[1].contains(touchPoint.x, touchPoint.y)){
-                GameData.testType = 2;
-                gameState = GameState.SINGLEPLAYER;
-            }
-
-            if (bounds[2].contains(touchPoint.x, touchPoint.y)){
-                GameData.testType = 3;
-                gameState = GameState.MULTIPLAYER;
-            }
+//            if (bounds[1].contains(touchPoint.x, touchPoint.y)){
+//                GameData.testType = 2;
+//                gameState = GameState.SINGLEPLAYER;
+//            }
+//
+//            if (bounds[2].contains(touchPoint.x, touchPoint.y)){
+//                GameData.testType = 3;
+//                gameState = GameState.MULTIPLAYER;
+//            }
+//
+//            if (bounds[3].contains(touchPoint.x, touchPoint.y)){
+//                GameData.testType = 4;
+//                gameState = GameState.SINGLEPLAYER;
+//            }
 
         }
         else if (Gdx.input.isKeyPressed(Input.Keys.ENTER)) {
             gameState = GameState.MAIN_MENU;
         }
-        //a regular game setup of what game play will look like normally
-        else if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
-            //the default test setup; how game play will look with full array of units for both players
-            GameData.testType = 1;
-            gameState = GameState.SINGLEPLAYER;
-        }
-        else if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) {
-            GameData.testType = 2;
-            gameState = GameState.SINGLEPLAYER;
-        }
-        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)){
-            GameData.testType = 3;
-            gameState = GameState.MULTIPLAYER;
-        }
+//        //a regular game setup of what game play will look like normally
+//        else if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
+//            //the default test setup; how game play will look with full array of units for both players
+//            GameData.testType = 1;
+//            gameState = GameState.SINGLEPLAYER;
+//        }
+//        else if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) {
+//            GameData.testType = 2;
+//            gameState = GameState.SINGLEPLAYER;
+//        }
+//        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)){
+//            GameData.testType = 3;
+//            gameState = GameState.MULTIPLAYER;
+//        }
         else if (Gdx.input.isKeyJustPressed(Input.Keys.R)){
             gameState = GameState.GAME_RULES;
             stage.addActor(scrollTable); //adds the scrollPane to stage
             Gdx.input.setInputProcessor(stage);
         }
 
-        stage.act();
+
     }
 
     //draw textures & fonts with text
@@ -217,23 +216,23 @@ public class MainScreen implements Screen {
         game.batch.begin();
 
         game.batch.draw(welcomeTex, Constants.SCREENWIDTH/2 - 350/2, Constants.SCREENHEIGHT - 120f);
-        //font.draw(game.batch, welcomeMsg, Constants.SCREENWIDTH/2 - 350/2 + 40f, Constants.SCREENHEIGHT - 80f);
+        font.draw(game.batch, welcomeMsg, Constants.SCREENWIDTH/2 - 350/2 + 40f, Constants.SCREENHEIGHT - 80f);
 
         game.batch.draw(rulesTex, Constants.RULE_TEX_POS[0], Constants.RULE_TEX_POS[1]);
         font.draw(game.batch, rulesMsg, Constants.RULE_TEX_POS[0]+5f, Constants.RULE_TEX_POS[1]+15f);
 
-        for (int i = 0; i < 3; i++){
+        for (int i = 0; i < 4; i++){
 
             game.batch.draw(testTextures[i], testTexPos[i][0], testTexPos[i][1]); //textures for test boxes
 
             float width = testTextures[i].getWidth();
             float height = testTextures[i].getHeight();
 
-            TextBounds bounds = font.getMultiLineBounds(testMgs[i]);
+            TextBounds bounds = font.getMultiLineBounds(mainMsgs[i]);
             float x = testTexPos[i][0] ;
             float y = testTexPos[i][1] + height/2 + bounds.height/2;
 
-            font.drawMultiLine(game.batch, testMgs[i], x, y, width, HAlignment.CENTER);
+            font.drawMultiLine(game.batch, mainMsgs[i], x, y, width, HAlignment.CENTER);
         }
 
         game.batch.end();
@@ -247,6 +246,10 @@ public class MainScreen implements Screen {
     public void render(float delta) {
 
         switch(gameState){
+
+            case TEST_SCREEN:
+                game.setScreen(game.testScreen);
+                break;
             case START_SCREEN:
                 updateScreen();
                 show();
@@ -308,13 +311,16 @@ public class MainScreen implements Screen {
 
 	@Override
 	public void dispose() {
-
+        stage.dispose();
 	}
 
 
     @Override
     public void resize(int width, int height) {
+        stage.getViewport().update(width, height);
+        stage.getCamera().update();
 
+        camera.update();
     }
 
 }

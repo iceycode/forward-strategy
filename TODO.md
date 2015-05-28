@@ -34,3 +34,10 @@ TODO
 - begin coding the testing website
 - create & run more unit setup tests
 - create a survey for testers
+
+###Game Mecahnics###
+- Unit Health upgrade 
+
+###Special Abilities###
+- 
+- Unit's are given "Upgrade"  

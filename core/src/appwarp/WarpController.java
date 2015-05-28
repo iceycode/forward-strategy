@@ -35,7 +35,7 @@ public class WarpController {
 	
 	private int STATE;
 
-	// Game state constants
+	// Game animState constants
 	public static final int WAITING = 1;
 	public static final int STARTED = 2;
 	public static final int COMPLETED = 3;

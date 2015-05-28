@@ -1,0 +1,87 @@
+//Dark skin for all screen UI elements
+{
+  com.badlogic.gdx.graphics.g2d.BitmapFont: {
+    default-font: { file: fonts/roboto/roboto-reg16.fnt },
+    medium-font: { file: fonts/roboto/roboto-reg20.fnt },
+    light-font: {file: fonts/roboto/roboto-light14.fnt},
+    bold-font: {file: fonts/roboto/roboto-bold16.fnt}
+  } ,
+  com.badlogic.gdx.graphics.Color: {
+    green: { a: 1, b: 0, g: 1, r: 0 },
+    white: { a: 1, b: 1, g: 1, r: 1 },
+    red: { a: 1, b: 0, g: 0, r: 1 },
+    black: { a: 1, b: 0, g: 0, r: 0 },
+    grey: { a: 1, b: .5, g: .5, r: .5}, //divide by 255 to get the float value
+    blue : { a: .8, b: 1, g: 0, r : 0},
+    cyan: {a: 1, b: 1, g: .7, r: .4}, //RGB code: Red: 102   Green: 178    Blue: 255
+    yellow: {a: 1, b: 0, g: 1, r: 1}
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle: {
+    default: {down: buttonDown, up: buttonUp, font: default-font, fontColor: white},
+    small: {down: buttonDown-small, up: buttonUp-small, font: bold-font, fontColor: white},
+    medium: {down: buttonDown-med, up: buttonUp-med, font: default-font, fontColor: white},
+    large: { down: buttonDown-large, up: buttonUp-large, font: default-font, fontColor: white },
+    rounded: { down: buttonDown-rounded, up: buttonUp-rounded, font: default-font, fontColor: white},
+    disabled-med: { up: buttonUp-disabled, font: default-font, fontColor: white },
+    fb-login: {down: buttonDown-med-fb, up: buttonUp-med-fb, font: default-font},
+    gp-login: {down: buttonDown-med-gp, up: buttonUp-med-gp, font: default-font}
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.ScrollPane$ScrollPaneStyle: {
+  //background: default-rect, hScroll: default-scroll, hScrollKnob: default-round-large
+    default: { vScroll: scroll-vertical, vScrollKnob: scroll-knob}
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
+    default: { font: default-font, fontColor: white }, //default also does not have background
+    default-grey: {font: default-font, fontColor: grey},
+    default-black: {font: default-font, fontColor: black},
+    default-red: {font: default-font, fontColor: red},
+    default-blue: {font: default-font, fontColor: blue},
+    default-yellow: {font: default-font, fontColor: yellow},
+    default-green: {font: default-font, fontColor: green},
+    bold-cyan:{font: bold-font, fontColor: cyan},
+    title: {font: default-font, fontColor: white, background: title-large},
+    title-small: {font: default-font, fontColor: white, background: title-small},
+    tab: {font: default-font, fontColor: red, background: window-tab}
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.TextField$TextFieldStyle: {
+    default: {selection: selection, background: textfield-text, font: default-font, fontColor: white, cursor: cursor,
+      messageFont: light-font, messageFontColor: white},
+    title: {selection: selection, background: titleBack, font: bold-font, fontColor: white, cursor: cursor,
+      messageFont: default-font, messageFontColor: white},
+    digit: {selection: selection, background: textfield-digit, font: default-font, fontColor: white, cursor: cursor,
+      messageFont: light-font, messageFontColor: white} //this is for when editing a supply
+    green-digit: {selection: selection, background: textfield-digit, font: default-font, fontColor: white, cursor: cursor,
+      messageFont: light-font, messageFontColor: green},
+    green-text: {selection: selection, background: textfield-text, font: default-font, fontColor: white, cursor: cursor,
+      messageFont: light-font, messageFontColor: green}
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.CheckBox$CheckBoxStyle: {
+    default: { checkboxOn: radio-on, checkboxOff: radio-off, font: default-font, fontColor: white },
+    star: {checkboxOn: star-on, checkboxOff: star-off, font: default-font, fontColor: white},
+    check: {checkboxOn: checkOn, checkboxOff: checkOff, font: default-font, fontColor: white}
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.Window$WindowStyle: {
+    default: { titleFont: default-font, background: window-back, titleFontColor: white},
+    window-large: {titleFont: default-font, background: loadWindow, titleFontColor: white}
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle: {
+    default: { fontColorUnselected: grey, selection: selectBox-selection, fontColorSelected: white, font: default-font }
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.Slider$SliderStyle: {
+    default-horizontal: { background: slider-track, knob: slider-knob }, //need to put -horizontal or -vertical identifier
+    large-horizontal: {background: slider-track-large, knob: slider-knob-large}
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle: {
+    default: { font: default-font, fontColor: white, background: selectBox-back, scrollStyle: default,
+      listStyle: { font: default-font, selection: selectBox-selection}},
+    date: { font: default-font, fontColor: white, background: selectBox-back_number, scrollStyle: default,
+      listStyle: { font: default-font, selection: selectBox-selection_number}}
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle:{
+    default: { selection: selectBox-selection, plus: plus_tree, minus: minus_tree }
+  }
+//  com.badlogic.gdx.scenes.scene2d.ui.ProgressBar$ProgressBarStyle{
+//    default:{}
+//  }
+
+}
