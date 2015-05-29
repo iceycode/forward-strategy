@@ -2,6 +2,7 @@ TODO
 ==
 ###Bugs###
 - in certain situations, pathfinder not working correctly - ie, unit is surrounded by map boundaries & other units
+- See Trello Forward Strategy Tasks Bugs list for more details on any bugs
 
 ###Code###
 - create rules screen
@@ -19,11 +20,15 @@ TODO
 - figure out pause menu implementation in online play (if needed)
 - create method for earning points & updating scores
 - figure out "specials" (attacks & areas on map)
+- Increase Unit attack damage
+
 
 ###Textures & Animation
 - get the attack animations for humans/arthroids
 - get other missing animations in
 - plug-in UI textures for menus & gameplay info & side panels, other
+- for panels, try to sync up the move animations
+- also, make the units move faster...
 
 ###Audio###
 - create a soundboard for human & arthroid units
@@ -36,7 +41,7 @@ TODO
 - create a survey for testers
 
 ###Game Mecahnics###
-- Unit Health upgrade 
+
 
 ###Special Abilities###
 - 

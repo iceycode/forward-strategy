@@ -2,7 +2,7 @@ package com.fs.game.utils;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.fs.game.constants.Constants;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 import com.fs.game.stages.GameStage;
 
 import java.util.Random;

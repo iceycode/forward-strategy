@@ -1,4 +1,4 @@
-package com.fs.game.actors;
+package com.fs.game.units;
 
 /** Enum for Unit control state, or what player is doing with it
  *  Unit can be moving, done_moving, standing, finished/done, chosen/selected, attacking,

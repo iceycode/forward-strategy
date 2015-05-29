@@ -130,7 +130,7 @@ public class Constants {
     public static final int[] TILE_SIZE_M = {64, 64};
     public static final float MAP_VIEW_WIDTH = 512;
     public static final float MAP_VIEW_HEIGHT = 384;
-    public static final float MAP_X = SCREENWIDTH/2 - MAP_VIEW_WIDTH/2;
+    public static final float MAP_X = SCREENWIDTH/2 - MAP_VIEW_WIDTH/2; //NOTE: change these around to fit MiniMap
     public static final float MAP_Y = 100f;
     public static final float[] MAP_BTM_LEFT = {MAP_X, MAP_Y};
     public static final float[] MAP_TOP_RIGHT = {MAP_X + MAP_VIEW_WIDTH, MAP_Y + MAP_VIEW_HEIGHT};
@@ -287,7 +287,7 @@ public class Constants {
 	//related to game timer and info panel
 	public static final float TIMER_WIDTH = 64; //timer width in pixels
 	public static final float TIMER_HEIGHT = 100; //timer height
-	public static final float MAX_TIME = 30f; //max game time
+	public static final float MAX_TIME = 15f; //max game time
 	
 	//for the info panel below game board
 	public static final float INFO_X = MAP_X + TIMER_WIDTH; //

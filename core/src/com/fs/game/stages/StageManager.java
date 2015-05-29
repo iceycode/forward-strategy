@@ -1,6 +1,6 @@
 package com.fs.game.stages;
 
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 
 /** Helps manages Stage settings
  *
@@ -12,5 +12,8 @@ public interface StageManager {
 
     void updatePlayerScore(String player, int score);
 
-    void moveCamera(int x, int y); //moves camera position
+    void changeView(); //changes view from player 1 to player 2 on LARGE game board
+
+    //sets area in minimap that is shown on actual game screen
+    void setMMAreaPosition(float x, float y);
 }

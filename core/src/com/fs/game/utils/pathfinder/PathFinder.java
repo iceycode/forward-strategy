@@ -50,7 +50,7 @@ end
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 import com.fs.game.map.Panel;
 
 public class PathFinder {
@@ -97,6 +97,13 @@ public class PathFinder {
 		closedList.add(start);
 
 		unitMovePath = findNodePath(start, end);
+
+		//NOTE: For printing out best move path
+		StringBuilder builder = new StringBuilder();
+		for (Vector2 pos : unitMovePath){
+			builder.append(pos.toString());
+		}
+		log("Positions in best move path: " + builder.toString());
 	}
 
 
@@ -298,5 +305,10 @@ public class PathFinder {
 
 
 		return gridNodeGraph;
+	}
+
+
+	private void log(String message){
+		Gdx.app.log("Pathfinder LOG", message);
 	}
 }

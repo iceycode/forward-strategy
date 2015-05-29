@@ -1,4 +1,4 @@
-package com.fs.game.actors;
+package com.fs.game.units;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;

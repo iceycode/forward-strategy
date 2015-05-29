@@ -17,7 +17,7 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.fs.game.constants.Constants;
 import com.fs.game.MainGame;
-import com.fs.game.actors.TextActor;
+import com.fs.game.units.TextActor;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UserData;
 import com.fs.game.stages.GameStage;

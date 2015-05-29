@@ -1,7 +1,7 @@
 package com.fs.game.ai;
 
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 import com.fs.game.ai.fsm.RiskFactors;
 
 /** Utility class all about decisions (contains all static methods)

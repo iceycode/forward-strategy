@@ -11,7 +11,8 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fs.game.constants.Constants;
-import com.fs.game.actors.TextActor;
+import com.fs.game.map.MiniMap;
+import com.fs.game.units.TextActor;
 import com.fs.game.assets.Assets;
 import com.fs.game.data.GameData;
 import com.fs.game.utils.UIUtils;
@@ -30,12 +31,7 @@ public class InfoStage extends Stage{
     final float VIEWPORTWIDTH = Constants.SCREENWIDTH;
     final float VIEWPORTHEIGHT = Constants.SCREENHEIGHT;
 
-//    //positions of map (camera and tiledmap)
-//    final float MAP_X = Constants.MAP_X;
-//    final float MAP_Y = Constants.MAP_Y;
-//
-//    final float MAP_VIEW_WIDTH = Constants.MAP_VIEW_WIDTH;
-//    final float MAP_VIEW_HEIGHT = Constants.MAP_VIEW_HEIGHT;
+    final float TIME_PER_TURN = Constants.MAX_TIME;
 
     //widgets for HUD
     TextButton[] uiButtons = new TextButton[3]; //go button, p1 & p2 side button,
@@ -43,13 +39,14 @@ public class InfoStage extends Stage{
 
     BitmapFont font;
     TextActor textActor;
+    public MiniMap miniMap; //minimap
 
     Skin skin;
     Viewport viewport;
 
 
     float timerCount = 0; //came time
-    boolean playerTurn = false; //this player (for multiplayer)
+    boolean playerTurn = true; //this player, starts at true (for multiplayer)
     int currPlayer = 1; //current player's turn
     int player = 1; //the main player (AI is always 2)
     int playerScore = 0;
@@ -75,6 +72,23 @@ public class InfoStage extends Stage{
         textActor = new TextActor(font, Constants.TURN_MSG_COORD);
         addActor(textActor);
     }
+
+
+    /** Sets up the MiniMap Window on this Stage and adds
+     *  sets interface with GameStage for MiniMap  .
+     *
+     */
+    public void setupMiniMap(GameStage stage){
+        if (GameData.testType == 4){
+            miniMap = new MiniMap(40, 30);
+        }
+
+        // Set minimap interfaces b/w two stages so that info sent:
+        //  InfoStage.MiniMap <--> GameStage.Camera
+        stage.setMapListener(this);
+        stage.setMinimapListener(miniMap);
+    }
+
 
     public void updatePlayerScores(){
         if (GameData.getInstance().player == 1){
@@ -114,13 +128,10 @@ public class InfoStage extends Stage{
                 playerTurn = false;
 
                 //switch the current player
-                if (player == 1)
-                    currPlayer = 2;
-                else
-                    currPlayer = 1;
+                currPlayer = player == 1 ? 2 : 1;
 
-                //toggle button to red (should be green if player's turn)
-                //stageMap.lockPlayerUnits(GameData.getInstance().playerName);  //lock these player units
+                // toggle button to red (should be green if player's turn)
+                // stageMap.lockPlayerUnits(GameData.getInstance().playerName);  //lock these player units
                 resetTurn();
             }
         }
@@ -142,8 +153,6 @@ public class InfoStage extends Stage{
 
 
 
-
-
     @Override
     public void draw() {
         viewport.apply();
@@ -154,6 +163,9 @@ public class InfoStage extends Stage{
 //        Gdx.gl20.glClear(GL20.GL_COLOR_BUFFER_BIT);
 //        Gdx.gl20.glEnable(GL20.GL_SCISSOR_TEST);
 
+        miniMap.render(getBatch());
+
+        getBatch().end();
         super.draw();
 
 
@@ -166,5 +178,12 @@ public class InfoStage extends Stage{
         //perform update tasks
         updateWidgets(delta);
         isPlayerDone(); //checks to see if next player will go
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+
+        miniMap.dispose();
     }
 }

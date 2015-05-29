@@ -15,8 +15,8 @@ import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.actors.UnitImage;
-import com.fs.game.actors.UnitInfo;
+import com.fs.game.units.UnitImage;
+import com.fs.game.units.UnitInfo;
 
 import java.util.HashMap;
 

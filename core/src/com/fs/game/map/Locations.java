@@ -3,7 +3,7 @@ package com.fs.game.map;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 import com.fs.game.ai.pf.PanelGraph;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
@@ -117,19 +117,6 @@ public class Locations {
     }
 
 
-
-//    //updates Panel state when Unit is inactive
-//    public void updateState(Unit unit){
-////        int[] panelPos = uPositionMap.get(0).get(unit.getName()).positions;
-//
-//        if (unit.isPlayerUnit()){
-//            GameData.panelMatrix[panelPos[0]][panelPos[1]].setPanelState(PanelState.ALLY);
-//        }
-//        else{
-//            GameData.panelMatrix[panelPos[0]][panelPos[1]].setPanelState(PanelState.ENEMY);
-//        }
-//    }
-
     /** Removes Unit from position map when dead
      *
      * @param unit : unit that is dead
@@ -192,6 +179,11 @@ public class Locations {
 
     public PositionData getUnitPosition(Unit unit){
         return uPositionMap.get(unit.getPlayer()).get(unit.getName());
+    }
+
+
+    public PanelGraph getPanelGraph(){
+        return panelGraph;
     }
 
     /** object representing occupied position of Unit on PanelNode map

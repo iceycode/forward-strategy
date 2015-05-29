@@ -32,7 +32,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.*;
-import com.fs.game.actors.UnitInfo;
+import com.fs.game.units.UnitInfo;
 import com.fs.game.constants.Constants;
 import com.fs.game.utils.UnitUtils;
 

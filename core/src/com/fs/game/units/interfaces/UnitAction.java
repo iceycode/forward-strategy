@@ -1,6 +1,6 @@
-package com.fs.game.actors.interfaces;
+package com.fs.game.units.interfaces;
 
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 import com.fs.game.map.Panel;
 
 /** Unit Action Interface

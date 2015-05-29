@@ -3,7 +3,7 @@ package com.fs.game.ai.pf;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedNode;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 import com.fs.game.map.Panel;
 
 /** A Panel Node
@@ -14,7 +14,7 @@ import com.fs.game.map.Panel;
 public class PanelNode implements IndexedNode<PanelNode>{
 
     //the different types of PanelNodes possible
-    public static int OCCUPIED = 11; //space is occupied by a unit
+    public final static int OCCUPIED = 11; //space is occupied by a unit
 
     public final int x;  //x coordinate
     public final int y; //y coordinate
@@ -32,9 +32,7 @@ public class PanelNode implements IndexedNode<PanelNode>{
 
     //sets Panel action based on Node property
     public interface NodeListener {
-        void setMoveable(); //makes panel moveable
-
-        void setSelected(); //makes panel selected
+        void updateMinipanelState();
     }
 
     /** A PanelNode constructor
@@ -61,6 +59,7 @@ public class PanelNode implements IndexedNode<PanelNode>{
     //updates the node type status to OCCUPIED or a terrain type
     public void updateNodeType(){
         this.type = type != OCCUPIED ? OCCUPIED : terrainType;
+
     }
 
     //check if based on Unit type, if node is passable

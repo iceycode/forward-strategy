@@ -5,11 +5,10 @@ package com.fs.game.data;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.OrderedMap;
-import com.fs.game.actors.UnitImage;
-import com.fs.game.map.MapActor;
 import com.fs.game.map.Panel;
-import com.fs.game.actors.Unit;
-import com.fs.game.actors.UnitInfo;
+import com.fs.game.units.Unit;
+import com.fs.game.units.UnitImage;
+import com.fs.game.units.UnitInfo;
 
 /**
  * stores data that is relevant to current Units on the grid board
@@ -55,7 +54,7 @@ public class GameData {
     //all these are related to basic board elements (grid tiles 32x32)
     public static Panel[][] panelMatrix;    //the grid postiions in double array
     public static Array<Panel> gamePanels = new Array<Panel>();; //the gridBoard Array of Panels
-    public static Array<MapActor> mapActorArr = new Array<MapActor>();; //tiled map actors
+//    public static Array<MapActor> mapActorArr = new Array<MapActor>();; //tiled map actors
 
     //for audio
     public static float[] volumes = {.5f, .5f};

@@ -2,7 +2,7 @@ package com.fs.game.ai.fsm;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntMap;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 import com.fs.game.data.GameData;
 
 /** RiskState contains information about

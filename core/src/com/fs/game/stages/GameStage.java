@@ -11,6 +11,7 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
@@ -18,15 +19,12 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.fs.game.actors.Unit;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UnitData;
-import com.fs.game.map.Locations;
-import com.fs.game.screens.GameState;
-import com.fs.game.screens.MainScreen;
-import com.fs.game.tests.TestScreen;
+import com.fs.game.map.MiniMap;
 import com.fs.game.tests.TestUtils;
+import com.fs.game.units.Unit;
 import com.fs.game.utils.GameMapUtils;
 
 
@@ -70,27 +68,25 @@ public class GameStage extends Stage {
     //x & y screen position of TileMap on Screen
     final float MAP_X = Constants.MAP_X;
     final float MAP_Y = Constants.MAP_Y;
-    int rows = 0; //rows in tiled map
-    int cols = 0; //columns in tiledmap
-    //world positions - for stage/camera position
-    final float WORLD_VIEW_WIDTH = 16;
-    final float WORLD_VIEW_HEIGHT = 12;
-    final float[] WORLD_POS = {164.5f, 116.125f};
 
     TiledMapRenderer tiledMapRenderer;
 	OrthographicCamera camera;
-    DragListener dragListener;
+    CameraController cameraController;
 	Viewport viewport;
 
 
     String aiName = "GameAI";
     public boolean aiTurn = false; //whether it is ai turn
 
-    MessageDispatcher playerMessenger;
     MessageDispatcher aiMessenger;
 
 
+    MinimapListener minimapListener;
 
+    //updates minimap view based on current camera view
+    public interface MinimapListener {
+        void updateView(float x, float y);
+    }
 
 //    private Unit attacker;
 //    private Array.ArrayIterator<Unit> unitIter; //iterates over units
@@ -103,11 +99,7 @@ public class GameStage extends Stage {
         //this also sets up this stages panelArray
         GameMapUtils.setupGridElements(this); //setup Table & Actors thru GameMapUtils
 
-        //for single player, units don't need to wait to be added
-        // which is the case for multiplayer game
-        if (MainScreen.gameState == GameState.SINGLEPLAYER || TestScreen.gameState == GameState.SINGLEPLAYER) {
-            addUnits();
-        }
+
 
         if (mapID == 4){
             setupViewLarge(); //only 1/4 of tiled map will show
@@ -116,9 +108,11 @@ public class GameStage extends Stage {
             setupView();
         }
 
-        //initialize Locations singleton PanelGraph/Node/Connection data
-        Locations.getLocations().initLocations();
-        setCameraDragListener(); //sets DragListener
+
+
+        cameraController = new CameraController(camera);
+        addListener(cameraController); //add custom drag listener class
+//        setCameraDragListener(); //sets DragListener
 //        setDebugAll(true);
     }
 
@@ -169,23 +163,6 @@ public class GameStage extends Stage {
 //    }
 
 
-	/** initializes & sets units onto stage
-	 * creates 7 units on board 
-	 *  - gets info from an array in an array
-	 *  
-	 */
-	public void addUnits() {
-
-        if (GameData.testType==1) {
-            TestUtils.test2Units(this);
-        }
-		else if (GameData.testType == 2){
-            TestUtils.testBoardSetup3(this);
-        }
-        else if (GameData.testType == 4){
-            TestUtils.testBoardSetup4(this);
-        }
-	}
 
     /** adds all player's units to stage
      *
@@ -286,33 +263,63 @@ public class GameStage extends Stage {
         }
     }
 
-    public void setCameraDragListener(){
-        dragListener = new DragListener(){
-            final Vector2 curr = new Vector2();
-            final Vector2 last = new Vector2(-1, -1);
-            final Vector2 delta = new Vector2(); //how much tiled map has moved by
 
-            @Override
-            public void dragStart(InputEvent event, float x, float y, int pointer) {
-                last.set(x, y);
-            }
+    /** Sets listener for minimap input listener
+     *
+     * @param stage
+     */
+    public void setMapListener(InfoStage stage){
+        stage.miniMap.setMapviewSetter(cameraController);
+    }
 
-            @Override
-            public void drag(InputEvent event, float x, float y, int pointer) {
-                curr.set(x, y);
-                camera.translate(getDeltaX(), getDeltaY(), 0);
-            }
 
-            @Override
-            public void dragStop(InputEvent event, float x, float y, int pointer) {
-                camera.update();
-            }
+    /** Controls camera via DragListener
+     *
+     */
+    public class CameraController extends DragListener implements MiniMap.MapviewSetter {
 
-        };
+        private final OrthographicCamera camera;
+        final Vector2 curr = new Vector2();
+        final Vector2 last = new Vector2(-1, -1);
+        final Vector2 delta = new Vector2(); //how much tiled map has moved by
 
-        dragListener.setTapSquareSize(32);
+        public CameraController(OrthographicCamera camera) {
+            this.camera = camera;
+            setTapSquareSize(32);
+        }
 
-        addListener(dragListener);
+        @Override
+        public void dragStart(InputEvent event, float x, float y, int pointer) {
+            last.set(x, y);
+        }
+
+        @Override
+        public void drag(InputEvent event, float x, float y, int pointer) {
+            curr.set(x, y);
+            camera.translate(getDeltaX(), getDeltaY(), 0);
+
+            updateMinimapView(camera.position.x/2, camera.position.y/2);
+        }
+
+        @Override
+        public void dragStop(InputEvent event, float x, float y, int pointer) {
+            camera.update();
+        }
+
+        @Override
+        public void updateCameraPosition(float x, float y) {
+
+        }
+    }
+
+
+    public void updateMinimapView(float x, float y){
+        Vector3 screenLoc = camera.project(new Vector3(x, y, 0));
+        minimapListener.updateView(x, y);
+    }
+
+    public void setMinimapListener(MiniMap mm){
+        this.minimapListener = mm;
     }
 
     private void log(String message){

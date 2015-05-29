@@ -42,7 +42,7 @@ import com.badlogic.gdx.utils.Array;
 import com.fs.game.data.GameData;
 import com.fs.game.map.Panel;
 import com.fs.game.stages.GameStage;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 import com.fs.game.utils.GameMapUtils;
 
 public class PathGenerator {

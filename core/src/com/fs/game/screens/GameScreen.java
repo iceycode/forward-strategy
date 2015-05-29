@@ -15,9 +15,12 @@ import com.fs.game.constants.Constants;
 import com.fs.game.MainGame;
 import com.fs.game.assets.Assets;
 import com.fs.game.data.GameData;
+import com.fs.game.map.Locations;
 import com.fs.game.stages.GameStage;
 import com.fs.game.stages.InfoStage;
 import com.fs.game.stages.PauseStage;
+import com.fs.game.tests.TestScreen;
+import com.fs.game.tests.TestUtils;
 import com.fs.game.utils.AudioUtils;
 
 /** Abstract Screen class
@@ -104,13 +107,42 @@ public class GameScreen implements Screen{
     protected void setStages(int mapChoice){
         //sets HUD stage - shows unit damage & info, score, time
         stage = new InfoStage(); //has its own batch
-//        UIUtils.setupUI(uiButtons, labels, stage); //sets up widgets for HUD
 
         stageMap = new GameStage(mapChoice);
-//        stageMap.setViewport(scalingViewPort); //sets viewport (renderer must have same )
+        // Add Units - for single player, units don't need to wait to be added.
+        // For multiplayer, both players need to be linked up first.
+        if (MainScreen.gameState == GameState.SINGLEPLAYER || TestScreen.gameState == GameState.SINGLEPLAYER) {
+            addUnits();
+        }
+
+        //initialize Locations singleton PanelGraph/Node/Connection data
+        // this is done after Panels AND Units are done setting up
+        Locations.getLocations().initLocations();
+
+        stage.setupMiniMap(stageMap);
+
 
         pauseStage = new PauseStage(this, scalingViewPort); //set PauseStage
     }
+
+    /** initializes & sets units onto stage
+     * creates 7 units on board
+     *  - gets info from an array in an array
+     *
+     */
+    public void addUnits() {
+
+        if (GameData.testType==1) {
+            TestUtils.test2Units(stageMap);
+        }
+        else if (GameData.testType == 2){
+            TestUtils.testBoardSetup3(stageMap);
+        }
+        else if (GameData.testType == 4){
+            TestUtils.testBoardSetup4(stageMap);
+        }
+    }
+
 
 
     //sets the input processors for the stage
@@ -168,8 +200,8 @@ public class GameScreen implements Screen{
     protected void updateCurrent(float delta){
         Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
 
-        stage.updateWidgets(delta);
-        stage.isPlayerDone(); //checks to see if next player will go
+//        stage.updateWidgets(delta);
+//        stage.isPlayerDone(); //checks to see if next player will go
 
         stage.act(delta); //stage with other UI elements
         stageMap.act(delta); //stage with tiled map & units on it

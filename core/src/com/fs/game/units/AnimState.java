@@ -1,4 +1,4 @@
-package com.fs.game.actors;
+package com.fs.game.units;
 
 /** enums for unit animation states
  * - integer value associated with JSON data for multiplayer

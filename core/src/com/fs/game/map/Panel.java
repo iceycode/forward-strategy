@@ -22,8 +22,8 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.OrderedMap;
-import com.fs.game.actors.Unit;
-import com.fs.game.actors.UnitController;
+import com.fs.game.units.Unit;
+import com.fs.game.units.UnitController;
 import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
 
@@ -33,11 +33,11 @@ public class Panel extends Actor {
 	final String LOG = "panel actor log : ";
 
 	//tiled map types
-	public static int PASSABLE = 0;
-	public static int LAND = 1; //this can be grass, desert, dirt, etc
-	public static int WATER = 2;
-	public static int OBSTACLE = 3; //any obstacle; eg, a large boulder
-	public static int OCCUPIED = 4; //panel is occupied by a Unit
+	public static final int PASSABLE = 0;
+	public static final int LAND = 1; //this can be grass, desert, dirt, etc
+	public static final int WATER = 2;
+	public static final int OBSTACLE = 3; //any obstacle; eg, a large boulder
+	public static final int OCCUPIED = 4; //panel is occupied by a Unit
 	
 	//A* scores for pathfinding algorithm
  	public float costFromStart;//distance from start panel to current panel
@@ -132,14 +132,7 @@ public class Panel extends Actor {
 	public void act(float delta){
 		super.act(delta);
 
-		//if Panel is selected, then becomes deselected after a bit of time
-		if (state == PanelState.SELECTED){
-			selectTime += delta;
-			if (selectTime > 1.5f){
-				selectTime = 0;
-				setPanelState(PanelState.NONE);
-			}
-		}
+
 	}
 
 	/** Signals to UnitController that this panel was selected
@@ -148,6 +141,7 @@ public class Panel extends Actor {
 	 */
 	public void signalSelected(){
 		unitUpdater.setSelectedPanel(this);
+		clickCount = 0;
 	}
 
 
@@ -261,36 +255,34 @@ public class Panel extends Actor {
 		addListener(new InputListener() {
 			@Override
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-
-				clickCount++;
-
-				if (!isPanelOccupied()){
-					setPanelState(PanelState.SELECTED);
-					return false;
-				}
 				log("touchDown Panel, State: " + state.toString());
 
-				return true;
-			}
-
-			@Override
-			public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-
-				if (!isPanelOccupied() && state == PanelState.SELECTED) {
-
-					if (state == PanelState.MOVEABLE) {
-						signalSelected();
-					}
-					else{
-						if (clickCount == 2){
-							setPanelState(PanelState.NONE);
-							clickCount = 0;
-						}
-					}
+				if (!isPanelOccupied() && state == PanelState.MOVEABLE){
+					setPanelState(PanelState.SELECTED);
+					signalSelected();
+					log("touchDown Panel, State after touchdown, WHEN MOVEABLE: " + state.toString());
+					return true;
 				}
 
-				log("touchUP Panel, State: " + state.toString());
+
+				return false;
 			}
+
+//			@Override
+//			public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+//
+//				if (!isPanelOccupied() && state == PanelState.SELECTED) {
+//
+//					if (state == PanelState.MOVEABLE) {
+//						signalSelected();
+//					}
+//					else{
+//						setPanelState(PanelState.NONE);
+//					}
+//				}
+//
+//				log("touchUP Panel, State: " + state.toString());
+//			}
 
 		});
 	}

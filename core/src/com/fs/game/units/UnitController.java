@@ -1,4 +1,4 @@
-package com.fs.game.actors;
+package com.fs.game.units;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.msg.Telegram;
@@ -105,7 +105,7 @@ public class UnitController implements Panel.UnitUpdater, Telegraph{
         log("Moving Unit");
 
         currUnit.setTargetPan(panel); //set targetPanel
-        pathFinder.findBestPath(currUnit, panel); //find best path
+        pathFinder.findBestPath(currUnit, currUnit.targetPan); //find best path
 
         currUnit.panelPath = pathFinder.getUnitMovePath(); //set the path
 

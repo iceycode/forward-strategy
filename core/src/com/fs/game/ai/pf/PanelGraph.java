@@ -3,7 +3,7 @@ package com.fs.game.ai.pf;
 import com.badlogic.gdx.ai.pfa.indexed.DefaultIndexedGraph;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 import com.fs.game.map.Panel;
 import com.fs.game.map.Locations;
 import com.fs.game.constants.Constants;

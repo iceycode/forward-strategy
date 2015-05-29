@@ -6,8 +6,8 @@ import com.badlogic.gdx.ai.fsm.StateMachine;
 import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.ai.msg.Telegraph;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.actors.Unit;
-import com.fs.game.actors.UnitController;
+import com.fs.game.units.Unit;
+import com.fs.game.units.UnitController;
 import com.fs.game.ai.pf.PanelPathfinder;
 import com.fs.game.map.Locations;
 

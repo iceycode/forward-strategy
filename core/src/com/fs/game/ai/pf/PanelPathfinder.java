@@ -9,8 +9,8 @@ import com.badlogic.gdx.ai.pfa.PathFinder;
 import com.badlogic.gdx.ai.pfa.PathFinderRequest;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.actors.Unit;
-import com.fs.game.actors.UnitController;
+import com.fs.game.units.Unit;
+import com.fs.game.units.UnitController;
 import com.fs.game.ai.AgentManager;
 import com.fs.game.data.GameData;
 import com.fs.game.map.Locations;
@@ -74,7 +74,7 @@ public class PanelPathfinder implements Telegraph {
 
     public PanelPathfinder(){
         locations = Locations.getLocations(); //gets location singleton
-        gameMap = locations.panelGraph; //set the panelgraph
+        gameMap = locations.getPanelGraph(); //set the panelgraph
 
         initPathfinder(); //initialize path finder
     }

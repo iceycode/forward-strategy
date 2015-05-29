@@ -2,7 +2,7 @@ package com.fs.game.ai.tasks;
 
 import com.badlogic.gdx.ai.btree.LeafTask;
 import com.badlogic.gdx.ai.btree.Task;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 
 /** Adjusts how UnitAgents act based on tree task outcomes
  *  Issued after selecting running Damage & Position Tasks in parallel

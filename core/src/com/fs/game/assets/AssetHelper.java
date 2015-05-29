@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.utils.Array;
 
 import java.io.File;
 
@@ -42,21 +41,6 @@ public class AssetHelper {
     }
 
 
-    /** Only TEMPORARY setup for Tests
-     *
-     * @return : an Array of MiniMap textures
-     */
-    public static Array<Texture> getMMAssets(){
-        Array<Texture> textures = new Array<Texture>();
-
-        textures.add(createMMTexture(3, 3, Color.LIGHT_GRAY)); //just regular panel
-        textures.add(createMMTexture(3, 3, Color.OLIVE)); //an obstacle
-        textures.add(createMMTexture(3, 3, Color.YELLOW)); //a selected Unit
-        textures.add(createMMTexture(3, 3, Color.GREEN)); //ALLY
-        textures.add(createMMTexture(3, 3, Color.RED)); //ENEMY
-
-        return textures;
-    }
 
     public static Texture createMMTexture(int width, int height, Color color){
         Pixmap pixmap = createPixmap(width, height, color);
