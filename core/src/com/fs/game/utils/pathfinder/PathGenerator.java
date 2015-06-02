@@ -36,17 +36,19 @@ package com.fs.game.utils.pathfinder;
  * 
  */
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.data.GameData;
-import com.fs.game.actors.Panel;
+import com.fs.game.map.Panel;
 import com.fs.game.stages.GameStage;
-import com.fs.game.actors.Unit;
-import com.fs.game.utils.GameUtils;
+import com.fs.game.units.Unit;
+import com.fs.game.utils.GameMapUtils;
 
 public class PathGenerator {
 	
 	final String LOG = "PathGenerator LOG : ";
+	private static PathGenerator instance;
 	
 	Unit unit; //the unit that is looking for possible move paths
  
@@ -65,37 +67,45 @@ public class PathGenerator {
 	Array<Panel> openList = new Array<Panel>(); //contains panels being inspected
 	Array<Panel> movePath = new Array<Panel>(); //the move panels 
 	
-	public Array<Panel> unitMovePath; //the shortest path unit takes
 
-	/** 
-	 * 
+	//empty constructor
+	public PathGenerator() {
+		instance = this;
+ 	}
+
+
+	public static PathGenerator getPG(){
+		if (instance == null)
+			instance = new PathGenerator();
+		return instance;
+	}
+
+
+	/**
+	 *
 	 * @param unit : unit whose path is being generated
-	 * @param oriX : origin of that unit
-	 * @param oriY
+	 * @param oriX : origin of that unit on X axis (starting position)
+	 * @param oriY: origin of unit on Y axis
 	 */
-	public PathGenerator(Unit unit, float oriX, float oriY) {
+	public void update(Unit unit, float oriX, float oriY){
 		this.unit = unit;
 		this.maxDistance = unit.getMaxMoves()*32;
 		this.unitSize = unit.getUnitSize();
 //		Gdx.app.log(LOG, "unit size = " + unitSize);
 		this.crossWater = unit.crossWater;
 		this.crossLand = unit.crossLand;
-		getOriginPanel(oriX, oriY);
-
- 	}
+		setOriginPanel(oriX, oriY);
+	}
 	
 	/** finds the panel the unit is standing on
 	 * 
-	 * @param panX
-	 * @param panY
+	 * @param x : screen x of unit
+	 * @param y : screen y of unit
 	 */
-	public void getOriginPanel(float panX, float panY){
-		for (Panel p : allPanels){
-			if (p.getX() == panX && p.getY() == panY){
-				this.origin = p;
-				break;
-			}
-		}
+	public void setOriginPanel(float x, float y){
+		int[] gridPos = GameMapUtils.getGridPosition(x, y);
+
+		origin = GameData.panelMatrix[gridPos[0]][gridPos[1]];
 	}
 	
 	
@@ -104,7 +114,7 @@ public class PathGenerator {
 	 * @return possibleMoves
 	 */
 	public Array<Panel> findPaths(){
-        getOriginPanel(unit.getX(), unit.getY());
+//        setOriginPanel(unit.getX(), unit.getY());
 		origin.setCostFromStart(0);
 		Panel temp = origin; //temporary holder for panel being checked initialized to origin
 		
@@ -112,7 +122,7 @@ public class PathGenerator {
 		openList.add(temp); //initialize list which stores potential neighbors
 		
 		//loop until max distance 
-		while (openList.size>0){
+		while (openList.size > 0){
 			temp = openList.pop(); //pop off first added panel on list
 
 			if (temp.getCostFromStart() <= maxDistance){
@@ -126,17 +136,20 @@ public class PathGenerator {
 		
 		if (unit.getUnitSize().equals("64x32")||unit.getUnitSize().equals("64x64"))
             checkForSpace(); //for larger units
-		
+
+		Gdx.app.log("Possible moves  ", possibleMoves.toString(", "));
 		
 		return possibleMoves;
 	}
-	
-	
+
+
+	/** Finds adjacent panels
+	 *
+	 * @param currPan : current panel
+	 */
 	public void findAdjacentPanels(Panel currPan){
 		for (Panel pan : allPanels){
-			
-			
-			//Gdx.app.log(LOG, "Panel name is " + pan.getName() + "panel terrain type is " + pan.getTerrainType());
+			//Gdx.app.log(LOG, "Panel name is " + pan.getName() + "panel terrain type is " + pan.getTerrainName());
 			
 			//check for 3 requirements for adding to the open list
 			if (isNeighborPanel(currPan, pan) && !isObstacle(pan) && !possibleMoves.contains(pan, false)) {
@@ -146,7 +159,6 @@ public class PathGenerator {
 				
 				openList.add(pan); //added to openList to find new nodes
 				possibleMoves.add(pan);
-				
 			}
  
 		}
@@ -157,12 +169,11 @@ public class PathGenerator {
 	 *   by adding width/height to costs to account for size
 	 */
 	private void checkForSpace(){
-		for (Panel p : possibleMoves){
-            if (unitObstruction(p, unit)){
-                possibleMoves.removeValue(p, false);
-            }
+		for (Panel p : possibleMoves) {
+			if (unitObstruction(p, unit)) {
+				possibleMoves.removeValue(p, false);
+			}
 		}
-		
 	}
 	
 	
@@ -229,7 +240,6 @@ public class PathGenerator {
 			child.neighbor = parent;
 			
 			horizNeighbor = true;
-			
 		}
 		else if ((parent.getX() == child.getX() - incrX) && parent.getY()==child.getY() && !isObstacle(child)){
 			child.panelRight = parent;
@@ -266,11 +276,11 @@ public class PathGenerator {
 		boolean mapObstacle = false;  //whether this is a map obstacle 
 		
 		GameStage stage = (GameStage)this.unit.getStage();
-        Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
-		Array<Unit> otherUnits = GameUtils.StageUtils.findOtherUnits(allUnits, unit);
+        Array<Unit> allUnits = GameMapUtils.findAllUnits(stage.getActors());
+		Array<Unit> otherUnits = GameMapUtils.findOtherUnits(allUnits, unit);
 		
-		if(!this.crossWater && pan.terrainType.equals("water") ||
-				!this.crossLand && pan.terrainType.equals("obstacles")){
+		if(!crossWater && pan.terrainName.equals("water") ||
+				!crossLand && pan.terrainName.equals("obstacles")){
 			mapObstacle = true;
 		}
 		
@@ -288,8 +298,8 @@ public class PathGenerator {
     //checks around to make sure larger units cannot overalap others
     public boolean unitObstruction(Panel panel, Unit unit){
         GameStage stage = (GameStage)this.unit.getStage();
-        Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
-        Array<Unit> otherUnits = GameUtils.StageUtils.findOtherUnits(allUnits, unit);
+        Array<Unit> allUnits = GameMapUtils.findAllUnits(stage.getActors());
+        Array<Unit> otherUnits = GameMapUtils.findOtherUnits(allUnits, unit);
         Array.ArrayIterator<Unit> unitIter = new Array.ArrayIterator<Unit>(otherUnits);
 
         //creates a hypothetical rectangle of where the chosen unit
@@ -305,99 +315,4 @@ public class PathGenerator {
         return false;
     }
 
-
-
-//These are in PathFinder class
-    //	/** returns a Manhattan distance Heuristic
-//	 *   H = Math.abs(start.x-destination.x) + Math.abs(start.y-destination.y));
-//	 *
-//	 * @parent : current node in queue
-//	 * @neighbor : neighbor node whose Heuristic is being calculated
-//	 * @return
-//	 */
-//	public float calculateHeuristic(Panel current, Panel goal){
-//
-//		float x = Math.abs(current.getX() - goal.getX());
-//		float y = Math.abs(current.getY() - goal.getY());
-//
-//		return x + y;
-//	}
-	
-//	/** method for finding the shortest path NOTE: using a seperate class for shortest path finding
-//	 * - uses A* algorithm to find best path
-//	 * - since distance from start is already set, heuristic only set
-//	 *
-//	 * @param goal
-//	 * @return
-//	 */
-//	public Array<Panel> findBestPath(Panel goal){
-//		movePath = new Array<Panel>(); //stores the panels unit will move along
-//		Panel parent = origin; //set panel to origin
-//
-//		openList.add(parent); //initialize the open list
-//		movePath.add(parent);
-//
-//		//calculate the Heuristics for all Panels in openList
-//		for (Panel pan : openList){
-//			pan.setHeuristic(calculateHeuristic(pan, goal));
-//		}
-//
-//		while (openList.size > 0){
-//
-//			addNeighborPanels(parent, goal);
-//
-//			parent = findBestPanel(parent);
-//			movePath.add(parent);
-//
-//			if (goal.getX() == parent.getX() && goal.getY() == parent.getY()){
-// 				return movePath;
-//			}
-//
-//		}
-//
-//		return null;
-//	}
-//
-//
-//	private void addNeighborPanels(Panel current, Panel goal){
-//
-// 		//add neighbor nodes to list
-//		for (Panel pan : possibleMoves){
-// 			//checks see if blocks are neighbors or obstacles, units, etc
-// 			if (isNeighborPanel(current, pan)){
-// 				//if not in closed list already & cost of totalCost (F) of parent is greater then cost of node
-//				if (!movePath.contains(pan, false) && current.getTotalCost() > pan.getTotalCost()){
-//					pan.neighbor = current;
-// 					openList.add(pan);
-//
-//					Gdx.app.log(LOG, "Open list contains values : " + openList.toString(", "));
-// 				}
-//				else if (!movePath.contains(pan, false) && !openList.contains(pan, false)){
-//					pan.neighbor = current;
-//
-//
-//					openList.add(pan);
-//				}
-//  			}
-// 		}
-// 	}
-//
-//	public Panel findBestPanel(Panel parent){
-//		int lowestCostIndex = 0;
-//		float cost = parent.getTotalCost(); //current parent
-//
-//		for(int index = 1; index < openList.size; index++){
-//			Panel pan = openList.get(index);
-//			if(pan.getTotalCost() < cost){
-//				cost = pan.getTotalCost();
-//				lowestCostIndex = index;
-//			}
-//
-//		}
-//
-//		Panel next = openList.removeIndex(lowestCostIndex); //remove from openList
-//
-//
-//		return next;
-//	}
 }

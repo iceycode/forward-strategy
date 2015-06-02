@@ -1,0 +1,72 @@
+@startuml
+
+interface Collection
+
+class MessageDispatcher{
+void addListener(Telegraph listener, int msg)
+void addProvider(TelegramProvider provider, int...msg)
+void clearListeners()
+void clearQueue()
+void clearProviders() //removes all providers for all message codes
+clearProviders(int... msgs) //unregisters for given message codes
+void dispatchMessage(float delay, int msg)
+}
+
+interface PendingMessageCallback{
+
+}
+
+PendingMessageCallback <|-- MessageDispatcher
+
+interface TelegramProvider{
+Object provideMessageInfo(int msg, Telegraph receiver) //info about provider
+}
+
+interface Telegraph{
+    handleMessage(telegram)
+}
+
+
+class ArrayList {
+Object[] elementData
+size()
+}
+
+class Telegram{
+int Object extraInfo
+int message //in FS GameAI, UnitState int value
+Telegraph receiver
+Telegraph sender
+
+int compareTo(Telegram other)
+boolean equals(Object o)
+float getTimeStamp() //seconds
+void setTimeStamp(float timeStamp) //seconds
+int hashCode()
+void reset()
+}
+
+enum UnitState {
+//Unit actions: movement, attack, status
+--
+//Overall status
+CHOSEN(10), //unit is chosen
+MOVING(20), //unit is moving
+ATTACKING(30), //unit is attacking
+--
+//Detailed movement
+STILL(0),
+MOVE_RIGHT(1),
+MOVE_LEFT(2),
+MOVE_UP(3),
+MOVE_DOWN(4),
+--
+//Detailed Attack
+ATTACK_RIGHT(5),
+ATTACK_LEFT(6),
+ATTACK_UP(7),
+ATTACK_DOWN(8),
+DEAD(9); //unit is dead
+}
+
+@enduml

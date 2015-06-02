@@ -4,7 +4,9 @@ package appwarp;
  *
  */
 
-import com.fs.game.data.GameData;
+import com.fs.game.constants.Network;
+import com.fs.game.data.UserData;
+import com.fs.game.utils.AppWarpAPI;
 import com.shephertz.app42.gaming.multiplayer.client.WarpClient;
 import com.shephertz.app42.gaming.multiplayer.client.command.WarpResponseResultCode;
 import com.shephertz.app42.gaming.multiplayer.client.events.RoomEvent;
@@ -35,7 +37,7 @@ public class WarpController {
 	
 	private int STATE;
 
-	// Game state constants
+	// Game animState constants
 	public static final int WAITING = 1;
 	public static final int STARTED = 2;
 	public static final int COMPLETED = 3;
@@ -85,7 +87,7 @@ public class WarpController {
 	
 	private void initAppwarp(){
 		try {
-			WarpClient.initialize(apiKey, secretKey);
+			WarpClient.initialize(Network.AppWarp.API_KEY, Network.AppWarp.SECRET_KEY);
 			warpClient = WarpClient.getInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -107,16 +109,16 @@ public class WarpController {
 
 
 
-    public void sendGameStartUpdate(String msg){
-        System.out.println("Local user (warpcontroller) sending update: " + localUser);
-        if(isConnected && localUser.equals(GameData.getInstance().playerName)){
-            if(isUDPEnabled){
-                warpClient.sendUDPUpdatePeers((localUser+"#@"+msg).getBytes());
-            }else{
-                warpClient.sendUpdatePeers((localUser+"#@"+msg).getBytes());
-            }
-        }
-    }
+//    public void sendGameStartUpdate(String msg){
+//        System.out.println("Local user (warpcontroller) sending update: " + localUser);
+//        if(isConnected){ // && localUser.equals(GameData.playerName)
+//            if(isUDPEnabled){
+//                warpClient.sendUDPUpdatePeers((localUser+"#@"+msg).getBytes());
+//            }else{
+//                warpClient.sendUpdatePeers((localUser+"#@"+msg).getBytes());
+//            }
+//        }
+//    }
 
 //	public void sendPrivateGameUpdate(String msg){
 //        System.out.println("Local user (warpcontroller) sending private update: " + localUser);
@@ -197,7 +199,9 @@ public class WarpController {
 		log("onGetLiveRoomInfo: ");
 		if(liveUsers!=null){
 			if(liveUsers.length==2){
-				startGame();
+//				startGame();
+				//FIXED: changed to send info relavent to user setups
+				startGameWithInfo();
 			}else{
 				waitForOtherUser();
 			}
@@ -208,11 +212,12 @@ public class WarpController {
 	}
 	
 	public void onUserJoinedRoom(String roomId, String userName){
-		/*
+		/* FIXED: changed to send info when user joins
 		 * if room id is same and username is different then start the game
 		 */
 		if(localUser.equals(userName)==false){
-			startGame();
+//			startGame();
+			startGameWithInfo();
 		}
 	}
 	
@@ -226,15 +231,15 @@ public class WarpController {
 	}
 
 
-    public void onPlayersInRoom(String message){
-        log("player in room: " + message);
-
-        String userName = message.substring(0, message.indexOf("#@"));
-        String data = message.substring(message.indexOf("#@"), message.length());
-        if (!localUser.equals(userName)){
-            warpListener.onGameUpdateReceived(data);
-        }
-    }
+//    public void onPlayersInRoom(String message){
+//        log("player in room: " + message);
+//
+//        String userName = message.substring(0, message.indexOf("#@"));
+//        String data = message.substring(message.indexOf("#@"), message.length());
+//        if (!localUser.equals(userName)){
+//            warpListener.onGameUpdateReceived(data);
+//        }
+//    }
     
     //might need this in future
 //    public void onPrivateUpdateReceived(String message){
@@ -247,15 +252,15 @@ public class WarpController {
 //        }
 //    }
 
-    public void onGameSetupUpdateReceived(String message){
-        log("setup data recieved: " + message);
-
-        String userName = message.substring(0, message.indexOf("#@"));
-        String data = message.substring(message.indexOf("#@")+2, message.length());
-        if(!localUser.equals(userName)){
-            warpListener.onGameUpdateReceived(data);
-        }
-    }
+//    public void onGameSetupUpdateReceived(String message){
+//        log("setup data recieved: " + message);
+//
+//        String userName = message.substring(0, message.indexOf("#@"));
+//        String data = message.substring(message.indexOf("#@")+2, message.length());
+//        if(!localUser.equals(userName)){
+//            warpListener.onGameUpdateReceived(data);
+//        }
+//    }
 
 
 	public void onGameUpdateReceived(String message){
@@ -298,6 +303,15 @@ public class WarpController {
 		STATE = STARTED;
 		
 		warpListener.onGameStarted("Start the Game");
+	}
+
+	private void startGameWithInfo(){
+		STATE = STARTED;
+
+		UserData data = AppWarpAPI.getInstance().getSetupUserData();
+		String message = AppWarpAPI.getInstance().encodeUserData(data);
+
+		warpListener.onGameStarted(message);
 	}
 	
 	private void waitForOtherUser(){

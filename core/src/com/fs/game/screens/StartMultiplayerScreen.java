@@ -2,21 +2,26 @@ package com.fs.game.screens;
 
 import appwarp.WarpController;
 import appwarp.WarpListener;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.fs.game.MainGame;
 import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
+import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.enums.GameState;
-import com.fs.game.main.MainGame;
-import com.fs.game.utils.GameUtils;
-
-import java.util.Random;
+import com.fs.game.data.UserData;
+import com.fs.game.utils.AppWarpAPI;
+import com.fs.game.utils.PlayerUtils;
 
 /** the start screen for multiplayer
  * - manages waiting & game over states
  * - runs MultiplayerScreen
+ *
+ * All UserData will be setup HERE since switching to Multiplayer screen and then
+ * sending seems to create confusion in terms of which WarpListener gets the
+ * updated data from the connected player online.
  *
  * Created by Allen on 12/6/14.
  */
@@ -25,8 +30,13 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
     final MainGame game;
 //    MainScreen prevScreen;
 
+    MultiplayerScreen multiplayerScreen;
+
     OrthographicCamera camera;
     GameState gameState;
+
+    boolean isReceived = false; //if true, means setup (other player) data is received
+    public UserData userData; //userData from this screen, if any received
 
     BitmapFont font;
     private String msg = ""; //message displayed when connecting/disconnecting
@@ -60,9 +70,11 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
         this.font.scale(1.5f);
         this.msg = "Connecting to Server"; //initial message, before connected
 
+        MainGame.setGameState(GameState.MULTIPLAYER); //set state to Multiplayer while waiting
+
         setupCamera();
 
-        GameData.getInstance().playerFaction = GameUtils.Player.randomFaction();
+        GameData.playerFaction = PlayerUtils.randomFaction();
 
         WarpController.getInstance().setListener(this);
 
@@ -112,20 +124,33 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
     }
 
+    public void startMultiGame(){
+        multiplayerScreen = new MultiplayerScreen(game, StartMultiplayerScreen.this);
+        WarpController.getInstance().setListener(multiplayerScreen);
+        game.setScreen(multiplayerScreen);
 
+    }
 
 
     @Override
     public void render(float delta) {
-//        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
-//        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         switch(gameState){
             case WAITING:
                 drawMessage();
                 break;
+            case STARTING_MULTI:
+                msg = "Starting game in " + Integer.toString(3 - (int)counter);
+                drawMessage();
+                if (counter > 3.5) {
+                    gameState = GameState.STARTING;
+                    counter = 0;
+                }
+                break;
             case STARTING:
-                game.setScreen(new MultiplayerScreen(game, StartMultiplayerScreen.this));
+                startMultiGame();
                 break;
             case GAME_OVER:
                 counter += delta;
@@ -188,65 +213,55 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
     @Override
     public void onGameStarted(String message) {
-//    	sendSetupData();
-    	gameState = GameState.STARTING;
+        userData = AppWarpAPI.getInstance().decodeUserData(message);
+
+    	gameState = GameState.STARTING_MULTI;
 
 
+//        log("onGameStarted..sending setup update");
+//        AppWarpAPI.getInstance().sendGameSetupUpdate(); //update sent out here
     }
 
     @Override
     public void onGameFinished(int code, boolean isRemote) {
-        if(code== WarpController.GAME_WIN){
-            this.msg = game_lose;
-        }else if(code==WarpController.GAME_LOST){
-            this.msg = game_win;
-        }else if(code==WarpController.ENEMY_LEFT){
-            this.msg = enemy_left;
+
+        msg = code == WarpController.GAME_WIN ? game_lose
+                : code == WarpController.GAME_LOST ? game_win
+                : enemy_left;
+
+        if (code == WarpController.ENEMY_LEFT)
             playerLeft = true;
-        }
+
         game.setScreen(this);
         gameState = GameState.GAME_OVER;
     }
 
     @Override
     public void onGameUpdateReceived(String message) {
+        UserData userData = AppWarpAPI.getInstance().decodeUserData(message);
 
+        switch (userData.getUpdateState()){
+            case AppWarpAPI._SETUP:
+                this.userData = userData;
+                AppWarpAPI.getInstance().sendReadyUpdate();
+                break;
+            case AppWarpAPI._READY_TO_START:
+                isReceived = true;
+                break;
+        }
+
+        log("Player " + GameData.playerName + ", received setup info from " + userData.getName());
     }
 
-//    boolean setupDone = false; //so that sendSetupData does not happen twice
-//    private void sendSetupData(){
-//        try{
-//            if (!setupDone){
-//                playerID = randomLengthPlayerID(10000);
-//
-//                UserData userData = new UserData();
-//                userData.setName(GameData.getInstance().playerName);
-//                userData.setPlayerID(playerID);
-//                userData.setFaction(GameData.getInstance().playerFaction);
-//                userData.setUpdateState(0);
-//
-//                Json json = new Json();
-//                json.setIgnoreUnknownFields(true);
-//                String data = json.toJson(userData);
-//                setupDone = true;
-//
-//                WarpController.getInstance().sendGameUpdate(data);
-//            }
-//        }
-//        catch(Exception e){
-//            System.out.println("exception while writing to json & sending setupData");
-//            e.printStackTrace();
-//        }
-//    }
-    
-    private int randomLengthPlayerID(int max){
-        Random rand = new Random();
-        int id = rand.nextInt(max);
-
-        return id;
+    public UserData getUserData(){
+        return userData;
     }
-    
+
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
+    }
+
+    private void log(String message){
+        Gdx.app.log("StartMulti.. LOG", message);
     }
 }

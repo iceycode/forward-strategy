@@ -10,9 +10,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
-import com.fs.game.enums.GameState;
-import com.fs.game.main.MainGame;
+import com.fs.game.constants.Constants;
+import com.fs.game.MainGame;
 
 /** Screen which shows the rules of the game
  *

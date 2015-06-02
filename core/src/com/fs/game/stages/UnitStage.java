@@ -11,11 +11,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.fs.game.assets.Constants;
+import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.enums.GameState;
-import com.fs.game.actors.Unit;
-import com.fs.game.actors.UnitImage;
+import com.fs.game.screens.GameState;
+import com.fs.game.units.Unit;
+import com.fs.game.units.UnitImage;
 import com.fs.game.utils.MenuUtils;
 import com.fs.game.utils.UIUtils;
 

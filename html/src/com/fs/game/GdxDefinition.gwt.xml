@@ -5,7 +5,7 @@
 	<inherits name='com.badlogic.gdx.physics.box2d.box2d-gwt' />
     <!--<inherits name="com.badlogic.gdx.ai"/>-->
 	<!--<inherits name='com.shephertz.app42.gaming.multiplayer-client'/>-->
-
+    <inherits name='com.badlogic.gdx.ai' />
 
 	<source path='core'/>
 	<source path='html'/>

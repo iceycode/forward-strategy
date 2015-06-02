@@ -1,197 +1,169 @@
 package com.fs.game.screens;
 
-//import com.badlogic.gdx.graphics.g2d.tiled.TiledMap;
-
 import com.badlogic.gdx.*;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.fs.game.actors.TextActor;
-import com.fs.game.ai.GameAI;
+import com.fs.game.MainGame;
+import com.fs.game.ai.AgentManager;
+import com.fs.game.ai.fsm.UnitAgent;
 import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
+import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.enums.GameState;
-import com.fs.game.main.MainGame;
+import com.fs.game.map.Locations;
 import com.fs.game.stages.GameStage;
+import com.fs.game.stages.InfoStage;
+import com.fs.game.stages.PauseStage;
+import com.fs.game.tests.TestScreen;
+import com.fs.game.tests.TestUtils;
 import com.fs.game.utils.AudioUtils;
-import com.fs.game.utils.GameUtils;
-import com.fs.game.utils.MenuUtils;
-import com.fs.game.utils.UnitUtils;
 
-/** Holds the string representation of levelScreen
- *  - also holds the background
- *  
- *  NOTES/IDEAS: 
+/** Abstract Screen class
+ * - all other Screens should implement this for simplicity
+ *
+ *
+ * NOTES/IDEAS:
  *   - need to update other screens
  *  Textures needed:
  *   - need to create progress down splash screen
- *   
- * 
- *  
- * @author Allen Jagoda
+ *  STAGES: need to call viewport before each stage, since both use there own
  *
+ * Created by Allen on 5/5/15.
  */
+public class GameScreen implements Screen{
 
-public class GameScreen implements Screen {
+    final MainGame game;
+    final String LOG = "GameScreen log: ";
 
-	final MainGame game;
-	
-	GameState gameState; //starts out running
-	GameData gd;
-    GameAI ai;
+    public GameState gameState; //starts out running
+    float countDown = 0; //countdown to game start
 
-	final float VIEWPORTWIDTH = Constants.SCREENWIDTH;
-	final float VIEWPORTHEIGHT = Constants.SCREENHEIGHT;
-	final float GRID_ORI_X = Constants.GAMEBOARD_X;
-	final float GRID_ORI_Y = Constants.GAMEBOARD_Y;
-	final String LOG = "LevelScreen log: ";
+    public String msg = ""; //Game start/end message
+    private String startMsg = "Game Starting for player: "+ GameData.playerName + "\n Game Starting in ";
 
-	/** the stages & their utilities/components******
-	 * for units & maps
-	 */
+    final float VIEWPORTWIDTH = Constants.SCREENWIDTH;
+    final float VIEWPORTHEIGHT = Constants.SCREENHEIGHT;
 
+    float currVolumeMusic = .01f; //initialize to 1.0f (highest volume)
+    float currVolumeSound = 1.0f; //initialize to 1.0f
 
-	GameStage stageMap; //all the units, tiles go here
-	Stage stage; 	//this shows unit info, timer, player turn, etc. (HUD)
-	Stage pauseStage; //pause menu options
-    InputMultiplexer in; //handles input events for stage
+    //Stages holding information about Game, main game map & characters & pause menu
+    InfoStage stage; //main stage - shows info about gameplay, not game actors
+    GameStage stageMap; //gameplay stage - all the units, tiles go here
+    PauseStage pauseStage; //pause menu options
+
+    //Game font, text image (TextActor) font & Messages
+    BitmapFont font;
+
+    //TODO: put in some audio for units, movements, finishing, etc
+    Music music; //music that plays (during pause & run animState)
+    Array<Sound> sounds; //sounds TODO: find & add sounds to game
+
+    //For AI - State Machine
+    UnitAgent agent; //agent making decisions
+    AgentManager aiManager; //manages AI turn - updates during stage act() method
 
     //cameras & viewport
     ScalingViewport scalingViewPort;
     OrthographicCamera camera; //main stage cam
-    Array<InputProcessor> processors; //processors on stages
-    ScreenViewport viewport;
+    public InputMultiplexer in; //handles input events for stage & stageMap
 
 
-
-    Music music; //music that plays (during pause & run state)
-  	
-	//timer variables - load into Label
-	final float maxTime = Constants.MAX_TIME+1;
-    float timerCount = 0;
-    float currVolumeMusic = .5f; //initialize to 1.0f (highest volume)
-    float currVolumeSound = 1.0f; //initialize to 1.0f
-
-    //widgets
-    TextButton[] uiButtons = new TextButton[3]; //go button, p1 & p2 side button,
-    Label[] labels = new Label[5]; //timer, unit detail, unit damages, score p1, score p2
-    Window pauseWindow;
-
-    boolean playerTurn = false; //this player (for multiplayer)
-    int currPlayer = 1; //current player's turn
-    int player = 1; //the main player (AI is always 2)
-    int playerScore = 0;
-    int enemyScore = 0;
-    int[] playerScores = {0, 0};
-    String playerName;
-
-    float countDown = 0;
-    BitmapFont font;
-    TextActor textActor;
-    private String msg;
-    private String startMsg = "Game Starting for player: "+ GameData.getInstance().playerName + "\n Game Starting in ";
-    private String playerTurnMsg = "PLAYER " + currPlayer + " TURN";
-
-	/** the main screen for game play
-	 * test determines whether a test stage will pop up
-     *
-	 * @param game
-	 */
-	public GameScreen(final MainGame game) {
-		this.game = game;
+    public GameScreen(final MainGame game){
+        this.game = game;
         this.gameState = GameState.STARTING;
         this.font = Assets.uiSkin.getFont("retro1");
 
-		setupCamera();
-        setupViewport();
-		setupStages(); //creates a stage for units & map tiles
-        setupAudio(); //music which is playing
+        if (GameData.isTest)
+            GameData.mapChoice = GameData.testType;
 
-	}
-	
-	//method which sets up the camera for this screen
-	public void setupCamera(){
-		/** the cameras for viewing scene objects**/
-		//camera for stage
-		camera = new OrthographicCamera(VIEWPORTWIDTH/32, VIEWPORTHEIGHT/32);
-		camera.setToOrtho(false, VIEWPORTWIDTH, VIEWPORTHEIGHT);
-		camera.update();
-	}
+//        setupView(); //sets camera & viewport
 
-    public void setupViewport(){
-        viewport = new ScreenViewport();
-        viewport.setWorldHeight(VIEWPORTWIDTH); //sets the camera screen view dimensions
-        viewport.setWorldWidth(VIEWPORTHEIGHT);
-        viewport.setCamera(camera);
-        //viewport.setRotation
-        scalingViewPort = new ScalingViewport(Scaling.stretch, VIEWPORTWIDTH, VIEWPORTHEIGHT);
+        setStages(GameData.mapChoice); //sets the stages
+
+        setInputProcessors();
+        setupAudio();
+    }
+
+    //method which sets up the viewport & camera for screen
+//    public void setupView(){
+////        /** the cameras for viewing scene objects**/
+////        //camera for stage
+////        camera = new OrthographicCamera(VIEWPORTWIDTH , VIEWPORTHEIGHT );
+////        camera.setToOrtho(false, VIEWPORTWIDTH, VIEWPORTHEIGHT);
+////        camera.update();
+//
+//        scalingViewPort = new ScalingViewport(Scaling.stretch, VIEWPORTWIDTH, VIEWPORTHEIGHT);
+////        scalingViewPort.setCamera(camera);
+//    }
+
+
+    /** stage for GamePlay - for units/tiled map
+     *
+     * @param mapChoice : user or random map choice
+     */
+    protected void setStages(int mapChoice){
+        //sets HUD stage - shows unit damage & info, score, time
+        stage = new InfoStage(); //has its own batch
+
+        stageMap = new GameStage(mapChoice);
+        // Add Units - for single player, units don't need to wait to be added.
+        // For multiplayer, both players need to be linked up first.
+        if (MainScreen.gameState == GameState.SINGLEPLAYER || TestScreen.gameState == GameState.SINGLEPLAYER) {
+            addUnits();
+            //initialize Locations singleton PanelGraph/Node/Connection data
+            // this is done after Panels AND Units are done setting up
+            Locations.getLocations().initLocations();
+        }
+
+
+        stage.setupMiniMap(stageMap);
+
+        stage.setGameStageListener(stageMap);
+        stageMap.setInfoStageListener(stage);
+
+        pauseStage = new PauseStage(this); //set PauseStage
+    }
+
+    /** initializes & sets units onto stage
+     * creates 7 units on board
+     *  - gets info from an array in an array
+     *
+     */
+    public void addUnits() {
+
+        if (GameData.testType==1) {
+            TestUtils.test2Units(stageMap);
+        }
+        else if (GameData.testType == 2){
+            TestUtils.testBoardSetup3(stageMap);
+        }
+        else if (GameData.testType == 4){
+            TestUtils.testBoardSetup4(stageMap);
+        }
     }
 
 
-	//creates stages
-	public void setupStages() {
 
-						
-		/** stage : create the stage for HUD */
-		stage = new Stage(scalingViewPort); //has its own batch
-        textActor = new TextActor(font, Constants.TURN_MSG_COORD);
-
-        /** stageMap : contains tile map & actors associated with it ****/
-        //either create test stage or normal stage
-        if (GameData.testType==1){
-            stageMap = GameUtils.Map.createMap(11);
-        }
-        else if (GameData.testType ==2){
-            stageMap = GameUtils.Map.createMap(12);
-        }
-        else if (GameData.testType == 3){
-            stageMap = GameUtils.Map.createMap(4); //creates the TiledMap with Tiles as actorsOnStage
-        }
-        stageMap.setViewport(scalingViewPort); //sets viewport (renderer must have same )
-
-        setupInputProcessors();
-        setupUI(); //the info panels during game
-
-    }
-
-    public void setupInputProcessors(){
+    //sets the input processors for the stage
+    protected void setInputProcessors(){
         //all the processors targets created & combined
         in = new InputMultiplexer(); //inputmultiplexer allows for multiple inputs
-        processors = new Array<InputProcessor>();
+
+        Array<InputProcessor> processors = new Array<InputProcessor>();
         processors.add(stage);
         processors.add(stageMap);
+//        stageMap.addCameraInputProcessor(processors); //add tiled map camera processor
         in.setProcessors(processors);
         Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
     }
 
-	/** creates the info panel
-	 * 
-	 */
-	public void setupUI() {
-        GameUtils.Screen.setupUI(uiButtons, labels, stage);
-        setupPauseMenu();
- 	}
 
-    public void setupPauseMenu( ){
-        /** pause stage*/
-        pauseWindow = MenuUtils.PauseMenu.pauseWindow(); //pause window
-        pauseStage = new Stage(scalingViewPort);
-        pauseStage.addActor(pauseWindow);
-    }
-
-    /**
-     * TODO: create & add more music
+    /** TODO: create & add more music
      * ...currently only 1 track
      */
     public void setupAudio(){
@@ -200,80 +172,42 @@ public class GameScreen implements Screen {
 
         GameData.volumes[1] = .5f;
         music.setVolume(GameData.volumes[1]);
-
     }
 
 
+    //draws stages
+    protected void drawStages(){
 
-    public void updateWidgets(float delta){
-        labels[0].setText("" + (int)timerCount);
-        labels[0].act(delta);
+        stageMap.draw();
 
-        updatePlayerScores();
-        if (GameData.chosenUnit!=null) {
-            labels[1].setText(UnitUtils.Info.unitDetails(GameData.chosenUnit));
-            labels[2].setText(UnitUtils.Info.unitDamageList(GameData.chosenUnit));
-        }
-    }
-
-
-    public void updatePlayerScores(){
-        if (GameData.getInstance().player == 1){
-            labels[3].setText(GameData.getInstance().playerName + "\n" + Integer.toString(playerScore));
-            labels[4].setText(GameData.getInstance().enemyName + "\n" + Integer.toString(enemyScore));
-        }
-        else{
-            labels[3].setText(GameData.getInstance().enemyName + "\n" + Integer.toString(enemyScore));
-            labels[4].setText(GameData.getInstance().playerName + "\n" + Integer.toString(playerScore));
-        }
-    }
-
-    private void isPlayerDone() {
-
-        //if the timer reaches max time, playerTurn set to true
-        if (timerCount > maxTime || uiButtons[0].isPressed() ||
-                Gdx.input.isKeyJustPressed(Input.Keys.G)) {
-
-            if (playerTurn){
-                playerTurn = false;
-
-                //switch the current player
-                if (player == 1)
-                    currPlayer = 2;
-                else if (player == 2)
-                    currPlayer = 1;
-
-                //toggle button to red (should be green if player's turn)
-                //stageMap.lockPlayerUnits(GameData.getInstance().playerName);  //lock these player units
-                resetTurn();
-            }
-        }
+        stage.draw();
 
     }
 
-    public void resetTurn(){
-        timerCount = 0;
-        uiButtons[player].toggle();
-        if (player == 1)
-            uiButtons[2].toggle(); //since player is either 1 or 2
-        else
-            uiButtons[1].toggle();
-
-        textActor.setText(playerTurnMsg);
-
+    /** Draws status messages for players
+     *
+     */
+    public void drawGameMsg(){
+        game.batch.begin();
+        float y = Constants.SCREENHEIGHT/2;
+        float x = Constants.SCREENWIDTH/4;
+        game.font.drawMultiLine(game.batch, msg, x, y);
+        game.batch.end();
     }
 
 
-
-    public void updateCurrent(float delta){
+    /** Updates what is currently going on in render
+     *
+     * @param delta : current time from Gdx
+     */
+    protected void updateCurrent(float delta){
         Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
 
-        updateWidgets(delta);
-        isPlayerDone(); //checks to see if next player will go
+//        stage.updateWidgets(delta);
+//        stage.isPlayerDone(); //checks to see if next player will go
 
-        stageMap.act(delta); //stage with tiled map & units on it
         stage.act(delta); //stage with other UI elements
-
+        stageMap.act(delta); //stage with tiled map & units on it
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.P) ){
             Gdx.input.setInputProcessor(pauseStage);
@@ -282,61 +216,43 @@ public class GameScreen implements Screen {
         }
     }
 
-    public void pauseCurrent(float delta){
 
-        pauseStage.act(delta);
-        //shows the main pause window
-        pauseWindow.act(Gdx.graphics.getDeltaTime());
+    @Override
+    public void show() {
+        Gdx.graphics.getGL20().glClearColor(0, 0, 0, 1); //sets the color of clear screen
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if (Gdx.input.isKeyJustPressed(Keys.R)) {
-            Gdx.input.setInputProcessor(in); //in order to be called when new input arrives
-            Gdx.app.log(LOG, "game is resuming");
-            gameState = GameState.RESUME;
-        }
+        drawStages();
     }
 
-    public void drawGameMsg(){
-        game.batch.begin();
-        float y = Constants.SCREENHEIGHT/2;
-        float x = Constants.SCREENWIDTH/4;
-        font.drawMultiLine(game.batch, msg, x, y);
-        game.batch.end();
-    }
-
-    public void draw(){
-        stageMap.draw();
-        stage.draw();
-    }
-	
-	/** updates the stages' batch
-	 * 
-	 */
-	@Override
-	public void render(float delta) {
-
+    @Override
+    public void render(float delta) {
         currVolumeMusic = GameData.volumes[1];
-        music.play();
-		
-		switch (gameState){
+//        music.play(); //FIXME: enable music eventually
+
+        switch (gameState){
             case STARTING:
-                countDown += delta;
-                msg = startMsg + Integer.toString(3 - (int)countDown);
-                drawGameMsg();
-                if (countDown > 3.5) {
+                if (MainGame.isTest)
                     gameState = GameState.RUN;
-                    countDown = 0;
+                else {
+                    countDown += delta;
+                    msg = startMsg + Integer.toString(3 - (int) countDown);
+                    drawGameMsg();
+                    if (countDown > 3.5) {
+                        gameState = GameState.RUN;
+                        countDown = 0;
+                    }
                 }
                 break;
-
-			case RUN :
+            case RUN :
                 updateCurrent(delta);
                 show();
-				break;
-			case PAUSE :
-                pauseCurrent(delta);
+                break;
+            case PAUSE :
                 pause();
-				break;
-            case RESUME : show();
+                break;
+            case RESUME :
+                show();
                 break;
             case QUIT :
                 game.setScreen(game.getMainScreen());
@@ -345,67 +261,137 @@ public class GameScreen implements Screen {
             default :
                 show();
                 break;
-		}
- 		
-			
-	}
-
-
-	@Override
-	public void show() {
-        Gdx.graphics.getGL20().glClearColor(0,0,0,1); //<---managed by Game interface
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-     	draw();
-
- 	}
-
-	@Override
-	public void hide() {
-
-	}
-
-	@Override
-	public void pause() {
-        Gdx.graphics.getGL20().glClearColor(0,1,0,1); //sets the color of clear screen
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-		pauseStage.draw();
-
-	}
-
-	@Override
-	public void resume() {
-
-	}
-
-	@Override
-	public void dispose() {
-        music.dispose();
-        stage.dispose();
-        stageMap.dispose();
-        pauseStage.dispose();
-	}
+        }
+    }
 
     @Override
     public void resize(int width, int height) {
-//        stage.getViewport().update(width, height, true);
-//        stageMap.getViewport().update(width, height, true);
-//        pauseStage.getViewport().update(width, height, true);
-
         //Set the viewport to the whole screen.
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        //restore the stage's viewport.
+        //restore the stages' viewports.
         stage.getViewport().update(width, height, true);
         stageMap.getViewport().update(width, height, true);
         pauseStage.getViewport().update(width, height, true);
 
-        camera.update();
         stage.getCamera().update();
         stageMap.getCamera().update();
+        pauseStage.getCamera().update();
+    }
+
+    @Override
+    public void pause() {
+        Gdx.graphics.getGL20().glClearColor(0, 1, 0, 1); //sets the color of clear screen
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        pauseStage.act(Gdx.graphics.getDeltaTime());
+        pauseStage.draw();
+    }
+
+    @Override
+    public void resume() {
+//        Gdx.input.setInputProcessor(in); //for when returning from pause animState
+    }
+
+    @Override
+    public void hide() {
 
     }
 
+    @Override
+    public void dispose() {
+        music.dispose();
+        stage.dispose();
+        stageMap.dispose();
+        pauseStage.dispose();
+    }
 
+
+
+    //sets game animState
+    public void setGameState(GameState state){
+        this.gameState = state;
+    }
+
+    //sets input to InputMultiplexer
+    public void setGameInput(){
+        Gdx.input.setInputProcessor(in);
+    }
+
+    private void log(String message){
+        Gdx.app.log(LOG, message);
+    }
 }
+
+//    protected void updateWidgets(float delta){
+//        timerCount += delta;
+//        labels[0].setText("" + (int) timerCount);
+////        labels[0].act(delta);
+//
+//        updatePlayerScores();
+//        if (GameData.chosenUnit!=null) {
+//            labels[1].setText(UnitUtils.Info.unitDetails(GameData.chosenUnit));
+//            labels[2].setText(UnitUtils.Info.unitDamageList(GameData.chosenUnit));
+//        }
+//    }
+//
+//
+//    protected void updatePlayerScores(){
+//        if (GameData.getInstance().player == 1){
+//            labels[3].setText(GameData.getInstance().playerName + "\n" + Integer.toString(playerScore));
+//            labels[4].setText(GameData.getInstance().enemyName + "\n" + Integer.toString(enemyScore));
+//        }
+//        else{
+//            labels[3].setText(GameData.getInstance().enemyName + "\n" + Integer.toString(enemyScore));
+//            labels[4].setText(GameData.getInstance().playerName + "\n" + Integer.toString(playerScore));
+//        }
+//    }
+//
+//    protected void isPlayerDone() {
+//
+//        //if the timer reached max time, button or "G" pressed, then player is done
+//        if (timerCount > MAX_TIME || uiButtons[0].isPressed() || Gdx.input.isKeyJustPressed(Input.Keys.G)) {
+//
+//            if (playerTurn){
+//                playerTurn = false;
+//
+//                //switch the current player
+//                if (player == 1)
+//                    currPlayer = 2;
+//                else
+//                    currPlayer = 1;
+//
+//                //toggle button to red (should be green if player's turn)
+//                //stageMap.lockPlayerUnits(GameData.getInstance().playerName);  //lock these player units
+//                resetTurn();
+//            }
+//        }
+//
+//    }
+//
+//    //resets players turn time & displays message alert
+//    protected void resetTurn(){
+//        timerCount = 0;
+//        uiButtons[player].toggle();
+//        if (player == 1)
+//            uiButtons[2].toggle(); //since player is either 1 or 2
+//        else
+//            uiButtons[1].toggle();
+//
+//        textActor.setText(playerTurnMsg);
+//        textActor.act(Gdx.graphics.getDeltaTime());
+//    }
+
+
+//    //sets up textActor & adds to HUD stage, stage
+//    protected void setTextActor(){
+//        textActor = new TextActor(font, Constants.TURN_MSG_COORD);
+//        stage.addActor(textActor);
+//    }
+
+//    public void setupPauseMenu(){
+//        /** pause stage*/
+//        pauseWindow = MenuUtils.PauseMenu.pauseWindow(); //pause window
+//        pauseStage = new Stage(scalingViewPort);
+//        pauseStage.addActor(pauseWindow);
+//    }

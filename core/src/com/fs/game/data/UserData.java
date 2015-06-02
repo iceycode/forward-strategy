@@ -3,7 +3,7 @@ package com.fs.game.data;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.fs.game.actors.Unit;
+import com.fs.game.units.Unit;
 
 //TODO: put Unit Data in here
 
@@ -99,6 +99,7 @@ public class UserData implements Json.Serializable{
     public void setUnitData(UnitData unitData) {
         this.unitData = unitData;
     }
+
 
     @Override
     public void write(Json json) {

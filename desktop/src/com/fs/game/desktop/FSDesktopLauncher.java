@@ -2,7 +2,7 @@ package com.fs.game.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.fs.game.main.MainGame;
+import com.fs.game.MainGame;
 
 public class FSDesktopLauncher {
 	public static void main (String[] arg) {

@@ -8,24 +8,27 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.actions.*;
+import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Assets;
-import com.fs.game.assets.Constants;
+import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.enums.UnitState;
-import com.fs.game.actors.Panel;
-import com.fs.game.screens.MultiplayerScreen;
+import com.fs.game.map.Panel;
+import com.fs.game.screens.GameState;
+import com.fs.game.screens.MainScreen;
 import com.fs.game.stages.GameStage;
-import com.fs.game.actors.Unit;
-import com.fs.game.actors.UnitImage;
-import com.fs.game.actors.UnitInfo;
-import com.fs.game.utils.pathfinder.PathFinder;
+import com.fs.game.tests.TestScreen;
+import com.fs.game.units.*;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.moveTo;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.run;
+
+// so that Actions do not need reference to Actions
+// static class, static import it
 
 
 /** Unit Utils
@@ -77,21 +80,24 @@ public class UnitUtils  {
 
         /** returns a UnitInfo Array based on faction choice
          *
-         * @param faction
+         * @param faction : faction Units belong to
          * @return
          */
         public static Array<UnitInfo> getDefaultUnits(String faction){
-            Array<UnitInfo> unitInfoArray = Assets.unitInfoMap.get(faction);
+
+//            Array<UnitInfo> unitInfoArray = Assets.unitInfoMap.get(faction);
+
+            UnitInfo[] unitInfos = Assets.unitInfoMap.get(faction).toArray(UnitInfo.class) ;
             Array<UnitInfo> chosenUnits = new Array<UnitInfo>();
 
             //adding small units
             for (int i = 0; i < 4; i++){
-                chosenUnits.add(unitInfoArray.get(i));
+                chosenUnits.add(unitInfos[i]);
             }
 
-            chosenUnits.add(unitInfoArray.get(5));
-            chosenUnits.add(unitInfoArray.get(6));
-            chosenUnits.add(unitInfoArray.get(8));
+            chosenUnits.add(unitInfos[5]);
+            chosenUnits.add(unitInfos[6]);
+            chosenUnits.add(unitInfos[8]);
 
             return chosenUnits;
         }
@@ -119,33 +125,48 @@ public class UnitUtils  {
                 unit.setOwner(playerName);
                 unitArray.add(unit);
 
-                if (player == 2)
-                    unit.setLock(true);
+//                if (player == 2)
+//                    unit.setLock(true);
             }
 
             return unitArray;
         }
 
 
-
-        public static Array<Unit> setupUnits(String playerName, Array<UnitInfo> chosenUnits, int player, float[][] positions,  GameStage stage){
+        /** Places Units on stage based on panel position
+         *  Use GameData.panelMatrix[0][i] or [38-39][i] to set positions of Units
+         *
+         * @param playerName : name of player
+         * @param chosenUnits : chosen unit
+         * @param player : player id; player 1 or 2
+         * @return : an Array of Units
+         */
+        public static Array<Unit> setupUnits(Array<UnitInfo> chosenUnits, int player, String playerName){
             Array<Unit> currUnits = new Array<Unit>();
 
-            for (int i = 0; i < chosenUnits.size; i++){
-                float x = positions[i][0];
-                float y = positions[i][1];
+            // Get id of outer array, or where on x-axis panel is & set Unit position
+            // if player 2, then is on right side, and Unit's on 2nd to last column (small units on last)
+            int idx = player == 1 ? 0 : GameData.cols - 2;
+
+            //seperate by 2 spaces each in Y direction
+            for (int i = 0; i < chosenUnits.size; i ++){
+
+                String unitSize = chosenUnits.get(i).getSize(); //for x position
+                idx += unitSize == Unit.SMALL && idx > 0 ? 1 : 0; //if on right side & small unit, move by 1 to right
+
+                float x = GameData.panelMatrix[idx][i].getX();
+                float y = GameData.panelMatrix[idx][i].getY();
+
                 Unit unit = new Unit(chosenUnits.get(i), x, y, player);
+                unit.setGridPos(new int[]{idx, i});
                 unit.setOwner(playerName);
-                stage.addActor(unit);
                 currUnits.add(unit);
+
+                if (player == 1) GameData.p1Units.put(unit.getName(), unit);
+                else GameData.p2Units.put(unit.getName(), unit);
             }
 
-            if (player == 1) {
-                GameData.unitsInGame.put(1, currUnits);
-            }
-            else{
-                GameData.unitsInGame.put(2, currUnits);
-            }
+//            GameData.unitsInGame.put(player, currUnits);
 
             return currUnits;
         }
@@ -170,15 +191,29 @@ public class UnitUtils  {
             else{
                 y += 32f;
             }
-            Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
-            Array.ArrayIterator<Unit> iter = new Array.ArrayIterator<Unit>(allUnits);
-            positionClonedUnit(clone, x, y, iter);
+            Array<Unit> allUnits = GameMapUtils.findAllUnits(stage.getActors());
+            positionClonedUnit(clone, x, y, new Array.ArrayIterator<Unit>(allUnits)); //set the new unit's position
 
             stage.addActor(clone);
 
         }
 
+
+        /** Checks to see whether this is the multiplayer Unit of enemy
+         *  and if is, sets it to be untouchable
+         *
+         * @param unit : unit to check against
+         *
+         */
+        public static void setMultiEnemy(Unit unit){
+            if (MainScreen.gameState == GameState.MULTIPLAYER || TestScreen.gameState == GameState.MULTIPLAYER &&
+                    GameData.playerName != unit.getOwner()){
+                unit.setTouchable(Touchable.disabled);
+            }
+        }
+
         /** recursively checks to see whether unit can fit in position
+         *  by checking against other unit positions
          *
          * @param unit
          * @param x
@@ -190,12 +225,12 @@ public class UnitUtils  {
             while (iter.hasNext()){
                 Unit u = iter.next();
                 if (!u.unitBox.contains(x, y) && !u.unitBox.contains(x + unit.getWidth(), y + unit.getHeight())){
-                    if (GameUtils.StageUtils.isPastTop(y)){
+                    if (GameMapUtils.isPastTop(y)){
                         y -= y;
                         positionClonedUnit(unit, x, y, iter);
                     }
 
-                    if (GameUtils.StageUtils.isPastBottom(y)){
+                    if (GameMapUtils.isPastBottom(y)){
                         y += y;
                         positionClonedUnit(unit, x, y, iter);
                     }
@@ -283,7 +318,12 @@ public class UnitUtils  {
             return anim;
         }
 
-
+        /** Sets up Unit animations
+         *
+         * @param unit : unit object whose animations are being set
+         * @param aniTime : time b/w each frame in animation
+         * @return : an Array of Animation objects (each depicts movement/attacks in various directions)
+         */
         public static Array<Animation> setupAnimations(Unit unit, float aniTime){
             Array<Animation> animations = new Array<Animation>(9);
 
@@ -350,6 +390,7 @@ public class UnitUtils  {
 
             return dimensions;
         }
+
     }
 
 
@@ -359,7 +400,6 @@ public class UnitUtils  {
     /*-------------------Unit Info------------------------
      *
      * methods related to displaying unit information
-     *
      *
      */
     public static class Info {
@@ -436,71 +476,67 @@ public class UnitUtils  {
      *
      * methods for getting unit position
      * - direction for movement & attack
-     *
+     * FIXED: Unit Panel movement covered by UnitController
      *
      */
     public static class Movement {
 
-        /** Get all possible unit movements on board
-         * uses the max moves to show player movements
-         * adds the panels into an array
-         * find relative position of panels to all possible moves
-         * highlights all possible panels on board if unit is selected
-         */
-        public static void showMoves(Unit unit) {
-            if (unit.panelArray!=null){
-                for (Panel p : unit.panelArray) {
-                    if (!p.moveableTo){
-                        p.moveableTo = true;
-                    }
-                }
-            }
-
-        }//sets the associated panels with unit max moves
-
-        /**
-         * hides the panels highlighted by showMoves()
-         */
-        public static void hideMoves(Unit unit){
-            if (unit.panelArray!=null){
-                for (Panel p : unit.panelArray) {
-//                    if ((p.moveableTo || p.selected) ) {
-//
+//        /** Get all possible unit movements on board
+//         * uses the max moves to show player movements
+//         * adds the panels into an array
+//         * find relative position of panels to all possible moves
+//         * highlights all possible panels on board if unit is selected
+//         */
+//        public static void showMoves(Unit unit) {
+//            if (unit.panelArray!=null){
+//                for (Panel p : unit.panelArray) {
+//                    if (!p.moveableTo){
+//                        p.moveableTo = true;
 //                    }
-                    p.selected = false; //in case p was selected
-                    p.moveableTo = false;
-                }
-            }
-            unit.panelsFound = false;
-        }
+//                }
+//            }
+//
+//        }//sets the associated panels with unit max moves
 
-        /** finds the targetPanel that the user selected
-         * 	unit to go to
-         *
-         */
-        public static void checkTargetPanel(Unit unit) {
-            for (Panel p : unit.panelArray) {
-                if ((p.selected && p.moveableTo)) {
-                    unit.setTargetPan(p);
-                    //movePath = pathGen.findBestPath(targetPan);
+//        /**
+//         * hides the panels highlighted by showMoves()
+//         */
+//        public static void hideMoves(Unit unit){
+//            if (unit.panelArray!=null){
+//                for (Panel p : unit.panelArray) {
+//                    p.selected = false; //in case p was selected
+//                    p.moveableTo = false;
+//                }
+//            }
+//            unit.panelsFound = false;
+//        }
 
-                    unit.moving = true;
-                    unit.standing = false;
-                    unit.chosen = false;
-                    hideMoves(unit); //moves not shown now
-
-                    //sets unit to new position
-                    unit.destX = p.getX();
-                    unit.destY = p.getY();
-
-                    unit.panelPath = getMovePath(unit, p);
-
-                    break;
-
-                }
-
-            }
-        }
+//        /** finds the targetPanel that the user selected
+//         * 	unit to go to
+//         *
+//         */
+//        public static void checkTargetPanel(Unit unit) {
+//            for (Panel p : unit.panelArray) {
+//                if ((p.selected && p.moveableTo)) {
+//                    unit.setTargetPan(p);
+//                    //movePath = pathGen.findBestPath(targetPan);
+//
+//                    unit.moving = true;
+//                    unit.standing = false;
+//                    unit.chosen = false;
+//                    hideMoves(unit); //moves not shown now
+//
+//                    //sets unit to new position
+//                    unit.destX = p.getX();
+//                    unit.destY = p.getY();
+//
+//                    unit.panelPath = getMovePath(unit, p, new PathFinder());
+//
+//                    break;
+//
+//                }
+//            }
+//        }
 
         /**
          * sets duration based on moves actually taken
@@ -526,71 +562,126 @@ public class UnitUtils  {
             return duration;
         }
 
-        /** finds all areas unit will move to
-         *  returns in a Vecto2 array with screen coordinates
+//        /** finds all areas unit will move to
+//         *  returns in a Vecto2 array with screen coordinates
+//         *
+//         * @param uni
+//          * @return pathMoves
+//         */
+//        public static Array<Vector2> getMovePath(Unit uni, Panel target, PathFinder pathFinder) throws NullPointerException{
+//            Array<Vector2> gridPaths = new Array<Vector2>();
+//
+//            pathFinder.findBestPath(uni, target); //finds the best path
+//
+//            try{
+//                gridPaths = pathFinder.getUnitMovePath();
+//                Gdx.app.log(LOG, "paths found by PathFinder: " + gridPaths.toString(", "));
+//            }catch(NullPointerException e){
+//                Gdx.app.log(LOG, " no path found, unit CANNOT MOVE!");
+//            }
+//
+//            return gridPaths;
+//        }
+
+
+        /** Creates move action for Unit
          *
-         * @param uni
-          * @return pathMoves
-         */
-        public static Array<Vector2> getMovePath(Unit uni, Panel target) throws NullPointerException{
-            Array<Vector2> gridPaths = new Array<Vector2>();
-
-            PathFinder pathFinder = new PathFinder(uni, target); //gets the shortest path
-
-            try{
-                gridPaths = pathFinder.getUnitMovePath();
-                Gdx.app.log(LOG, "paths found by PathFinder: " + gridPaths.toString(", "));
-            }catch(NullPointerException e){
-                Gdx.app.log(LOG, " no path found, unit CANNOT MOVE!");
-            }
-
-            return gridPaths;
-        }
-
-
-        /**
-         *
-         * @param moveSequence
-         * @param unit
+         * @param moveSequence : the sequence of moves to selected panel
+         * @param unit : the unit that is moving
+         * @return a {@link SequenceAction} of panel to panel movements for Unit
          */
         public static SequenceAction createMoveAction(SequenceAction moveSequence, Unit unit){
             if (moveSequence.getActions().size != unit.panelPath.size) {
                 for (Vector2 pos : unit.panelPath) {
-                    MoveToAction moveAction = Actions.moveTo(pos.x, pos.y, 5f);
+                    MoveToAction moveAction = moveTo(pos.x, pos.y, 5f);
                     moveSequence.addAction(moveAction);
                 }
             }
+            //add a runnable action at end
+            moveSequence.addAction(run(new Runnable() {
+                @Override
+                public void run() {
+                    log("MoveAction completed!");
+                }
+            }));
+
             return moveSequence;
         }
 
+        /** Creates move action for Unit
+         *
+         * @param unit : the unit that is moving
+         * @return a {@link SequenceAction} of panel to panel movements for Unit
+         */
+        public static SequenceAction createMoveAction(Unit unit){
+            SequenceAction moveSequence = new SequenceAction();
+            if (moveSequence.getActions().size != unit.panelPath.size) {
+                for (Vector2 pos : unit.panelPath) {
+                    MoveToAction moveAction = moveTo(pos.x, pos.y, 5f);
+                    moveSequence.addAction( moveTo(pos.x, pos.y, 5f));
+                }
+            }
+
+
+            return moveSequence;
+        }
+
+        /** Creates move using Unit panelPath array
+         *
+         * @param panelPath : the Array containing path locations as Vector2 objects
+         * @return a {@link SequenceAction} of panel to panel movements for Unit
+         */
+        public static SequenceAction createMoveAction(Array<Vector2> panelPath){
+            SequenceAction moveSequence = new SequenceAction();
+            for (Vector2 pos : panelPath) {
+                moveSequence.addAction(moveTo(pos.x, pos.y, .8f));
+            }
+
+            moveSequence.addAction(run(new Runnable() {
+                @Override
+                public void run() {
+                    log("MoveAction completed!");
+                }
+            }));
+
+            return moveSequence;
+        }
+
+        public static void addUnitAction(Unit unit, Array<Vector2> path){
+            switch(unit.state){
+                case MOVING:
+                    unit.addAction(createMoveAction(path));
+                    break;
+            }
+        }
 
 
         /** sets unit direction & as a result animation
          *
-         * @param uni
-         * @param destX destination of target
-         * @param destY
+         * @param uni : unit whose animstate is returned
+         * @param destX :
+         * @param destY :
          */
-        public static UnitState unitDirection(Unit uni, float destX, float destY){
+        public static AnimState unitDirection(Unit uni, float destX, float destY){
             float oriX = uni.unitBox.getX();
             float oriY = uni.unitBox.getY();
 
-            UnitState state;
+            AnimState state;
 
             if (isLeft(oriX, oriY, destX, destY)){
-                state = UnitState.MOVE_LEFT;
+                state = AnimState.MOVE_LEFT;
             }
             else if (isRight(oriX, oriY, destX, destY)){
-                state = UnitState.MOVE_RIGHT;
+                state = AnimState.MOVE_RIGHT;
             }
             else if (isUp(oriX, oriY, destX, destY)){
-                state = UnitState.MOVE_UP;
+                state = AnimState.MOVE_UP;
             }
             else if (isDown(oriX, oriY, destX, destY)){
-                state = UnitState.MOVE_DOWN;
+                state = AnimState.MOVE_DOWN;
             }
             else
-                state = UnitState.STILL;
+                state = AnimState.STILL;
 
             return state;
         }
@@ -647,63 +738,66 @@ public class UnitUtils  {
 
 
     /** Unit attack & damage methods
-     *
+     * NOTE: changed from automatic attack to explicit attack - player/ai has to click on "attackable" unit to attack
+     * FIXED: methods dealing with damage changed b/c of change above
      */
     public static class Attack {
 
-        /** when unit finished moving & becomes adjacent to another
+        /** when unit finished moving & becomes adjacent to another (or other)
+         *  the option to attack is possible & the attackable unts
+         *  are put into an Array.
          *
-         * @param unit
-         * @param stage
+         * @param unit : unit whose turn it is
+         * @return Array of Units that can be attacked
          */
-        public static void attackNearbyUnits(Unit unit, GameStage stage){
-            Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(stage.getActors());
-            Array.ArrayIterator<Unit> unitIter = new Array.ArrayIterator<Unit>(allUnits);
-//        OrderedMap<Integer, Unit> unitsInRange = new OrderedMap<Integer, Unit>();
+//        public static Array<Unit> enemiesInRange(Unit unit, GameStage stage){
+//            Array<Unit> allUnits = GameMapUtils.findAllUnits(stage.getActors());
+//            Array.ArrayIterator<Unit> unitIter = new Array.ArrayIterator<Unit>(allUnits);
 //
-//            int highDamage = 1; //the highest damage dealt; set at 1 since they are negative
-//            Unit unitToAttack = unitIter.next(); //unit that will be attacked
+//            Array<Unit> unitsInRange = new Array<Unit>(); //units that can be attacked
+//
+//            log("unit " + unit.getName() + " trying to find nearby units to attack");
+//
+//            while (unitIter.hasNext()){
+//                Unit u = unitIter.next();
+//                if (UnitUtils.Attack.isEnemy(u) && UnitUtils.Attack.unitAdjacent(unit, u) && !u.underattack){
+//
+//                    int damage = Assets.damageListArray.get(unit.getUnitID()-1)[u.getUnitID()-1];
+//                    u.isAttackable = true;
+//                    unitsInRange.add(u);
+//                    u.damage = damage;
+//                }
+//            }
+//
+//            return unitsInRange;
+//        }
+
+
+        public static Unit findBestEnemy(Unit unit){
+            GameStage stage = ((GameStage) unit.getStage()); //get stage
+            Unit enemy = null; //set as new empty Unit for now
+            int hv = 0; //highest damage that can be done
+
+            Array<Unit> allUnits = GameMapUtils.findAllUnits(stage.getActors());
+            Array.ArrayIterator<Unit> unitIter = new Array.ArrayIterator<Unit>(allUnits);
 
             log("unit " + unit.getName() + " trying to find nearby units to attack");
 
-            while (unitIter.hasNext() && !unit.isAttacking){
+            while (unitIter.hasNext()){
                 Unit u = unitIter.next();
-                if (UnitUtils.Attack.isEnemy(u) && UnitUtils.Attack.unitAdjacent(unit, u) && !u.underattack){
+                if (UnitUtils.Attack.isEnemy(u) && UnitUtils.Attack.unitAdjacent(unit, u) && u.state != UnitState.UNDER_ATTACK){
+
                     int damage = Assets.damageListArray.get(unit.getUnitID()-1)[u.getUnitID()-1];
-                    u.isAttackable = true;
-                    u.damage = damage;
-                }
-
-                if (!unitIter.hasNext())
-                    unit.isAttacking = true;
-            }
-        }
-
-        /** another (possibly outdated) unit attack method
-         *
-         * @param unit
-         */
-        public static void unitAttacked(Unit unit){
-            Array<Unit> allUnits = GameUtils.StageUtils.findAllUnits(unit.getStage().getActors());
-            Array.ArrayIterator<Unit> iterator = new Array.ArrayIterator<Unit>(allUnits);
-
-            while (iterator.hasNext()){
-                Unit u = iterator.next();
-                if (isEnemy(u) && unitAdjacent(unit, u)){
-                    unit.damage = Assets.damageListArray.get(u.getUnitID()-1)[unit.getUnitID()-1];
-                    unit.health += unit.damage;
-                    unit.underattack = true;
-
-                    if (unit.health <= 0){
-                        MultiplayerScreen.getInstance().playerScore += 10;
-                        MultiplayerScreen.getInstance().unitCounts[unit.getPlayer()-1]--;
+                    if (hv < damage){
+                        hv = damage;
+                        enemy = u;
+                        u.damage = damage;
                     }
-                }
-                else{
-                    unit.underattack = false;
-                }
 
+                }
             }
+
+            return enemy; //returns enemy that Unit deals highest damage to
         }
 
 
@@ -729,7 +823,7 @@ public class UnitUtils  {
          *
          * @param uni1 : the unit on right side
          * @param uni2 : the unit on left side
-         * @return
+         * @return : true if a unit is adjacent to another one
          */
         public static boolean unitAdjacent(Unit uni1, Unit uni2){
 
@@ -741,6 +835,11 @@ public class UnitUtils  {
 
         }
 
+        /** checks if Unit is an enemy
+         *
+         * @param unit : Unit that is doing the checking
+         * @return : true or not
+         */
         public static boolean isEnemy(Unit unit){
             if (!unit.getOwner().equals(GameData.getInstance().playerName)){
                 return true;
@@ -761,25 +860,6 @@ public class UnitUtils  {
             return false;
         }
 
-        /** unit is dealt damage
-         *
-         * @param damage
-         * @param u
-         */
-        public static void damageUnit(int damage, Unit u){
-            u.unitDamaged(damage);
-            u.underattack = true;
-
-            if (u.health <= 0){
-                MultiplayerScreen.getInstance().playerScore += 10;
-                MultiplayerScreen.getInstance().unitCounts[u.getPlayer()-1]--;
-            }
-
-            Gdx.app.log(LOG, "unit " + u.getName() + " damage inflicted = " + damage
-                    + " \n health = " + u.health);
-
-        }
-
 
     }
 
@@ -797,24 +877,18 @@ public class UnitUtils  {
             public void touchDown(InputEvent event, float x, float y, int pointer, int button){
                 Unit currUnit = ((Unit)event.getTarget());
 
-                if (currUnit.clickCount < 2 && !currUnit.lock && !currUnit.done){
-                    if (currUnit.otherUnits!=null)
-                        GameUtils.StageUtils.deselectUnits(currUnit.otherUnits);
+                if (currUnit.clickCount < 2 && currUnit.isPlayerUnit()){
 
                     currUnit.clickCount++;
-                    currUnit.chosen = true;
-                    ((GameStage)currUnit.getStage()).setChosenUnit(currUnit);
-                    Gdx.app.log(LOG, currUnit.getName() + " selected (touchDown - ActorGestureListener)");
+//                    currUnit.chosen = true;
+                    Gdx.app.log(LOG, currUnit.getName() + " SELECTED (touchDown - ActorGestureListener)");
+                    UnitController.getInstance().selectUnit(currUnit);
+
                 }
-                else if (currUnit.clickCount >= 2 && !currUnit.lock && !currUnit.done){
-                    currUnit.chosen = false;
+                else if (currUnit.clickCount >= 2 && currUnit.isPlayerUnit()){
+//                    currUnit.chosen = false;
+                    UnitController.getInstance().deselectUnit();
                     currUnit.clickCount = 0; //reset clickCount
-                }
-
-
-                if (currUnit.isAttackable){
-                    currUnit.underattack = true;
-                    currUnit.isAttackable = false;
                 }
 
             }
@@ -823,22 +897,12 @@ public class UnitUtils  {
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
                 Unit currUnit = ((Unit)event.getTarget());
 
-                if (currUnit.clickCount == 2 && !currUnit.lock && !currUnit.done) {
-                    currUnit.chosen = false;
+                if (currUnit.clickCount == 2 && currUnit.isPlayerUnit()) {
+//                    currUnit.chosen = false;
                     currUnit.clickCount = 0; //reset clickCount
-                    UnitUtils.Movement.hideMoves(currUnit);
+                    UnitController.getInstance().deselectUnit();
                     Gdx.app.log(LOG, currUnit.getName() +" UNSELECTED (touchUp - ActorGestureListener)");
                 }
-
-
-            }
-        };
-
-
-        public static ChangeListener unitChangeListener = new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                Unit unit = ((Unit)actor);
 
 
             }

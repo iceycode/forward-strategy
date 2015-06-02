@@ -1,0 +1,58 @@
+{
+    com.badlogic.gdx.graphics.Color: {
+        white: { r: 1, g: 1, b: 1, a: 1 },
+        red: { r: 1, g: 0, b: 0, a: 1 },
+        green: { r: 0, g: 1, b: 0, a: 1 },
+        black: { a: 1, b: 0, g: 0, r: 0 },
+        grey: { a: 1, b: .5, g: .5, r: .5}, //divide by 255 to get the float value
+        blue : { a: .8, b: 1, g: 0, r : 0},
+        cyan: {a: 1, b: 1, g: .7, r: .4}, //RGB code: Red: 102   Green: 178    Blue: 255
+        olive: {a: 0.5f, b: 0.5f, g: 0, r: 1},
+        yellow1: { r: 0.5, g: 0.5, b: 0, a: 1 },
+        yellow2: {r: 1, g: 0, b: 1, a: 1}
+    },
+    com.badlogic.gdx.graphics.g2d.BitmapFont: {
+        default-font: { file: fonts/default1.fnt},
+        retro1: {file: fonts/battlenet_FNT1.fnt},
+        retro2: { file: fonts/megaman10_FNT1.fnt }
+    },
+    com.badlogic.gdx.scenes.scene2d.ui.Slider$SliderStyle: {
+    	default-horizontal: { background: pause-sounds-slider, knob: pause-slider-knob },
+//    	default-vertical: { background: default-slider, knob: default-round-large },
+        music:{background: pause-music-slider, knob: pause-slider-knob}
+    },
+    com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle: {
+//        default: {
+//            down: round-down, up: humansButton, font: default, fontColor: black
+//        },
+        hum-choice: {up: humansButton, font: default, fontColor: black},
+        rep-choice:{up: repButton, font: default, fontColor: black},
+        art-choice:{up: artButton, font: default, fontColor: black}
+    },
+    com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
+        default: { font: default-font, fontColor: black }, //default also does not have background
+        unitText: {font: retro2, fontColor: olive}, //simple label style for unit types in menu
+        default-black: {font: default-font, fontColor: black}
+    },
+    com.badlogic.gdx.scenes.scene2d.ui.Window$WindowStyle: {
+        default: { titleFont: default-font, background: pause-background, titleFontColor: black},
+        window-confirm: {titleFont: default-font, background: confirm1, titleFontColor: black} //confirm choosing unit/faction
+    }
+//,    com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle: {
+//        default: { fontColorUnselected: grey, selection: selectBox-selection, fontColorSelected: white, font: default-font }
+//    },
+//    com.badlogic.gdx.scenes.scene2d.ui.CheckBox$CheckBoxStyle: {
+//        default: { checkboxOn: radio-on, checkboxOff: radio-off, font: default-font, fontColor: white },
+//        star: {checkboxOn: star-on, checkboxOff: star-off, font: default-font, fontColor: white},
+//        check: {checkboxOn: checkOn, checkboxOff: checkOff, font: default-font, fontColor: white}
+//    },
+//    com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle: {
+//        default: { font: default-font, fontColor: white, background: selectBox-back, scrollStyle: default,
+//            listStyle: { font: default-font, selection: selectBox-selection}},
+//        date: { font: default-font, fontColor: white, background: selectBox-back_number, scrollStyle: default,
+//            listStyle: { font: default-font, selection: selectBox-selection_number}}
+//    },
+//    com.badlogic.gdx.scenes.scene2d.ui.Tree$TreeStyle:{
+//        default: { selection: selectBox-selection, plus: plus_tree, minus: minus_tree }
+//    }
+}

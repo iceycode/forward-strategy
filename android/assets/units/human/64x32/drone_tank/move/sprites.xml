@@ -1,0 +1,3 @@
+<TextureAtlas imagePath="sprites.png">
+	<SubTexture name="move.png" x="0" y="0" width="116" height="18"/>
+</TextureAtlas>

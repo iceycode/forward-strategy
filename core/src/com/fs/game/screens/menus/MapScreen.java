@@ -4,8 +4,8 @@
 package com.fs.game.screens.menus;
 
 import com.badlogic.gdx.Screen;
-import com.fs.game.enums.GameState;
-import com.fs.game.main.MainGame;
+import com.fs.game.screens.GameState;
+import com.fs.game.MainGame;
 
 /** MapScreen.java
  *  TODO: add more maps
