@@ -7,14 +7,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.msg.MessageDispatcher;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
@@ -22,14 +21,16 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UnitData;
+import com.fs.game.map.Locations;
 import com.fs.game.map.MiniMap;
 import com.fs.game.tests.TestUtils;
+import com.fs.game.units.TextActor;
 import com.fs.game.units.Unit;
 import com.fs.game.utils.GameMapUtils;
 
 
-/** the stage which contains the tiled map
- * 
+/** The stage which contains the tiled map
+ *
  * @author Allen
  *
  * NOTES:
@@ -42,46 +43,68 @@ import com.fs.game.utils.GameMapUtils;
  * CAMERA SCROLLING: using InputAdapter for mouse (or touch) drag across tiled map
  *
  */
-public class GameStage extends Stage {
-	
+public class GameStage extends Stage implements StageListener {
+
 	final String LOG = "GAMESTAGE LOG: ";
 
  	public TiledMap tiledMap; 	//creates the actual map
-    int[] backgroundLayers = { 0, 1, 2, 3 }; // don't allocate every frame!
-    int[] foregroundLayers = {4, 5, 6}; //the layers showing terrain
+    boolean largeMap = false; //if true, then large, scrollable map
 
 	//variables related to stage/screen placements
 	final float SCREENWIDTH = Constants.SCREENWIDTH;
 	final float SCREENHEIGHT = Constants.SCREENHEIGHT;
     final float ASPECT_RATIO = SCREENHEIGHT/SCREENWIDTH; //aspect ratio of view
 
+    final Vector3 curr = new Vector3();
+    final Vector3 last = new Vector3(-1, -1, -1);
+    final Vector3 delta = new Vector3();
+
+    final Vector3 P1_POS = Constants.P1_POS;
+    final Vector3 P2_POS = Constants.P2_POS;
+
     //tile width/height in pixels
     float tiledMap_width;
     float tiledMap_height;
     final float TILE_WIDTH = 32;
-    final float TILE_HEIGHT = 32;
+
     float unitScale = 1/TILE_WIDTH;
 
     //what can be seen by map view
 	final float MAP_VIEW_WIDTH = Constants.MAP_VIEW_WIDTH;
 	final float MAP_VIEW_HEIGHT = Constants.MAP_VIEW_HEIGHT;
-    //x & y screen position of TileMap on Screen
+    final float MAP_WIDTH = 40*32;
+    final float MAP_HEIGHT = 30*32;
+    // X & Y screen position of TileMap on Screen
     final float MAP_X = Constants.MAP_X;
     final float MAP_Y = Constants.MAP_Y;
 
     TiledMapRenderer tiledMapRenderer;
 	OrthographicCamera camera;
-    CameraController cameraController;
 	Viewport viewport;
 
+    OrthographicCamera miniCamera; //minimap camera, which draws actors in corner scaled down
+    Batch miniBatch; //draws minimap batch
+    final float SCALE = 3; //scale everything down by factor of 3
+
+    int mPlayer ; //multiplayer player id (1 or 2)
+    public int currPlayer = 1; //player currently going, starts at 1
+    Unit chosenUnit; //current chosen unit
 
     String aiName = "GameAI";
     public boolean aiTurn = false; //whether it is ai turn
 
     MessageDispatcher aiMessenger;
 
-
+    StageListener infoStageListener; //listener is InfoStage
     MinimapListener minimapListener;
+
+    //global fields for showing message over GameMap
+    float msgTime = 0f; //time start for message
+    float endTime = 2f; //time message stops
+    TextActor textActor;
+    String msg = "START GAME!"; // game message, initially start game
+    String playerTurnMsg = "PLAYER " + currPlayer + " TURN";
+
 
     //updates minimap view based on current camera view
     public interface MinimapListener {
@@ -98,8 +121,7 @@ public class GameStage extends Stage {
         setupTiledMap(mapID);
         //this also sets up this stages panelArray
         GameMapUtils.setupGridElements(this); //setup Table & Actors thru GameMapUtils
-
-
+//        Locations.getLocations().generatePanelGraph(GameData.panelMatrix); //generate PanelGraph in Locations
 
         if (mapID == 4){
             setupViewLarge(); //only 1/4 of tiled map will show
@@ -108,12 +130,7 @@ public class GameStage extends Stage {
             setupView();
         }
 
-
-
-        cameraController = new CameraController(camera);
-        addListener(cameraController); //add custom drag listener class
-//        setCameraDragListener(); //sets DragListener
-//        setDebugAll(true);
+        setTextActor(); //textActor for displaying messages
     }
 
 
@@ -137,23 +154,27 @@ public class GameStage extends Stage {
         //create and set the viewport to manage camera
         viewport = new ScalingViewport(Scaling.fit, SCREENWIDTH , SCREENHEIGHT , camera);
         setViewport(viewport);
-        getViewport().setScreenBounds((int) MAP_X, (int) MAP_Y, (int) MAP_VIEW_WIDTH, (int) MAP_VIEW_HEIGHT);
+//        getViewport().setScreenBounds((int) MAP_X, (int) MAP_Y, (int) MAP_VIEW_WIDTH, (int) MAP_VIEW_HEIGHT);
         camera.update();
 
  	}
 
     protected void setupViewLarge(){
+        largeMap = true;
         tiledMap_width = 40*32;
         tiledMap_height = 30*32 ;
 
-        camera = new OrthographicCamera(MAP_VIEW_WIDTH, MAP_VIEW_HEIGHT);
-        camera.position.set(MAP_X, MAP_Y, 0);
-        camera.update();
+        camera = new OrthographicCamera(MAP_WIDTH, MAP_HEIGHT); //MAP_WIDTH, MAP_HEIGHT
 
-        viewport = new ScalingViewport(Scaling.none, SCREENWIDTH, SCREENHEIGHT, camera);
-        viewport.setCamera(camera);
+        camera.position.set(MAP_X, MAP_Y, 0);
+//        camera.update();
+
+        viewport = new ScalingViewport(Scaling.fill, SCREENWIDTH , SCREENHEIGHT, camera);
 //        viewport.setScreenBounds((int) MAP_X, (int) MAP_Y, (int) MAP_VIEW_WIDTH, (int) MAP_VIEW_HEIGHT);
         setViewport(viewport);
+
+        log("Camera position when starting: " + camera.position.x + ", " + camera.position.y);
+        log("Viewport position when starting (should be 0,0) : " + viewport.getScreenX() + ", " + viewport.getScreenY());
     }
 
 //
@@ -162,66 +183,145 @@ public class GameStage extends Stage {
 //        playerMessenger = new MessageDispatcher();
 //    }
 
-
+    //sets up textActor & adds to HUD stage, stage
+    protected void setTextActor(){
+        textActor = new TextActor("retro1", Constants.TURN_MSG_COORD);
+        addActor(textActor);
+    }
 
     /** adds all player's units to stage
      *
-     * @param unitArray
-     * @param playerName
+     * @param unitArray : an Array of Units that are added to stage
      */
-    public void addUnits(Array<Unit> unitArray, String playerName){
+    public void addUnits(Array<Unit> unitArray ){
         for (Unit u : unitArray){
+            if (u.getOwner() != GameData.playerName)
+                u.setTouchable(Touchable.disabled);
             addActor(u);
         }
     }
 
 
-    public void setupUnits(int player, int enemyPlayer, String enemyName, String faction, String enemyFaction){
-        GameData.playerUnits = TestUtils.randomMultiplayerSetup(player, GameData.getInstance().playerName, faction);
-        addUnits(GameData.playerUnits, GameData.getInstance().playerName);
+    public void setupUnitsMulti(int player, String faction, String enemyFaction){
+        this.mPlayer = player; //set the player
 
-        GameData.enemyUnits = TestUtils.randomMultiplayerSetup(enemyPlayer, enemyName, enemyFaction);
-        addUnits(GameData.enemyUnits, enemyName);
+        GameData.playerUnits = TestUtils.randomMultiplayerSetup(mPlayer, GameData.playerName, faction);
+        addUnits(GameData.playerUnits);
 
+        GameData.enemyUnits = TestUtils.randomMultiplayerSetup(player == 1 ? 2 : 1, GameData.enemyName, enemyFaction);
+        addUnits(GameData.enemyUnits);
+
+        log("GameData p1Units: " + GameData.p1Units.toString(", "));
+        log("GameData p2Units: " + GameData.p2Units.toString(", "));
+
+
+        Locations.getLocations().initLocations();
+
+        GameMapUtils.togglePlayerUnits(1, this);
     }
 
-    /** gets data from multiplayerscreen
+    /** gets updated data from multiplayerscreen
      *
-     * @param data
+     * @param player : player who is doing the sending
+     * @param data : data from multiplayer screen
      */
-    public void updateUnit(UnitData data){
+    public void updateUnit(int player, UnitData data){
         String name = data.getOwner();
-        int unitID = data.getUnitID();
-        Array<Unit> unitsInGame = GameMapUtils.findAllUnits(getActors());
 
-        for (Unit u : unitsInGame){
-            if (unitID == u.getUnitID() && u.getOwner().equals(name)){
-                System.out.println("Unit " + u.getName() + " is enemy, owned by "+ name);
-                u.updateUnit(data);
+        Unit u = player == 1 ? GameData.p1Units.get(data.getName()) : GameData.p2Units.get(data.getName());
+        System.out.println("Unit " + data.getName() + " is enemy, owned by "+ name);
+        u.updateUnit(data);
 
-                break;
-            }
+//        int unitID = data.getUnitID();
+//        Array<Unit> unitsInGame = GameMapUtils.findAllUnits(getActors());
+//        for (Unit u : unitsInGame){
+//            if (unitID == u.getUnitID() && u.getOwner().equals(name)){
+//                System.out.println("Unit " + u.getName() + " is enemy, owned by "+ name);
+//                u.updateUnit(data);
+//
+//                break;
+//            }
+//        }
+    }
+
+
+    boolean showMsg = true; //if true, shows message
+    public void showMessage(float delta){
+        msgTime += delta;
+
+        if (msgTime < endTime){
+            //check if actor is in back, since it will have ZIndex of 0
+            if (textActor.getZIndex() == 0)
+                textActor.toFront();
+        }
+        else{
+            textActor.toBack();
+            msgTime = 0;
+            showMsg = false;
         }
     }
 
-
-    /** Renders the tiled map, updating & setting camera view first.
+    /** Shows a message over all other actors on stage
      *
-     *
+     * @param message : message to show
+     * @param msgTime : time to show it for
      */
-//    public void render() {
-//        //set tiledMapRenderer view
-////    	tiledMapRenderer.getBatch().setProjectionMatrix(camera.combined);
-////    	tiledMapRenderer.setView(camera.combined, camera.position.x, camera.position.y, camera.viewportWidth, camera.viewportHeight);
-//        camera.update();
-//        tiledMapRenderer.setView(getBatch().getProjectionMatrix(), MAP_X, MAP_Y, tiledMap_width, tiledMap_height);
-////        tiledMapRenderer.setView(camera);
-//
-////        getBatch().end();
-//     	tiledMapRenderer.render();
-////        getBatch().begin();
-//    }
+    public void setStageMessage(String message, float msgTime){
+        showMsg = true;
+        textActor.setText(message);
+        this.endTime = msgTime;
+    }
 
+
+    @Override
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (screenX < MAP_WIDTH && screenY < MAP_HEIGHT && screenY > MAP_Y && screenX > MAP_X)
+            return super.touchDown(screenX, screenY, pointer, button);
+
+        return false;
+    }
+
+
+
+    boolean isDragging = false; //flag for dragging
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+
+        if (largeMap){
+            isDragging = true;
+            camera.unproject(curr.set(screenX, screenY, 0));
+            if (!(last.x == -1 && last.y == -1 && last.z == -1)) {
+                camera.unproject(delta.set(last.x, last.y, 0));
+                delta.sub(curr);
+                float nx = camera.position.x + delta.x;
+                float ny = camera.position.y + delta.y;
+                if (nx <= MAP_WIDTH + MAP_X/2 && ny <= MAP_HEIGHT + MAP_Y/2 && nx >= MAP_X*2 && ny >= MAP_Y*2){
+                    camera.position.add(delta.x, delta.y, 0);
+                }
+                else{
+                    log("Went past bounds!");
+                    return false;
+                }
+            }
+            last.set(screenX, screenY, 0);
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        last.set(-1, -1, -1);
+        if (isDragging){
+            log("New Camera position after dragging: " + camera.position.x + ", " + camera.position.y);
+            isDragging = false;
+        }
+
+        if (screenX < MAP_VIEW_WIDTH && screenY < MAP_VIEW_HEIGHT && screenY > MAP_Y && screenX > MAP_X)
+            return super.touchUp(screenX, screenY, pointer, button);
+
+        return false;
+    }
 
     /* stage maps draw method */
     @Override
@@ -235,7 +335,9 @@ public class GameStage extends Stage {
 
         //render(); //renders the tiled map & actors
 
-        super.draw(); //so that Units & Panels draw on top of tiled map
+        super.draw(); //updates viewport/camera & draws actors
+
+
     }
 
 
@@ -247,82 +349,102 @@ public class GameStage extends Stage {
     public void act(float delta) {
         super.act(delta);
 
-        showPosInfo();
+        if (showMsg)
+            showMessage(delta);
     }
 
-    //shows positions of camera/viewport
-    boolean showPosInfo = true;
-    protected void showPosInfo(){
-        if (showPosInfo){
-            //show pos of camera
-            log("Position of Camera: " + camera.position.x + ", " + camera.position.y);
-            log("Position of Viewport: " + viewport.getScreenX() + ", " + viewport.getScreenY());
-//            log("TiledMapRenderer positions is: (" + Float.toString(tiledMapRenderer.getViewBounds().getX()) + ", "
-//                    + Float.toString(tiledMapRenderer.getViewBounds().getY()));
-            showPosInfo = false;
+
+    public void setCurrentUnit(Unit unit){
+        if (unit==null || chosenUnit!=unit) {
+            this.chosenUnit = unit;
+            infoStageListener.updateUnitInfo(unit);
         }
     }
 
 
-    /** Sets listener for minimap input listener
-     *
-     * @param stage
-     */
-    public void setMapListener(InfoStage stage){
-        stage.miniMap.setMapviewSetter(cameraController);
+    public void setInfoStageListener(StageListener stage){
+        this.infoStageListener = stage;
     }
 
 
-    /** Controls camera via DragListener
-     *
-     */
-    public class CameraController extends DragListener implements MiniMap.MapviewSetter {
+    //returns multiplayer player number
+    public int getPlayer(){
+        return mPlayer;
+    }
 
-        private final OrthographicCamera camera;
-        final Vector2 curr = new Vector2();
-        final Vector2 last = new Vector2(-1, -1);
-        final Vector2 delta = new Vector2(); //how much tiled map has moved by
 
-        public CameraController(OrthographicCamera camera) {
-            this.camera = camera;
-            setTapSquareSize(32);
-        }
+    public void updateScore(Unit unit){
+        int player = unit.player; //get unit player
 
-        @Override
-        public void dragStart(InputEvent event, float x, float y, int pointer) {
-            last.set(x, y);
-        }
+        //set score based on unit size
+        int score = unit.getUnitSize() == Unit.SMALL ? 10
+                : unit.getUnitSize() == Unit.MEDIUM ? 20
+                : 30;
 
-        @Override
-        public void drag(InputEvent event, float x, float y, int pointer) {
-            curr.set(x, y);
-            camera.translate(getDeltaX(), getDeltaY(), 0);
+//        int resources = score*5; //resources for creating buildings TODO: implement resources for buildings
+        infoStageListener.updatePlayerScore(player, score);
+    }
 
-            updateMinimapView(camera.position.x/2, camera.position.y/2);
-        }
 
-        @Override
-        public void dragStop(InputEvent event, float x, float y, int pointer) {
+    @Override
+    public void updateUnitInfo(Unit unit) {
+        //NOTHING DONE HERE
+    }
+
+    @Override
+    public void updatePlayerScore(int player, int score) {
+        //NOTHING DONE HERE
+    }
+
+    @Override
+    public void changeView(Vector3 pos) {
+        log("Changed camera based on minimap to positions: " + pos.x + ", " + pos.y);
+        camera.project(pos);
+        log("After unprojecting: " + pos.x + ", " + pos.y);
+        camera.position.set(pos.x, pos.y, 0);
+//        camera.translate(x, y, 0);
+        camera.update();
+    }
+
+    @Override
+    public void changePlayer(int nextPlayer) {
+        if (largeMap){
+            //set camera position to other half of board
+            Vector3 playerPos = nextPlayer == 2 ? P2_POS : P1_POS;
+            camera.position.set(playerPos);
             camera.update();
         }
 
-        @Override
-        public void updateCameraPosition(float x, float y) {
 
-        }
+        GameMapUtils.togglePlayerUnits(nextPlayer, this);
+        currPlayer = nextPlayer;
+
+        msg = playerTurnMsg;
+        setStageMessage(msg, 3f);
+    }
+
+    @Override
+    public void setMMAreaPosition(float x, float y) {
+        //NOTHING DONE HERE
+    }
+
+    public int getCurrPlayer(){
+        return currPlayer;
     }
 
 
     public void updateMinimapView(float x, float y){
-        Vector3 screenLoc = camera.project(new Vector3(x, y, 0));
+//        Vector3 screenLoc = camera.project(new Vector3(x, y, 0));
+        log("Minimap changed map view to: (" + x + ", "  + y + ")");
         minimapListener.updateView(x, y);
     }
 
     public void setMinimapListener(MiniMap mm){
-        this.minimapListener = mm;
+        this.minimapListener = mm.getMmView();
     }
 
     private void log(String message){
         Gdx.app.log(LOG, message);
     }
+
 }

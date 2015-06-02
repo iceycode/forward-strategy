@@ -8,20 +8,21 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.units.*;
 import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.map.Panel;
+import com.fs.game.screens.GameState;
+import com.fs.game.screens.MainScreen;
 import com.fs.game.stages.GameStage;
+import com.fs.game.tests.TestScreen;
+import com.fs.game.units.*;
 
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.moveTo;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.run;
@@ -83,17 +84,20 @@ public class UnitUtils  {
          * @return
          */
         public static Array<UnitInfo> getDefaultUnits(String faction){
-            Array<UnitInfo> unitInfoArray = Assets.unitInfoMap.get(faction);
+
+//            Array<UnitInfo> unitInfoArray = Assets.unitInfoMap.get(faction);
+
+            UnitInfo[] unitInfos = Assets.unitInfoMap.get(faction).toArray(UnitInfo.class) ;
             Array<UnitInfo> chosenUnits = new Array<UnitInfo>();
 
             //adding small units
             for (int i = 0; i < 4; i++){
-                chosenUnits.add(unitInfoArray.get(i));
+                chosenUnits.add(unitInfos[i]);
             }
 
-            chosenUnits.add(unitInfoArray.get(5));
-            chosenUnits.add(unitInfoArray.get(6));
-            chosenUnits.add(unitInfoArray.get(8));
+            chosenUnits.add(unitInfos[5]);
+            chosenUnits.add(unitInfos[6]);
+            chosenUnits.add(unitInfos[8]);
 
             return chosenUnits;
         }
@@ -121,8 +125,8 @@ public class UnitUtils  {
                 unit.setOwner(playerName);
                 unitArray.add(unit);
 
-                if (player == 2)
-                    unit.setLock(true);
+//                if (player == 2)
+//                    unit.setLock(true);
             }
 
             return unitArray;
@@ -130,33 +134,39 @@ public class UnitUtils  {
 
 
         /** Places Units on stage based on panel position
+         *  Use GameData.panelMatrix[0][i] or [38-39][i] to set positions of Units
          *
          * @param playerName : name of player
          * @param chosenUnits : chosen unit
          * @param player : player id; player 1 or 2
-         * @param panels : panels representing spaces Units move to
          * @return : an Array of Units
          */
-        public static Array<Unit> setupUnits(Array<UnitInfo> chosenUnits, int player, String playerName, Panel[] panels){
+        public static Array<Unit> setupUnits(Array<UnitInfo> chosenUnits, int player, String playerName){
             Array<Unit> currUnits = new Array<Unit>();
 
-            for (int i = 0; i < chosenUnits.size; i++){
-                float x = panels[i].getX();
-                float y = panels[i].getY();
+            // Get id of outer array, or where on x-axis panel is & set Unit position
+            // if player 2, then is on right side, and Unit's on 2nd to last column (small units on last)
+            int idx = player == 1 ? 0 : GameData.cols - 2;
+
+            //seperate by 2 spaces each in Y direction
+            for (int i = 0; i < chosenUnits.size; i ++){
+
+                String unitSize = chosenUnits.get(i).getSize(); //for x position
+                idx += unitSize == Unit.SMALL && idx > 0 ? 1 : 0; //if on right side & small unit, move by 1 to right
+
+                float x = GameData.panelMatrix[idx][i].getX();
+                float y = GameData.panelMatrix[idx][i].getY();
+
                 Unit unit = new Unit(chosenUnits.get(i), x, y, player);
+                unit.setGridPos(new int[]{idx, i});
                 unit.setOwner(playerName);
-
-//                UnitController.getInstance().initUnitInMap(unit);
-
                 currUnits.add(unit);
+
+                if (player == 1) GameData.p1Units.put(unit.getName(), unit);
+                else GameData.p2Units.put(unit.getName(), unit);
             }
 
-            if (player == 1) {
-                GameData.unitsInGame.put(1, currUnits);
-            }
-            else{
-                GameData.unitsInGame.put(2, currUnits);
-            }
+//            GameData.unitsInGame.put(player, currUnits);
 
             return currUnits;
         }
@@ -186,6 +196,20 @@ public class UnitUtils  {
 
             stage.addActor(clone);
 
+        }
+
+
+        /** Checks to see whether this is the multiplayer Unit of enemy
+         *  and if is, sets it to be untouchable
+         *
+         * @param unit : unit to check against
+         *
+         */
+        public static void setMultiEnemy(Unit unit){
+            if (MainScreen.gameState == GameState.MULTIPLAYER || TestScreen.gameState == GameState.MULTIPLAYER &&
+                    GameData.playerName != unit.getOwner()){
+                unit.setTouchable(Touchable.disabled);
+            }
         }
 
         /** recursively checks to see whether unit can fit in position
@@ -610,7 +634,7 @@ public class UnitUtils  {
         public static SequenceAction createMoveAction(Array<Vector2> panelPath){
             SequenceAction moveSequence = new SequenceAction();
             for (Vector2 pos : panelPath) {
-                moveSequence.addAction(moveTo(pos.x, pos.y, 1.2f));
+                moveSequence.addAction(moveTo(pos.x, pos.y, .8f));
             }
 
             moveSequence.addAction(run(new Runnable() {
@@ -634,9 +658,9 @@ public class UnitUtils  {
 
         /** sets unit direction & as a result animation
          *
-         * @param uni
-         * @param destX destination of target
-         * @param destY
+         * @param uni : unit whose animstate is returned
+         * @param destX :
+         * @param destY :
          */
         public static AnimState unitDirection(Unit uni, float destX, float destY){
             float oriX = uni.unitBox.getX();
@@ -761,7 +785,7 @@ public class UnitUtils  {
 
             while (unitIter.hasNext()){
                 Unit u = unitIter.next();
-                if (UnitUtils.Attack.isEnemy(u) && UnitUtils.Attack.unitAdjacent(unit, u) && !u.underattack){
+                if (UnitUtils.Attack.isEnemy(u) && UnitUtils.Attack.unitAdjacent(unit, u) && u.state != UnitState.UNDER_ATTACK){
 
                     int damage = Assets.damageListArray.get(unit.getUnitID()-1)[u.getUnitID()-1];
                     if (hv < damage){
@@ -853,7 +877,7 @@ public class UnitUtils  {
             public void touchDown(InputEvent event, float x, float y, int pointer, int button){
                 Unit currUnit = ((Unit)event.getTarget());
 
-                if (currUnit.clickCount < 2 && !currUnit.lock){
+                if (currUnit.clickCount < 2 && currUnit.isPlayerUnit()){
 
                     currUnit.clickCount++;
 //                    currUnit.chosen = true;
@@ -861,7 +885,7 @@ public class UnitUtils  {
                     UnitController.getInstance().selectUnit(currUnit);
 
                 }
-                else if (currUnit.clickCount >= 2 && !currUnit.lock){
+                else if (currUnit.clickCount >= 2 && currUnit.isPlayerUnit()){
 //                    currUnit.chosen = false;
                     UnitController.getInstance().deselectUnit();
                     currUnit.clickCount = 0; //reset clickCount
@@ -873,22 +897,12 @@ public class UnitUtils  {
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
                 Unit currUnit = ((Unit)event.getTarget());
 
-                if (currUnit.clickCount == 2 && !currUnit.lock) {
+                if (currUnit.clickCount == 2 && currUnit.isPlayerUnit()) {
 //                    currUnit.chosen = false;
                     currUnit.clickCount = 0; //reset clickCount
                     UnitController.getInstance().deselectUnit();
                     Gdx.app.log(LOG, currUnit.getName() +" UNSELECTED (touchUp - ActorGestureListener)");
                 }
-
-
-            }
-        };
-
-
-        public static ChangeListener unitChangeListener = new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                Unit unit = ((Unit)actor);
 
 
             }

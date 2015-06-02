@@ -163,7 +163,7 @@ public class PanelPathfinder implements Telegraph {
      * @param unit :
      */
     public void setPanelsInRange(Unit unit){
-        Locations.PositionData data = locations.getUnitPosition(unit);
+        Locations.PositionData data = unit.getPosData();
 
         int[] ori = data.positions.get(0);
 

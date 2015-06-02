@@ -65,7 +65,7 @@ public class MainScreen implements Screen {
         this.font.scale(.03f); //scale to 3/4 original size
         this.font.setColor(Color.RED);
 
-        GameData.getInstance().playerName = PlayerUtils.setupUsername();
+        GameData.playerName = PlayerUtils.setupUsername();
         setupTextures();
         setupCamera();
         setupStage();
@@ -113,8 +113,8 @@ public class MainScreen implements Screen {
         Gdx.app.postRunnable(new Runnable() {
             @Override
             public void run() {
-                WarpController.getInstance().startApp(GameData.getInstance().playerName); //starts appwarp
-                System.out.println("Player name: " + GameData.getInstance().playerName);
+                WarpController.getInstance().startApp(GameData.playerName); //starts appwarp
+                System.out.println("Player name: " + GameData.playerName);
                 game.setScreen(new StartMultiplayerScreen(game));
             }
         });
@@ -122,10 +122,10 @@ public class MainScreen implements Screen {
     }
 
     public void startSingleplayer(){
-        GameData.getInstance().playerName = PlayerUtils.setupUsername();
-        GameData.getInstance().enemyName = "testerAI";
-        GameData.getInstance().playerFaction = "Human";
-        GameData.getInstance().enemyFaction = "Arthroid";
+        GameData.playerName = PlayerUtils.setupUsername();
+        GameData.enemyName = "testerAI";
+        GameData.playerFaction = "Human";
+        GameData.enemyFaction = "Arthroid";
 
 //        Gdx.app.postRunnable(new Runnable() {
 //            @Override
@@ -172,11 +172,13 @@ public class MainScreen implements Screen {
 //            if (bounds[1].contains(touchPoint.x, touchPoint.y)){
 //                GameData.testType = 2;
 //                gameState = GameState.SINGLEPLAYER;
+     //           MainGame.setGameState(gameState);
 //            }
 //
 //            if (bounds[2].contains(touchPoint.x, touchPoint.y)){
 //                GameData.testType = 3;
 //                gameState = GameState.MULTIPLAYER;
+//                  MainGame.setGameState(gameState);
 //            }
 //
 //            if (bounds[3].contains(touchPoint.x, touchPoint.y)){

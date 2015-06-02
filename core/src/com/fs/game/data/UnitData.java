@@ -2,6 +2,7 @@ package com.fs.game.data;
 
 import com.badlogic.gdx.math.Vector2;
 import com.fs.game.map.Locations;
+import com.fs.game.units.Unit;
 
 /** Class that stores unit data to be read/written by Json (libgdx) for Multiplayer
  *  Appwarp client send/request protocol
@@ -14,12 +15,15 @@ import com.fs.game.map.Locations;
 public class UnitData {
 
     private int unitID;
+    private String name;
     private String owner;
     private String size;
     private Vector2 unitPosition; //this could be null
+    private Locations.PositionData posData; //updating position data (for panel states)
     private int state; //unit animState
     private int damage;
     private int health;
+
 
 
     public UnitData(){
@@ -27,12 +31,23 @@ public class UnitData {
     }
 
 
-    public void updateData(String owner, int stateVal, int damage, int health, Vector2 pos){
-        setOwner(owner);
-        setState(stateVal);
-        setDamage(damage);
-        setHealth(health);
+    public void updateData(Unit unit, Vector2 pos){
+        setName(unit.getName());
+        setOwner(unit.getOwner());
+        setState(unit.animState.getValue());
+        setDamage(unit.damage);
+        setHealth(unit.health);
         setUnitPosition(pos);
+        setPosData(unit.getPosData());
+
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getUnitID() {
@@ -94,6 +109,15 @@ public class UnitData {
 
     public void setHealth(int health) {
         this.health = health;
+    }
+
+
+    public Locations.PositionData getPosData() {
+        return posData;
+    }
+
+    public void setPosData(Locations.PositionData posData) {
+        this.posData = posData;
     }
 
 }

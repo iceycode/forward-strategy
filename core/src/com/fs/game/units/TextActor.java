@@ -24,8 +24,8 @@ public class TextActor extends Actor{
     public boolean showTurnMsg = false;
 
 
-    public TextActor(BitmapFont font, float[] coords){
-        this.font = font;
+    public TextActor(String fontName, float[] coords){
+        this.font = Assets.uiSkin.getFont(fontName);
         this.background = Assets.uiSkin.get("textBackTex", Texture.class);
         this.fadeAction = new AlphaAction();
         fadeAction.setDuration(3f);

@@ -25,7 +25,7 @@ public enum GameState {
     //Game animState during game play (cannot go into selection or main menus)
     WAITING, //when a player is waiting
     STARTING, //starting the game
-    STARTING_MULTI,
+    STARTING_MULTI, //starting multiplayer game...means players connected & waiting for update from each other
     PLAYER_DONE, //when player is done
     PLAYER_TURN, //when player has turn
 

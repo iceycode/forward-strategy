@@ -1,5 +1,6 @@
 package com.fs.game.map;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -14,6 +15,7 @@ import com.fs.game.data.GameData;
  * - helps UnitAgent decide where to move current unit
  *
  * NOTE: although a singleton, this needs to be initialized AFTER Units and Panels are setup
+ * FIXME: setup positions so that they are within boundaries of array
  *
  * Created by Allen on 5/10/15.
  */
@@ -23,11 +25,10 @@ public class Locations {
 
     public PanelGraph panelGraph; //graph of panels
     public Array<PositionData>  allPositions = new Array<PositionData> (); //allunit positions
-    public IntMap<ObjectMap<String, PositionData>> uPositionMap = new IntMap<ObjectMap<String, PositionData>>();
-
+    private IntMap<ObjectMap<String, PositionData>> uPositionMap = new IntMap<ObjectMap<String, PositionData>>();
 
     public Locations(){
-
+        log("New locations instance");
     }
 
     //get singleton object method
@@ -38,29 +39,30 @@ public class Locations {
     }
 
     /** initializes all Locations
-     *
+     *  NOTE: for Multiplayer Mode, this is initialized in GameStage
      */
     public void initLocations(){
-        generatePanelGraph(GameData.panelMatrix); //creates panelGraph
-        initPositionMap(GameData.enemyUnits, GameData.playerUnits); //sets positions relative to PanelNode graph
+        log("initializing Locations position data");
+        generatePanelGraph(GameData.panelMatrix);
+        initPositionMap(1, GameData.playerUnits); //sets positions relative to PanelNode graph
+        initPositionMap(2, GameData.enemyUnits);
     }
 
     //generates PanelGraph, an IndexedGraph implementation
-    protected void generatePanelGraph(Panel[][] panelMatrix){
+    public void generatePanelGraph(Panel[][] panelMatrix){
 
         panelGraph = new PanelGraph();
         panelGraph.init(panelMatrix);
     }
 
 
-    /** Initializes uPositionMap in terms of PanelNode coordinates
-     *
-     * @param agentUnits : agent's Units
-     * @param playerUnits : player's Units
-     */
-    protected void initPositionMap(Array<Unit> agentUnits, Array<Unit> playerUnits){
-        uPositionMap.put(0, getUnitPositions(agentUnits));
-        uPositionMap.put(1, getUnitPositions(playerUnits));
+    public void initPositionMap(int player, Array<Unit> p1Units){
+        uPositionMap.put(player, getUnitPositions(p1Units));
+
+
+        for (PositionData d : uPositionMap.get(1).values().toArray()){
+            log(d.toString());
+        }
     }
 
     /** Gets unit positions as Position object
@@ -77,6 +79,8 @@ public class Locations {
             position.unitSide = unit.getUnitSide(); //the side unit is on
             unit.setPosData(position); //set unit position data for updating
             unitPositions.put(unit.getName(), position);
+
+            log("Initial Unit pos: " + position.toString());
         }
 
         return unitPositions;
@@ -96,40 +100,36 @@ public class Locations {
                 : unit.getUnitSize()==Unit.MEDIUM ? new int[]{2,1}
                 : new int[]{2,2};
 
-        position.unitName = unit.getName();
         position.unitRange = unit.getMaxMoves();
         position.type = unit.unitType;
         position.unitSize = unit.getUnitSize();
+        position.unitName = unit.getName();
     }
 
 
     // after UnitAgent moves unit or when player does, need to update
     // Positions object
-    public void updateUnitNodePosition(Unit unit){
+    public void updateUnitNodePosition(PositionData data, Unit unit){
+//        log(data.toString());
         //need to reset previous positions, so get old positions & reset panelGraph nodes
-        Array<int[]> previousPos = uPositionMap.get(unit.getPlayer()).get(unit.getName()).positions;
-        panelGraph.updateOccupiedNodes(previousPos);
+        Array<int[]> previousPos = data.positions;
+        panelGraph.updateOccupiedNodes(previousPos); //update Panels via panelGraph PanelNodes
+
 
         //then update the positions
         Array<int[]> positions = unitGridPositions(unit);
-        uPositionMap.get(unit.getPlayer()).get(unit.getName()).positions = positions;
+        data.positions = positions;
         panelGraph.updateOccupiedNodes(positions);
-    }
 
-
-    /** Removes Unit from position map when dead
-     *
-     * @param unit : unit that is dead
-     */
-    public void removeUnitFromMap(Unit unit){
-        uPositionMap.get(unit.getPlayer()).remove(unit.getName());
+        //NOTE: log position update here
+        logLocationUpdate(previousPos.first(), positions.first());
     }
 
 
     /** Takes Panel point on screen & updates to point in gameMap
      *
-     * @param screenX
-     * @param screenY
+     * @param screenX : x coordinate
+     * @param screenY : y coordinate
      * @return nodePosition array
      */
     public int[] screenToNode(float screenX, float screenY){
@@ -177,11 +177,6 @@ public class Locations {
     }
 
 
-    public PositionData getUnitPosition(Unit unit){
-        return uPositionMap.get(unit.getPlayer()).get(unit.getName());
-    }
-
-
     public PanelGraph getPanelGraph(){
         return panelGraph;
     }
@@ -197,15 +192,42 @@ public class Locations {
         //Information relavent to Unit pathfinding, movement in graph
         public int unitSide = 0; //side of Unit
 
-        public String unitName; //name of Unit
-
+        public String unitName;
         public String unitSize; //size of unit
 
         public int unitRange; //number of nodes Unit can move in each direction
         public int[] unitSteps; //step unit takes in each direction
 
         public int type; //tye of terrain unit can pass
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("Name: " + unitName);
+            builder.append("\nUnit size: " + unitSize);
+            builder.append("\nPositions: ");
+            for (int[] p : positions){
+                builder.append("["+Integer.toString(p[0]) + ", " + Integer.toString(p[1]) + "]");
+            }
+            builder.append("\nUnitRange = " + Integer.toString(unitRange));
+            builder.append("\nTerrain Type = " + Integer.toString(type));
+
+            return builder.toString();
+        }
     }
 
+    /** Simply logs previous and current position when a change occurs
+     *
+     * @param prev : previous position
+     * @param curr : current position
+     */
+    private void logLocationUpdate(int[] prev, int[] curr){
+        if (prev[0] != curr[0] || prev[1] != curr[1]){
+            log("Update unit position from [" + prev[0] + ", " + prev[1] + ") to ["+curr[0]+ ", "+ curr[1] + "]");
+        }
+    }
 
+    private void log(String message){
+        Gdx.app.log("Locations LOG", message);
+    }
 }

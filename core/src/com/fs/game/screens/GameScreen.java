@@ -7,13 +7,12 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
+import com.fs.game.MainGame;
 import com.fs.game.ai.AgentManager;
 import com.fs.game.ai.fsm.UnitAgent;
-import com.fs.game.constants.Constants;
-import com.fs.game.MainGame;
 import com.fs.game.assets.Assets;
+import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.map.Locations;
 import com.fs.game.stages.GameStage;
@@ -44,7 +43,7 @@ public class GameScreen implements Screen{
     float countDown = 0; //countdown to game start
 
     public String msg = ""; //Game start/end message
-    private String startMsg = "Game Starting for player: "+ GameData.getInstance().playerName + "\n Game Starting in ";
+    private String startMsg = "Game Starting for player: "+ GameData.playerName + "\n Game Starting in ";
 
     final float VIEWPORTWIDTH = Constants.SCREENWIDTH;
     final float VIEWPORTHEIGHT = Constants.SCREENHEIGHT;
@@ -60,6 +59,7 @@ public class GameScreen implements Screen{
     //Game font, text image (TextActor) font & Messages
     BitmapFont font;
 
+    //TODO: put in some audio for units, movements, finishing, etc
     Music music; //music that plays (during pause & run animState)
     Array<Sound> sounds; //sounds TODO: find & add sounds to game
 
@@ -81,23 +81,25 @@ public class GameScreen implements Screen{
         if (GameData.isTest)
             GameData.mapChoice = GameData.testType;
 
-        setupView(); //sets camera & viewport
+//        setupView(); //sets camera & viewport
+
         setStages(GameData.mapChoice); //sets the stages
+
         setInputProcessors();
         setupAudio();
     }
 
     //method which sets up the viewport & camera for screen
-    public void setupView(){
-//        /** the cameras for viewing scene objects**/
-//        //camera for stage
-//        camera = new OrthographicCamera(VIEWPORTWIDTH , VIEWPORTHEIGHT );
-//        camera.setToOrtho(false, VIEWPORTWIDTH, VIEWPORTHEIGHT);
-//        camera.update();
-
-        scalingViewPort = new ScalingViewport(Scaling.stretch, VIEWPORTWIDTH, VIEWPORTHEIGHT);
-//        scalingViewPort.setCamera(camera);
-    }
+//    public void setupView(){
+////        /** the cameras for viewing scene objects**/
+////        //camera for stage
+////        camera = new OrthographicCamera(VIEWPORTWIDTH , VIEWPORTHEIGHT );
+////        camera.setToOrtho(false, VIEWPORTWIDTH, VIEWPORTHEIGHT);
+////        camera.update();
+//
+//        scalingViewPort = new ScalingViewport(Scaling.stretch, VIEWPORTWIDTH, VIEWPORTHEIGHT);
+////        scalingViewPort.setCamera(camera);
+//    }
 
 
     /** stage for GamePlay - for units/tiled map
@@ -113,16 +115,18 @@ public class GameScreen implements Screen{
         // For multiplayer, both players need to be linked up first.
         if (MainScreen.gameState == GameState.SINGLEPLAYER || TestScreen.gameState == GameState.SINGLEPLAYER) {
             addUnits();
+            //initialize Locations singleton PanelGraph/Node/Connection data
+            // this is done after Panels AND Units are done setting up
+            Locations.getLocations().initLocations();
         }
 
-        //initialize Locations singleton PanelGraph/Node/Connection data
-        // this is done after Panels AND Units are done setting up
-        Locations.getLocations().initLocations();
 
         stage.setupMiniMap(stageMap);
 
+        stage.setGameStageListener(stageMap);
+        stageMap.setInfoStageListener(stage);
 
-        pauseStage = new PauseStage(this, scalingViewPort); //set PauseStage
+        pauseStage = new PauseStage(this); //set PauseStage
     }
 
     /** initializes & sets units onto stage
@@ -159,8 +163,7 @@ public class GameScreen implements Screen{
     }
 
 
-    /** FIXED: moved to AbstractScreen
-     * TODO: create & add more music
+    /** TODO: create & add more music
      * ...currently only 1 track
      */
     public void setupAudio(){
@@ -188,7 +191,7 @@ public class GameScreen implements Screen{
         game.batch.begin();
         float y = Constants.SCREENHEIGHT/2;
         float x = Constants.SCREENWIDTH/4;
-        font.drawMultiLine(game.batch, msg, x, y);
+        game.font.drawMultiLine(game.batch, msg, x, y);
         game.batch.end();
     }
 

@@ -7,19 +7,21 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.units.Unit;
-import com.fs.game.units.UnitController;
-import com.fs.game.map.Panel;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.units.UnitState;
+import com.fs.game.map.Panel;
 import com.fs.game.map.PanelState;
 import com.fs.game.stages.GameStage;
+import com.fs.game.units.Unit;
+import com.fs.game.units.UnitController;
+import com.fs.game.units.UnitState;
 import com.fs.game.utils.pathfinder.PathGenerator;
 
 /** Map Utility methods
  * - helps with creating TiledMap, Panel actors & setting up stage
  * - methods for helping find & manipulate actors (units) on GameStage
+ *
+ * FIXME: swap rows & columns var names thorugout game
  *
  * Created by Allen on 5/7/15.
  */ //----------------------GAME MAP TOOLS--------------------------//
@@ -50,10 +52,6 @@ public class GameMapUtils {
         }
         else{
             tiledMap = new TmxMapLoader().load(Constants.MAP_3A);
-//            tiledMap = new TmxMapLoader().load(Constants.MAP_3B);
-//            tiledMap = new TmxMapLoader().load(Constants.MAP_1);
-//            tiledMap = new TmxMapLoader().load(Constants.MAP_2);
-//            tiledMap = new TmxMapLoader().load(Constants.MAP_3);
         }
 
         //tiledMap.getProperties();
@@ -65,7 +63,7 @@ public class GameMapUtils {
     //TODO: fuse panel actors with tiledmap actors
     public static void setupGridElements(GameStage stage) {
         //1st kind of setup - 16x12
-        if (GameData.testType <= 3){
+        if (GameData.testType != 4){
             setupPanels(16, 12, 32, 32);
             createMapActors(stage);
 //            stage.setPanelArray(GameData.gamePanels);
@@ -102,14 +100,14 @@ public class GameMapUtils {
      * @param stage : GameStage actors are added to
      */
     public static void setupTiledMapTerrain(TiledMapTileLayer tiledLayer, GameStage stage) {
-        int rows = tiledLayer.getWidth(); //layers width IN TILES
-        int cols = tiledLayer.getHeight();
+        int cols = tiledLayer.getWidth(); //layers width IN TILES
+        int rows = tiledLayer.getHeight();
 
 //        MapActor[][] mapMatrix = new MapActor[rows ][cols];
         String tileLayer = tiledLayer.getName();
 
-        for (int x = 0; x < rows; x++) {
-            for (int y = 0; y < cols; y++) {
+        for (int x = 0; x < cols; x++) {
+            for (int y = 0; y < rows; y++) {
 
                 TiledMapTileLayer.Cell cell = tiledLayer.getCell(x, y);
 
@@ -221,16 +219,17 @@ public class GameMapUtils {
      * @param width : width of tiles
      * @param height : height of tiles
      */
-    public static void setupPanels(int rows, int columns, int width, int height ){
-        Panel[][] panelMatrix = new Panel[rows][columns];
+    public static void setupPanels(int columns, int rows, int width, int height ){
+        Panel[][] panelMatrix = new Panel[columns][rows];
         UnitController controller = UnitController.getInstance(); //create controller instance
+
 
 
         Array<String[]> positions = new Array<String[]>(); //array of positions NOTE: for printing purpsoses
 
-        for (int x = 0; x < rows; x++) {
+        for (int x = 0; x < columns; x++) {
             String panelName = "x" + x;
-            for (int y = 0; y < columns; y++) {
+            for (int y = 0; y < rows; y++) {
                 float screenX = x * width + Constants.MAP_X;
                 float screenY = y * height + Constants.MAP_Y;
 
@@ -253,6 +252,8 @@ public class GameMapUtils {
         //setup the game board = stored in constants for pathfinding
         //set the elements which will be used on MapStage by Units
         GameData.panelMatrix = panelMatrix;
+        GameData.cols = columns;
+        GameData.rows = rows;
 
         logPanelPositions(positions, rows, columns);
     }
@@ -276,10 +277,6 @@ public class GameMapUtils {
 
 
     //--------------------FIND STAGE UNIT METHODS--------------------------
-
-
-
-
     /**
      * finds all units on the stage
      *
@@ -306,54 +303,38 @@ public class GameMapUtils {
     }
 
 
-    /**
-     * update player turn
-     * - int value to determine which player's units to lock
+    /** Update Unit states based on player turn.
+     *  Any current player Unit's are DONE, new players Units are set to STANDING
      *
-     * @param player
+     * @param player : next player, whose units are being locked
      */
-    public static void lockPlayerUnits(int player, GameStage stage) {
-        Unit u = new Unit(); //initialize constructor
+    public static void togglePlayerUnits(int player, GameStage stage) {
         Array<Unit> allUnits = findAllUnits(stage.getActors());
 
         //look through all units to see if certain ones locked or not
         for (int i = 0; i < allUnits.size; i++) {
-            u = allUnits.get(i);
-
-            //lock all units of this player
-            if (!u.isLock() && u.player == player) {
-                u.lock = true;
-                u.state = UnitState.DONE;
-//                u.done = true;
-//                u.chosen = false;
-//                u.standing = true;
-            }
+            Unit u = allUnits.get(i);
+            log("Unit is owned by Player " + u.player);
+            //lock all units of this player, while unlocking others
+            u.state = u.player == player ? UnitState.STANDING : UnitState.DONE;
         }
     }
 
-    /**
-     * unlocks player units
-     *
-     * @param player
-     */
-    public static void unlockPlayerUnits(int player, GameStage stage) {
-        Unit u = new Unit(); //initialize constructor
-        Array<Unit> allUnits = findAllUnits(stage.getActors());
-
-        //look through all units to see if certain ones locked or not
-        for (int i = 0; i < allUnits.size; i++) {
-            u = allUnits.get(i);
-            //unlock if this is not player being locked
-            if (u.isLock() && u.player == player) {
-//                if (u.underattack)
-//                    u.underattack = false;
-                u.lock = false;
-                u.state = UnitState.STANDING;
-//                u.done = false;
-//                u.standing = true;
-            }
-        }
-    }
+//    /**
+//     * Unlocks player units whose turn it is & locks those whose turn it is not.
+//     *
+//     * @param player : player whose units will be UNLOCKED
+//     */
+//    public static void togglePlayerUnits(int player, GameStage stage) {
+//        Unit u = new Unit(); //initialize constructor
+//        Array<Unit> allUnits = findAllUnits(stage.getActors());
+//
+//        //look through all units to see if certain ones locked or not
+//        for (int i = 0; i < allUnits.size; i++) {
+//            u = allUnits.get(i);
+//            u.state = u.player == player ? UnitState.STANDING : UnitState.DONE;
+//        }
+//    }
 
     /** Returns position in x/y coordinates, like in a game board grid
      *  eg bottom left would be 0, 0; top left would be 0, 0 + height

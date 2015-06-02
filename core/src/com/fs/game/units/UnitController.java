@@ -8,7 +8,6 @@ import com.badlogic.gdx.utils.Array;
 import com.fs.game.ai.pf.PanelPathfinder;
 import com.fs.game.assets.Assets;
 import com.fs.game.data.GameData;
-import com.fs.game.map.Locations;
 import com.fs.game.map.Panel;
 import com.fs.game.utils.GameMapUtils;
 import com.fs.game.utils.UnitUtils;
@@ -17,7 +16,8 @@ import com.fs.game.utils.pathfinder.PathGenerator;
 
 /** Controls unit actions in relation to player input
  *  Sends Unit actions and changes its internal data
- *  Works with Panels to move Unit to locations
+ *  Works with Panels to move Unit to locations by implementing PathGenerator & PathFinder
+ *  classes and adding a SequenceAction to Unit.
  *
  * Created by Allen on 5/23/15.
  */
@@ -25,7 +25,6 @@ public class UnitController implements Panel.UnitUpdater, Telegraph{
 
     private static UnitController instance;
 
-    Array<Unit> allUnits = new Array<Unit>(); //contains all Units
     Unit currUnit; //current unit selected
     boolean isPlayer; //tells whether this is the player or opponent
 
@@ -33,10 +32,6 @@ public class UnitController implements Panel.UnitUpdater, Telegraph{
     PathGenerator pathGen; //generates Unit paths
     PathFinder pathFinder; //finds best path to selected Panel using A*
     PanelPathfinder pf; //alt panel pathfinder Utility that uses gdx-ai Indexed A*
-
-    //manages Panel-Unit positions & states
-    Locations locations = Locations.getLocations();
-
 
 
     public UnitController(){
@@ -84,7 +79,6 @@ public class UnitController implements Panel.UnitUpdater, Telegraph{
     public void deselectUnit(){
         GameMapUtils.resetPanelsInRange(currUnit);
 
-
         // If this Unit is not DONE, then it is just STANDING
         // Player switched Units to move
         if (currUnit.state != UnitState.DONE){
@@ -120,10 +114,6 @@ public class UnitController implements Panel.UnitUpdater, Telegraph{
     public void onMoveFinish(){
         log("Unit finished moving");
 
-        //update unit locations
-        locations.updateUnitNodePosition(currUnit);
-
-
         //check for any enemy
         Unit enemy = UnitUtils.Attack.findBestEnemy(currUnit);
 
@@ -135,7 +125,8 @@ public class UnitController implements Panel.UnitUpdater, Telegraph{
             currUnit.state = UnitState.ATTACKING;
         }
         else{
-            currUnit.state = UnitState.DONE_MOVING;
+//            currUnit.state = UnitState.DONE_MOVING;
+            onTurnFinish();
         }
     }
 
@@ -149,6 +140,10 @@ public class UnitController implements Panel.UnitUpdater, Telegraph{
      */
     public void onTurnFinish(){
         log("Unit finishing turn");
+
+        if (currUnit.enemyUnit!=null && currUnit.enemyUnit.state==UnitState.DEAD){
+            currUnit.enemyUnit.remove();
+        }
 
 //        isAtEnemyBorder(); //TODO: create an in-game selection menu for new Units
 

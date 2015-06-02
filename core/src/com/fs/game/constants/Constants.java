@@ -5,6 +5,7 @@ package com.fs.game.constants;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.math.Vector3;
 
 /**
  * @author Allen
@@ -135,12 +136,23 @@ public class Constants {
     public static final float[] MAP_BTM_LEFT = {MAP_X, MAP_Y};
     public static final float[] MAP_TOP_RIGHT = {MAP_X + MAP_VIEW_WIDTH, MAP_Y + MAP_VIEW_HEIGHT};
 
+    //large map = 40x30 , 32x32 tiles
+    public static final float[] MAP_SIZE_L = {40*32, 30*32};
+
     //----Minimap
     public static final float MM_X = MAP_X + MAP_VIEW_WIDTH + 1; //1 px offset
-    public static final float MM_Y = MAP_Y;
-    public static final float MM_WIDTH = MAP_VIEW_WIDTH/10;
-    public static final float MM_HEIGHT = MAP_VIEW_HEIGHT/10;
+    public static final float MM_Y = 0;
+    public static final float[] MM_MARKER_SIZE = {3, 3};
+    public static final float MM_WIDTH = 40*3;
+    public static final float MM_HEIGHT = 30*3;
 
+    // Players positions based on world positions of screen.
+    // When changing players, the x,y values will put camera in correct place
+    // which is the bottom lower portion of screen.
+    // TODO: consider making the positions a bit more centered on each each
+    //  eg, make is further up instead of at corner, but still on left & right sides
+    public static final Vector3 P1_POS = new Vector3(385, 249, 0);
+    public static final Vector3 P2_POS = new Vector3(1171, 249, 0);
 
 
 
@@ -287,7 +299,7 @@ public class Constants {
 	//related to game timer and info panel
 	public static final float TIMER_WIDTH = 64; //timer width in pixels
 	public static final float TIMER_HEIGHT = 100; //timer height
-	public static final float MAX_TIME = 15f; //max game time
+	public static final float MAX_TIME = 35f; //max game time
 	
 	//for the info panel below game board
 	public static final float INFO_X = MAP_X + TIMER_WIDTH; //
@@ -332,17 +344,8 @@ public class Constants {
 
 /*----------APP WARP Game Info (Multiplayer)----------*/
 
-    public static class App42 {
 
-        public static final String API_KEY = "ae7493bafe3ef380323eb41c1032f62b5ddd0b940017648c62a7ea183471c408";
-        public static final String SECRET_KEY = "55e85dd41157782e533246712d06b7913c3d56c2eec0d615f19c6ec08f942e66";
-        public static final String ROOM_A = "506734404"; //ADMIN room
-        public static final int[] UPDATE_STATES = {0, 1, 2, 3, 4, 5};
-    }
-
-
-
-/*-----------SAVE JSON FILE Names---------------*/
+    /*-----------SAVE JSON FILE Names---------------*/
     public static FileHandle userDataFile = Gdx.files.local("data/userData.json");
     public static FileHandle userProfile = Gdx.files.internal("data/userProject.json");
 

@@ -1,9 +1,7 @@
 package com.fs.game.utils;
 
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.fs.game.constants.Constants;
 import com.fs.game.units.Unit;
-import com.fs.game.stages.GameStage;
 
 import java.util.Random;
 
@@ -35,31 +33,31 @@ public class PlayerUtils {
     }
 
 
-    public static int nextPlayer(int player, Button p1Button, Button p2Button, GameStage stageMap) {
-        if (player == 1) {
-
-            if (!p1Button.isChecked())
-                p1Button.toggle(); //toggle
-
-            GameMapUtils.lockPlayerUnits(player, stageMap);  //lock these player units
-            player = 2; //next player
-            GameMapUtils.unlockPlayerUnits(player, stageMap);    //unlock player units
-            p2Button.toggle();    //toggle checked animState p2
-        } //player 2 goes
-        else if (player == 2) {
-
-            if (!p2Button.isChecked())
-                p2Button.toggle(); //if it is not checked
-
-            GameMapUtils.lockPlayerUnits(player, stageMap);
-            player = 1; //next player
-            GameMapUtils.unlockPlayerUnits(player, stageMap);    //unlock player units
-            p1Button.toggle();
-        } //player 1 goes
-
-
-        return player;
-    }
+//    public static int nextPlayer(int player, Button p1Button, Button p2Button, GameStage stageMap) {
+//        if (player == 1) {
+//
+//            if (!p1Button.isChecked())
+//                p1Button.toggle(); //toggle
+//
+//            GameMapUtils.lockPlayerUnits(player, stageMap);  //lock these player units
+//            player = 2; //next player
+//            GameMapUtils.unlockPlayerUnits(player, stageMap);    //unlock player units
+//            p2Button.toggle();    //toggle checked animState p2
+//        } //player 2 goes
+//        else if (player == 2) {
+//
+//            if (!p2Button.isChecked())
+//                p2Button.toggle(); //if it is not checked
+//
+//            GameMapUtils.lockPlayerUnits(player, stageMap);
+//            player = 1; //next player
+//            GameMapUtils.unlockPlayerUnits(player, stageMap);    //unlock player units
+//            p1Button.toggle();
+//        } //player 1 goes
+//
+//
+//        return player;
+//    }
 
 
     /**

@@ -27,13 +27,17 @@ public class GameData {
     public static int scoreP1 = 0; //tracks player 1 score
     public static int scoreP2 = 0; //tracks player 2 score
 
+    //FIXME: get rid of some of these maps/arrays not being used
     public static Array<Unit> playerUnits;
     public static OrderedMap<Integer, Array<Unit>> unitsInGame  = new OrderedMap<Integer, Array<Unit>>(); //all units, p1Units, p2Units
+
+    public static OrderedMap<String, Unit> p1Units = new OrderedMap<String, Unit>();
+    public static OrderedMap<String, Unit> p2Units = new OrderedMap<String, Unit>();
 
     public static String enemyName;  //enemy's name
     public static String playerName; //player name
     public static int player; //current player (1 or 2)
-    public static boolean playerTurn; //if true, next player goes
+//    public static boolean playerTurn; //if true, next player goes
     public static String playerFaction;
     public static String enemyFaction;
 
@@ -50,9 +54,13 @@ public class GameData {
     public static int testType; //type of test that will be implemented
 
     //------for Map (TiledMap & Panel) data------
-    //TODO: need to fix redudencies in Panel list/array data
     //all these are related to basic board elements (grid tiles 32x32)
+    public static int rows; //number of rows in map
+    public static int cols; //number of cols in map
+
     public static Panel[][] panelMatrix;    //the grid postiions in double array
+
+    //NOTE: gamePanels Array used by PathGenerator to get all viable paths for Units
     public static Array<Panel> gamePanels = new Array<Panel>();; //the gridBoard Array of Panels
 //    public static Array<MapActor> mapActorArr = new Array<MapActor>();; //tiled map actors
 

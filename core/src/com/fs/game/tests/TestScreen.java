@@ -115,6 +115,7 @@ public class TestScreen implements Screen {
             @Override
             protected void result(Object object) {
                 gameState = ((GameState)object);
+                MainScreen.gameState = ((GameState)object); //FIXME: get rid of this after tests
                 GameData.testType = testType;
             }
         }.text("Are you sure you want to run test:\n"+testName).button("Yes", state).button("No", gameState)
@@ -122,11 +123,14 @@ public class TestScreen implements Screen {
     }
 
     public void startMultiplayer(){
+        MainGame.setGameState(GameState.MULTIPLAYER);
+
         Gdx.app.postRunnable(new Runnable() {
             @Override
             public void run() {
-                WarpController.getInstance().startApp(GameData.getInstance().playerName); //starts appwarp
-                System.out.println("Player name: " + GameData.getInstance().playerName);
+                MainGame.setGameState(GameState.MULTIPLAYER);
+                WarpController.getInstance().startApp(GameData.playerName); //starts appwarp
+                System.out.println("Player name: " + GameData.playerName);
                 game.setScreen(new StartMultiplayerScreen(game));
             }
         });
@@ -134,10 +138,14 @@ public class TestScreen implements Screen {
     }
 
     public void startSingleplayer(){
+        MainGame.setGameState(gameState);
+
         GameData.getInstance().playerName = PlayerUtils.setupUsername();
         GameData.getInstance().enemyName = "testAI_V1";
         GameData.getInstance().playerFaction = Constants.FACTION_LIST[0];
         GameData.getInstance().enemyFaction = Constants.FACTION_LIST[1];
+
+
 
 //        Gdx.app.postRunnable(new Runnable() {
 //            @Override

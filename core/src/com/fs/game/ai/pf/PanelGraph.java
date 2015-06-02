@@ -3,10 +3,13 @@ package com.fs.game.ai.pf;
 import com.badlogic.gdx.ai.pfa.indexed.DefaultIndexedGraph;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.units.Unit;
-import com.fs.game.map.Panel;
-import com.fs.game.map.Locations;
 import com.fs.game.constants.Constants;
+import com.fs.game.data.GameData;
+import com.fs.game.map.Locations;
+import com.fs.game.map.Panel;
+import com.fs.game.units.Unit;
+
+import java.util.Iterator;
 
 /** PanelNodeGraph containing graphical representation of tiled nodes on GameStage tiled map
  * - based on size,
@@ -58,9 +61,8 @@ import com.fs.game.constants.Constants;
  */
 public class PanelGraph extends DefaultIndexedGraph<PanelNode> implements IndexedGraph<PanelNode>  {
 
-    //FIXME: change sizeX & sizeY based on size of map being tested
-    public static int sizeX = Constants.GRID_ROWS;
-    public static int sizeY = Constants.GRID_COLS;
+    public int sizeX;
+    public int sizeY;
 
     public int width = 32; //width of Panel
     public int height = 32;  //height of Panel
@@ -72,7 +74,10 @@ public class PanelGraph extends DefaultIndexedGraph<PanelNode> implements Indexe
 
 
     public PanelGraph(){
-        super(sizeX * sizeY); //sets size of Array
+        super();
+        //NOTE: change size based on test type (for now..change this later)
+        sizeX = GameData.testType == 4 ? Constants.MAP_COLS_L : Constants.GRID_COLS;
+        sizeY = GameData.testType == 4 ? Constants.MAP_ROWS_L : Constants.GRID_ROWS;
         this.startNode = null; //set to null for now
     }
 
@@ -147,9 +152,13 @@ public class PanelGraph extends DefaultIndexedGraph<PanelNode> implements Indexe
      * @param positions : position(s) Unit occupies in Graph
      */
     public void updateOccupiedNodes(Array<int[]> positions){
-        for (int[] pos: positions){
+        Iterator<int[]> iterator = new Array.ArrayIterator<int[]>(positions);
+
+        while (iterator.hasNext()){
+            int[] pos = iterator.next();
             getNode(pos[0], pos[1]).updateNodeType();
         }
+
     }
 
     //returns node based on index
@@ -158,12 +167,12 @@ public class PanelGraph extends DefaultIndexedGraph<PanelNode> implements Indexe
     }
 
 
-    //adds connection with x & y offset
-    private void addConnection(PanelNode n, int xOffset, int yOffset){
-        PanelNode node = getNode(n.x + xOffset, n.y + yOffset);
-
-        node.addConnection(new PanelConnection(n, node, this));
-    }
+//    //adds connection with x & y offset
+//    private void addConnection(PanelNode n, int xOffset, int yOffset){
+//        PanelNode node = getNode(n.x + xOffset, n.y + yOffset);
+//
+//        node.addConnection(new PanelConnection(n, node, this));
+//    }
 
 
     /** Adds connection based on unit type

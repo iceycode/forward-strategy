@@ -2,12 +2,16 @@ package com.fs.game.stages;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.fs.game.assets.Assets;
-import com.fs.game.screens.GameState;
+import com.fs.game.constants.Constants;
 import com.fs.game.screens.GameScreen;
+import com.fs.game.screens.GameState;
+import com.fs.game.screens.MultiplayerScreen;
 import com.fs.game.utils.MenuUtils;
 
 /** Pause Stage
@@ -20,14 +24,15 @@ import com.fs.game.utils.MenuUtils;
  */
 public class PauseStage extends Stage {
 
-    GameScreen screen;
+    Screen screen;
     Window window; //pause window
 
     boolean isPaused = false; //if true, then game is paused
 
-    public PauseStage(GameScreen screen, ScalingViewport viewport){
+    public PauseStage(Screen screen){
         this.screen = screen;
-        this.setViewport(viewport);
+
+        setViewport(new ScalingViewport(Scaling.stretch, Constants.SCREENHEIGHT, Constants.SCREENWIDTH));
 
 
         this.window = MenuUtils.PauseMenu.pauseWindow();
@@ -51,7 +56,14 @@ public class PauseStage extends Stage {
         if (isPaused){
             if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
                 Gdx.app.log("PauseStage LOG: ", "game is resuming");
-                screen.setGameState(GameState.RESUME);
+//                screen.setGameState(GameState.RESUME);
+                if (screen instanceof MultiplayerScreen){
+                    ((MultiplayerScreen)screen).setGameState(GameState.RESUME);
+                }
+                if (screen instanceof GameScreen){
+                    ((GameScreen)screen).setGameState(GameState.RESUME);
+                }
+
                 isPaused = false;
             }
         }

@@ -22,61 +22,13 @@ public class TestUtils {
      * @param faction : chosen or random
      */
     public static Array<Unit> randomMultiplayerSetup(int player, String playerName, String faction){
-        Array<Unit> playerUnits = new Array<Unit>();
         Array<UnitInfo> unitInfoArray = UnitUtils.Setup.getDefaultUnits(faction);
 
-        if (player == 1){
-            playerUnits = UnitUtils.Setup.setupUnits(unitInfoArray, player, playerName, Constants.UNITS_POS_LEFT);
-            GameData.unitsInGame.put(1, playerUnits);
-        }
-        else if (player == 2){
-            playerUnits = UnitUtils.Setup.setupUnits(unitInfoArray, player, playerName, Constants.UNITS_POS_RIGHT );
-            GameData.unitsInGame.put(2, playerUnits);
-        }
+        Array<Unit> playerUnits = UnitUtils.Setup.setupUnits(unitInfoArray, player, playerName);
 
 
         return playerUnits;
     }
-//
-//    public static Array<Unit> randomMultiplayerSetup1(int player, String name, float[][] positions, String faction, GameStage stage){
-//        Array<UnitInfo> unitInfoArray = UnitUtils.Setup.getDefaultUnits(faction);
-//
-//        Array<Unit> playerUnits = UnitUtils.Setup.setupUnits(name, unitInfoArray, player, positions, stage);
-//
-//        GameData.unitsInGame.put(player, playerUnits);
-////        stage.p1Units = playerUnits;
-//
-//        return playerUnits;
-//    }
-//
-
-//    public static void testRandomMultiSetup(int[] players, String[] playerNames, String[] factions, GameStage stage){
-//        Array<Unit> playerUnits = randomMultiplayerSetup(players[0], playerNames[0], factions[0]);
-//        stage.addUnits(playerUnits, playerNames[0]);
-//
-//        Array<Unit> enemyUnits = randomMultiplayerSetup(players[1], playerNames[1], factions[1]);
-//        stage.addUnits(enemyUnits, playerNames[1]);
-//    }
-
-
-	/** testSetup1
-	 * Humans vs Arthroids
-	 * 
-	 */
-//	public static void testBoardSetup2_16x12(GameStage stage) {
-// 		String faction1 = "Human"; //player 1s faction
-//		String faction2 = "Arthroid"; //player 2's faction
-//
-//        Array<UnitInfo> p1UnitInfo = UnitUtils.Setup.getDefaultUnits(faction1);
-//        Array<UnitInfo> p2UnitInfo = UnitUtils.Setup.getDefaultUnits(faction2);
-//
-//        Array<Unit> p1Units = UnitUtils.Setup.setupUnits(p1UnitInfo, 1, Constants.UNITS_POS_LEFT, stage);
-//        Array<Unit> p2Units = UnitUtils.Setup.setupUnits(p2UnitInfo, 2, Constants.UNITS_POS_RIGHT, stage);
-//
-//        //adds to all units array in game data
-//        GameData.unitsInGame.put(1, p1Units);
-//        GameData.unitsInGame.put(2, p2Units);
-//	}
 
 
     public static void testBoardSetup3 (GameStage stage){
@@ -90,8 +42,8 @@ public class TestUtils {
         Array<Unit> p2Units = UnitUtils.Setup.setupUnits(p2UnitInfo, 2, GameData.enemyName, Constants.UNITS_POS_RIGHT);
 
 
-        stage.addUnits(p1Units, GameData.playerName);
-        stage.addUnits(p2Units, GameData.enemyName);
+        stage.addUnits(p1Units );
+        stage.addUnits(p2Units );
 
         //adds to all units array in game data
         GameData.unitsInGame.put(1, p1Units);
@@ -111,12 +63,12 @@ public class TestUtils {
         Array<UnitInfo> p1UnitInfo = UnitUtils.Setup.getDefaultUnits(faction1);
         Array<UnitInfo> p2UnitInfo = UnitUtils.Setup.getDefaultUnits(faction2);
 
-        Array<Unit> p1Units = UnitUtils.Setup.setupUnits(p1UnitInfo, 1, GameData.playerName, GameData.panelMatrix[0].clone());
-        Array<Unit> p2Units = UnitUtils.Setup.setupUnits(p2UnitInfo, 2, GameData.enemyName, GameData.panelMatrix[38].clone());
+        Array<Unit> p1Units = UnitUtils.Setup.setupUnits(p1UnitInfo, 1, GameData.playerName );
+        Array<Unit> p2Units = UnitUtils.Setup.setupUnits(p2UnitInfo, 2, GameData.enemyName );
 
 
-        stage.addUnits(p1Units, GameData.playerName);
-        stage.addUnits(p2Units, GameData.enemyName);
+        stage.addUnits(p1Units );
+        stage.addUnits(p2Units );
 
         //adds to all units array in game data
         GameData.unitsInGame.put(1, p1Units);
@@ -156,7 +108,7 @@ public class TestUtils {
         UnitInfo unitInfo = Assets.unitInfoMap.get("Arthroid").get(randUnit2);;
         Unit unit2 = new Unit(unitInfo, posX2, posY2, 2);
         unit2.setOwner(GameData.enemyName);
-        unit2.setLock(true);
+//        unit2.setLock(true);
         stage.addActor(unit2);
 //        stage.p2Units.add(unit2);
 

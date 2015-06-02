@@ -100,6 +100,7 @@ public class UserData implements Json.Serializable{
         this.unitData = unitData;
     }
 
+
     @Override
     public void write(Json json) {
         json.setIgnoreUnknownFields(true);

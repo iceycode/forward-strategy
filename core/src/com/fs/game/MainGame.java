@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
+import com.fs.game.screens.GameState;
 import com.fs.game.screens.InfoScreen;
 import com.fs.game.screens.MainScreen;
 import com.fs.game.screens.menus.FactionScreen;
@@ -37,6 +38,7 @@ public class MainGame extends Game{
 
     //bool flag for test game
     public static boolean isTest = true;
+    public static GameState gameState; //for storing game type: multi or single or other
 
 
 	@Override
@@ -108,9 +110,20 @@ public class MainGame extends Game{
             getScreen().resize(width, height);
     }
 
-    /**
-	 * @return the main
-	 */
+
+    //sets the gameState in MainGame, for access anywhere
+    public static void setGameState(GameState state){
+        gameState = state;
+    }
+
+
+    public static boolean isMultiGame(){
+        if (gameState == GameState.MULTIPLAYER)
+            return true;
+
+        return false;
+    }
+
 	public MainScreen getMainScreen() {
 		return mainScreen;
 	}

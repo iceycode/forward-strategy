@@ -26,5 +26,5 @@ public enum UnitState {
 
     DONE,//finished all possible actions for turn
 
-
+    DEAD, //Unit is dead
 }

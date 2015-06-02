@@ -3,8 +3,9 @@ package com.fs.game.ai.pf;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedNode;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.units.Unit;
 import com.fs.game.map.Panel;
+import com.fs.game.map.PanelState;
+import com.fs.game.units.Unit;
 
 /** A Panel Node
  * - contains properties of a Panel actor
@@ -59,7 +60,7 @@ public class PanelNode implements IndexedNode<PanelNode>{
     //updates the node type status to OCCUPIED or a terrain type
     public void updateNodeType(){
         this.type = type != OCCUPIED ? OCCUPIED : terrainType;
-
+        this.panel.setPanelState(PanelState.NONE); //update the actual panel state
     }
 
     //check if based on Unit type, if node is passable

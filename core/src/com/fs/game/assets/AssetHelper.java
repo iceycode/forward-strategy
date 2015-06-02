@@ -48,6 +48,23 @@ public class AssetHelper {
         return new Texture(pixmap);
     }
 
+//    /** Only TEMPORARY setup for Tests
+//     *
+//     * @return : an Array of MiniMap textures
+//     */
+//    public static Array<Texture> getMMAssets(){
+//        Array<Texture> textures = new Array<Texture>();
+//
+//        textures.add(AssetHelper.createMMTexture(3, 3, Color.LIGHT_GRAY)); //just regular panel
+//        textures.add(AssetHelper.createMMTexture(3, 3, Color.YELLOW)); //a selected Unit
+//        textures.add(AssetHelper.createMMTexture(3, 3, Color.GREEN)); //ALLY
+//        textures.add(AssetHelper.createMMTexture(3, 3, Color.RED)); //ENEMY
+//        textures.add(AssetHelper.createMMTexture(3, 3, Color.OLIVE)); //a land obstacle
+//        textures.add(AssetHelper.createMMTexture(3, 3, Color.BLUE)); //a water obstacle
+//
+//
+//        return textures;
+//    }
 
     /** Creates a PNG file using Pixmap
      *

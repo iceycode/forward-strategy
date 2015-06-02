@@ -1,7 +1,6 @@
 package com.fs.game.units;
 
 
-import appwarp.WarpController;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -13,20 +12,17 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Pool;
-import com.badlogic.gdx.utils.SerializationException;
+import com.fs.game.MainGame;
 import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UnitData;
-import com.fs.game.data.UserData;
 import com.fs.game.map.Locations;
 import com.fs.game.map.Panel;
 import com.fs.game.map.PanelState;
-import com.fs.game.screens.GameState;
-import com.fs.game.screens.MainScreen;
-import com.fs.game.tests.TestScreen;
+import com.fs.game.stages.GameStage;
+import com.fs.game.utils.AppWarpAPI;
 import com.fs.game.utils.UnitUtils;
 
 // so that Actions do not need reference to Actions
@@ -94,21 +90,13 @@ public class Unit extends Actor {
 	public int health = 400; //each unit has 400 health FIXED: now set to 400 instead of 4
 	public Texture healthBar; // the texture which is drawn with the unit
 	public int damage = 0; //the damage this unit IS dealt
+    int damageMod = 15; //damage mod, or multiplier
 
  	//different states the unit can be in : attack, moving, etc
     public UnitState state; //actual active state of Unit
 	public AnimState animState; //for drawing the unit
 
     //FIXME: use UnitState instead of boolean values
-	public boolean lock = false; //this value is for 
-	public boolean chosen = false; //if unit is chosen
-
-    //for attacking
-    public boolean underattack = false; //unit is under attack
-
-    public boolean done = false; //unit has finished moving/attacking
-    public boolean isEnemyUnit = false; //whether this is enemy unit or not
-
  	public int clickCount = 0; //if unit selected or not still
 
  	//related to unit moving on board
@@ -120,7 +108,8 @@ public class Unit extends Actor {
     protected SequenceAction moveSequence;
 //    public ParallelAction attackAction;
 
-    Locations.PositionData posData; //unit position data
+    private Locations.PositionData posData; //unit position data
+    private int[] gridPos; //Unit grid position in Graph
 
     //for online multiplayer data
     private UnitData unitData;
@@ -254,12 +243,12 @@ public class Unit extends Actor {
 		float healthBarWidth = healthBar.getWidth() * (health/400f);
   		batch.draw(healthBar, this.getX(), this.getY(), healthBarWidth, healthBar.getHeight());
 
-        if (lock){
-
+        if (state == UnitState.DONE && !isPlayerUnit()){
             //displays a small bar overhead
             if (UnitController.getInstance().currUnit != null){
                 damage = UnitController.getInstance().getEnemyDamage(this);
-                this.damageText.draw(batch, Integer.toString(-damage) + "", getX()+getWidth()-10f, getY()+getHeight()-10f);
+                this.damageText.draw(batch, Integer.toString(-damage*damageMod) + "", getX()+getWidth()-10f, getY()+getHeight
+                        ()-10f);
             }
 
         }
@@ -281,30 +270,19 @@ public class Unit extends Actor {
 
     //new unit act method
     public void unitActs(){
-        if (!isPlayerUnit()){
-            lock = true; //always keep it locked
-        }
+//        if (!isPlayerUnit()){
+//            lock = true; //always keep it locked
+//        }
 
         switch(state){
             case STANDING:
-                if (lock==true) {
-                    lock = false;
-                    PanelState stateSTILL = isPlayerUnit() ? PanelState.ALLY : PanelState.ENEMY;
-                    setUnitPanelState(stateSTILL);
-                }
+                setUnitPanelState(isPlayerUnit() ? PanelState.ALLY : PanelState.ENEMY);
                 break;
             case CHOSEN: //chosen but not moving
-                //setUnitPanelState(PanelState.SELECTED);
+                ((GameStage)getStage()).setCurrentUnit(this);
                 break;
             case MOVING: //chosen & moving
-                //moveUnit();
                 updatePosition();
-
-//                if (getX()==targetPan.getX() && getY()==targetPan.getY())
-//                    updateAfterMoving();
-                break;
-            case DONE_MOVING:
-                UnitController.getInstance().onTurnFinish();
                 break;
             case ATTACKING: //attacking
                 enemyUnit.unitAttacked(); //attacks enemy Unit set by Controller
@@ -315,46 +293,34 @@ public class Unit extends Actor {
                 setUnitPanelState(PanelState.ATTACK);
                 if (attackTime > 2f)
                     state = UnitState.DONE;
-
                 break;
             case AT_ENEMY_BORDER:
                 //TODO: finish this state case
                 break;
             case DONE:
-                if (lock==false){
-                    lock = true; //so unit cannot be selected
-
-                    PanelState stateDONE = isPlayerUnit() ? PanelState.ALLY : PanelState.ENEMY;
-                    setUnitPanelState(stateDONE);
-                }
-                clickCount = 0; //so Unit clickCount reset
-
+                PanelState stateDONE = isPlayerUnit() ? PanelState.ALLY : PanelState.ENEMY;
+                setUnitPanelState(stateDONE);
+                clickCount = 0; // Unit clickCount reset
+                break;
+            case DEAD:
+                //DO NOTHING HERE...everything done in UnitController, via currUnit that attacked
                 break;
         }
     }
 
 
-    //starts or finishes unit turn
-    public void turnSwitch(){
-        lock = lock == true ? false : true;
-
-        PanelState state = isPlayerUnit() ? PanelState.ALLY : PanelState.ENEMY;
-        setUnitPanelState(state);
-    }
-
-//    public void moveUnit(){
-////        moveSequence = UnitUtils.Movement.createMoveAction(actionPool.obtain(), this);
-////        moveSequence = UnitUtils.Movement.createMoveAction(this);
-//
-//        addAction(sequence());
-//        addAction(UnitUtils.Movement.createMoveAction(moveSequence, this));
-//
-//    }
-
+    /** Units is attacked
+     *  NOTE: health is currently at 400 per Unit, damage is multiplied by 15
+     */
     public void unitAttacked(){
-        health += damage; //damage set by other Unit
+        health += damage * damageMod; //damage set by other Unit
 
-        state = UnitState.UNDER_ATTACK; //set state as under attack
+        if (health > 0)
+            state = UnitState.UNDER_ATTACK; //set state as under attack
+        else{
+            state = UnitState.DEAD;
+            ((GameStage)getStage()).updateScore(this); //update score
+        }
 
         if (unitData!=null)
             selfUpdateData();
@@ -362,82 +328,55 @@ public class Unit extends Actor {
 
     //only updates if a Multiplayer Game
     public void selfUpdateData(){
-        if (TestScreen.gameState == GameState.MULTIPLAYER || MainScreen.gameState == GameState.MULTIPLAYER){
-            unitData.updateData(owner, animState.getValue(), damage, health, new Vector2(getX(), getY()));
 
-            UserData userData = new UserData();
-            userData.setUnitData(unitData);
-            userData.setUpdateState(1);
+        unitData.updateData(this, new Vector2(getX(), getY()));
 
-            try{
-                Json json = new Json();
-                String data = json.toJson(userData, UserData.class);
-                WarpController.getInstance().sendGameUpdate(data);
-            }
-            catch(SerializationException e){
-                e.printStackTrace();
-            }
-        }
-
+        AppWarpAPI.getInstance().sendUnitUpdate(unitData);
     }
 
+    /** For updating Unit for Multiplayer
+     *  Previous method, selfUpdateData(), sends out the UserData with UnitData in it
+     * @param unitData : unitData is data sent from AppWarp
+     */
     public void updateUnit(UnitData unitData){
         setX(unitData.getUnitPosition().x);
         setY(unitData.getUnitPosition().y);
-        this.unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
+
+        posData = unitData.getPosData();
+        Locations.getLocations().updateUnitNodePosition(posData, this);
+        setUnitPanelState(PanelState.ENEMY);
+        unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
 
         //animState.setValue(unitData.getState());
         health = unitData.getHealth();
         damage = unitData.getDamage();
     }
 
-    boolean panelStateSet = false; //whether state set
+
     //signals to player whether unit is enemy or ally
     public void setUnitPanelState(PanelState state){
         for (int[] pos : posData.positions){
+        //FIXME: from updateUnit(), GdxRunTimeException... #iterator() cannot be used nested
             GameData.panelMatrix[pos[0]][pos[1]].setPanelState(state);
         }
     }
 
-	
-	/** contains methods which updates unit positions, animState &
-	 * arrays which contain ally/enemy unit info
-	 *  
-	 */
-	public void updateAfterMoving() {
-        //update unit position, animation & selection information
-
-		updatePosition();
-
-//        state = UnitState.DONE_MOVING;
-        animState = AnimState.STILL;
-
-		panelPath.clear();
-		panelArray.clear();
-
-        clickCount = 0;
-
-        //reset/clear movement actions
-//		moveSequence.reset(); //NOTE: this is required to reset sequence so it doesn't cause infinite loop
-//		actionPool.free(moveSequence);
-//		actionPool.clear();
-
-
-        UnitController.getInstance().onMoveFinish();
-//        isAtEnemyBorder(); //clones enemy & resets Unit position
-
-  	}
 
 	/** updates unit position location variables on board
 	 * important for finding panels units can move to
 	 */
 	public void updatePosition() {
-        //update node positions as well, but only if on 32x32 region
-        if (getX()%32==0 && getY()%32==0)
-            Locations.getLocations().updateUnitNodePosition(this);
+        Locations.getLocations().updateUnitNodePosition(posData, this);
+        setUnitPanelState(PanelState.ALLY); //set as Ally, since moving
+        //        //update node positions as well, but only if on 32x32 region
+//        if (getX()/32>=0 && getX()/32 <= 0.5 && getY()/32>=0 && getY()/32 <= 0.5f)
+//            Locations.getLocations().updateUnitNodePosition(this);
 
-        //update object that is sent via AppWarp to other player
-        selfUpdateData();
+        // If multiplayer game, send update of relavent info via AppWarp by  JSON to other User
+        // whose AppWarp WarpListener will recieve and update the related Unit setup in beginning
+        if (MainGame.isMultiGame()){
+            selfUpdateData();
+        }
 
         if (this.getX() == targetPan.getX() && this.getY() == targetPan.getY()) {
             setOrigin(getX(), getY()); //update origin
@@ -479,13 +418,24 @@ public class Unit extends Actor {
 		this.maxMoves = maxMoves;
 	}
 
+    public void setGridPos(int[] gridPos){
+        this.gridPos = gridPos;
+    }
+
+    public int getGridPosX(){
+        return gridPos[0];
+    }
+
+    public int getGridPosY(){
+        return gridPos[1];
+    }
 
     /** Check to see if this is a Unit owned by actual player
      *
      * @return : true if it is player's Unit
      */
     public boolean isPlayerUnit(){
-        return owner == GameData.playerName ? true : false;
+        return player == ((GameStage)getStage()).getPlayer() ? true : false;
     }
 	/**
 	 * @return the unitID
@@ -548,20 +498,7 @@ public class Unit extends Actor {
 		this.faction = faction;
 	}
 
-	 
-	/** locks the unit so they cannot move
-	 * @return the lock
-	 */
-	public boolean isLock() {
-		return lock;
-	}
 
-	/**
-	 * @param lock the lock to set
-	 */
-	public void setLock(boolean lock) {
-		this.lock = lock;
-	}
 
 	public void setDamageList(int[] damageList) {
 		this.damageList = damageList;
@@ -626,4 +563,51 @@ public class Unit extends Actor {
     Gdx.app.log(LOG, message);
 }
 }
- 
+
+
+//	/** contains methods which updates unit positions, animState &
+//	 * arrays which contain ally/enemy unit info
+//	 *
+//	 */
+//	public void updateAfterMoving() {
+//        //update unit position, animation & selection information
+//
+//		updatePosition();
+//
+////        state = UnitState.DONE_MOVING;
+//        animState = AnimState.STILL;
+//        clickCount = 0;
+//		panelPath.clear();
+//		panelArray.clear();
+//
+//
+//
+//        //reset/clear movement actions
+////		moveSequence.reset(); //NOTE: this is required to reset sequence so it doesn't cause infinite loop
+////		actionPool.free(moveSequence);
+////		actionPool.clear();
+//
+//
+//        UnitController.getInstance().onMoveFinish();
+////        isAtEnemyBorder(); //clones enemy & resets Unit position
+//
+//  	}
+
+
+
+//    //starts or finishes unit turn
+//    public void turnSwitch(){
+//        lock = lock == true ? false : true;
+//
+//        PanelState state = isPlayerUnit() ? PanelState.ALLY : PanelState.ENEMY;
+//        setUnitPanelState(state);
+//    }
+
+//    public void moveUnit(){
+////        moveSequence = UnitUtils.Movement.createMoveAction(actionPool.obtain(), this);
+////        moveSequence = UnitUtils.Movement.createMoveAction(this);
+//
+//        addAction(sequence());
+//        addAction(UnitUtils.Movement.createMoveAction(moveSequence, this));
+//
+//    }

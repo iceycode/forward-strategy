@@ -11,21 +11,17 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
-import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.OrderedMap;
-import com.fs.game.units.Unit;
-import com.fs.game.units.UnitController;
 import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
+import com.fs.game.units.Unit;
+import com.fs.game.units.UnitController;
 
 
 public class Panel extends Actor {
@@ -48,11 +44,6 @@ public class Panel extends Actor {
 	public Panel panelRight;
 	public Panel panelLeft;
 
-	TiledMap map; //tiled map, which Panel actor sets animation for
-	Array<StaticTiledMapTile> panelTiles = new Array<StaticTiledMapTile>(); //panels tiles in layer
-
-	OrderedMap<String, Texture> textureTileMap; //map of tile textures from Panel tileSet
-	Array<TextureRegion> moveTextures = new Array<TextureRegion>(2); //move regions for animation
 	TextureRegion gridTexture; //main grid texture - just a black 32x32 box
 	TextureRegion terrainTex; //terrain texture
 
@@ -61,8 +52,8 @@ public class Panel extends Actor {
 	Animation moveAnim; //move animation
 	float stateTime = 0; //time for animation (time in seconds)
 
-	AnimatedTiledMapTile animTile;
-
+//	AnimatedTiledMapTile animTile;
+//	Array<StaticTiledMapTile> panelTiles = new Array<StaticTiledMapTile>(); //panels tiles in layer
 
 	public Vector2 location; //the location on the grid from (0,0) to (11,11)
 	
@@ -76,10 +67,6 @@ public class Panel extends Actor {
 	public int gridPosY = 0;
 
 	public PanelState state; //current panel state
-	public boolean selected = false;
-	public boolean moveableTo = false; 
-	public boolean blocked = false; //either an obstacle or unit on it
-	public boolean viewing = false;//if player wants to see info about map tile
 	public int clickCount = 0;
 	float selectTime = 0; //time a selected panel is showing
 
@@ -234,7 +221,7 @@ public class Panel extends Actor {
 	//sets panel state
 	public void setPanelState(PanelState state){
 		if (this.state != state) {
-			log("New state = " + state.toString() + " INDEX = " + state.getIndex());
+//			log("New state = " + state.toString() + " INDEX = " + state.getIndex());
 			this.state = state;
 		}
 	}
