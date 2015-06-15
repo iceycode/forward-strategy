@@ -14,7 +14,8 @@ import com.fs.game.units.Unit;
  */
 public class UserData implements Json.Serializable{
 
-    private int score;
+    private int score; //total current score
+    private int points; //points earned if unit has died
     private int player;
     private String name; //player's name
     private float playerID; //player's unique identifier
@@ -100,6 +101,10 @@ public class UserData implements Json.Serializable{
         this.unitData = unitData;
     }
 
+    public void setPoints(int points){ this.points = points;}
+
+    public int getPoints(){return points;}
+
 
     @Override
     public void write(Json json) {
@@ -115,6 +120,7 @@ public class UserData implements Json.Serializable{
         json.writeValue("playerID", playerID);
         json.writeValue("updateState", updateState);
         json.writeValue("unitData", unitData);
+        json.writeValue("points", points);
     }
 
     @Override
@@ -131,5 +137,6 @@ public class UserData implements Json.Serializable{
         playerID = json.readValue("playerID", Integer.class, jsonData);
         updateState = json.readValue("updateState", Integer.class, jsonData);
         unitData = json.readValue("unitData", UnitData.class, jsonData);
+        points = json.readValue("points", Integer.class, jsonData);
     }
 }

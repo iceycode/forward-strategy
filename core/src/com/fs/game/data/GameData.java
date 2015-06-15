@@ -4,6 +4,7 @@
 package com.fs.game.data;
 
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.OrderedMap;
 import com.fs.game.map.Panel;
 import com.fs.game.units.Unit;
@@ -18,10 +19,11 @@ import com.fs.game.units.UnitInfo;
  * @author Allen Jagoda
  */
 public class GameData {
-	private static GameData instance;
+
 
     //-------Game play info--------
-    public static Unit chosenUnit = null; //current unit chosen
+//    public static boolean isChosen; //whether a unit is chosen
+//    public static Unit chosenUnit = null; //current unit chosen
     public static Array<Unit> enemyUnits;
     public static String[] unitDetails; //chosen unit's attributes
     public static int scoreP1 = 0; //tracks player 1 score
@@ -34,6 +36,11 @@ public class GameData {
     public static OrderedMap<String, Unit> p1Units = new OrderedMap<String, Unit>();
     public static OrderedMap<String, Unit> p2Units = new OrderedMap<String, Unit>();
 
+    // Unit damage map containg all units damages to in order
+    // Key: unit id; Value: an IntMap[ Key: unit id ; Value : damage from unit id key in orderedMap]
+    public static OrderedMap<Integer, IntMap<Integer>> unitDamageMap = new OrderedMap<Integer, IntMap<Integer>>();
+
+
     public static String enemyName;  //enemy's name
     public static String playerName; //player name
     public static int player; //current player (1 or 2)
@@ -43,7 +50,6 @@ public class GameData {
 
     public static int difficulty = 0; //AI difficulty, default is 0
 
-    public static boolean isChosen; //whether a unit is chosen
 
     //------data to/from menu screens (or tests)----
     public static String[] factions;
@@ -69,17 +75,6 @@ public class GameData {
 
     //boolean value for game being in test mode
     public static boolean isTest = true;
-
-    
-    public static GameData getInstance(){
-    	if (instance == null){
-    		instance = new GameData();
-    	}
-    	return instance;
-    }
-
-
-
 
 
 }

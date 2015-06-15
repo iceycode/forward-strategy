@@ -7,9 +7,9 @@ package com.fs.game.constants;
 public class Network {
 
     public static class Parse{
-        public static final String _APP_ID = "wBnRkTXFDmGYcY8a7UfXPqlPMALSdYIyZAnYBSxx";
+        public static final String APP_ID = "wBnRkTXFDmGYcY8a7UfXPqlPMALSdYIyZAnYBSxx";
 
-        public static final String _REST_API_KEY = "oscXST8F4gNrF9XZmvIukr7Gvp7Baif7yaXypdy6";
+        public static final String REST_API_KEY = "oscXST8F4gNrF9XZmvIukr7Gvp7Baif7yaXypdy6";
 
     }
 
@@ -21,4 +21,5 @@ public class Network {
         public static final int[] UPDATE_STATES = {0, 1, 2, 3, 4, 5};
     }
 
+    //TODO, add facebook sync up in here
 }

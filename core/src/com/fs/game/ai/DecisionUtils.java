@@ -1,8 +1,9 @@
 package com.fs.game.ai;
 
 import com.badlogic.gdx.utils.Array;
+import com.fs.game.data.GameData;
 import com.fs.game.units.Unit;
-import com.fs.game.ai.fsm.RiskFactors;
+import com.fs.game.ai.fsm.AgentUtils;
 
 /** Utility class all about decisions (contains all static methods)
  *
@@ -32,8 +33,11 @@ public class DecisionUtils {
     }
 
 
-    public static void decideMove(){
+    public static void decideMove(Unit currUnit){
 
+        for (Unit unit : GameData.playerUnits){
+
+        }
     }
 
 
@@ -49,7 +53,7 @@ public class DecisionUtils {
      * @return
      */
     public static int getUnitHealth(int unitIndex, int playerID){
-        return RiskFactors.healthMap.get(playerID).get(unitIndex);
+        return AgentUtils.healthMap.get(playerID).get(unitIndex);
     }
 
 }

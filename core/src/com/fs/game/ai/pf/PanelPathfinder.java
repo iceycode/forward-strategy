@@ -1,21 +1,19 @@
 package com.fs.game.ai.pf;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.ai.msg.Telegraph;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.Heuristic;
-import com.badlogic.gdx.ai.pfa.PathFinder;
-import com.badlogic.gdx.ai.pfa.PathFinderRequest;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntMap;
+import com.badlogic.gdx.utils.TimeUtils;
+import com.fs.game.map.Locations;
 import com.fs.game.units.Unit;
 import com.fs.game.units.UnitController;
-import com.fs.game.ai.AgentManager;
-import com.fs.game.data.GameData;
-import com.fs.game.map.Locations;
-import com.fs.game.map.Panel;
-import com.fs.game.map.PanelState;
 
 /** Utils for pathfinding used by AI & game
  * - implements Index A* pathfinding algoirthm in gdx-ai
@@ -40,36 +38,27 @@ public class PanelPathfinder implements Telegraph {
     public final static int AI_RESPONSE = 2;
 
     //for Pathfinder handling UnitController requests
-    public final static int PF_SHOW_MOVES = 0;
-    public final static int PF_FIND_PATH = 1;
+    public final static int SHOW_ALL_PATHS = 0; //request to show moveable paths
+    public final static int FIND_PATH = 1; //request to find path
+    public final static int FOUND_ALL_PATHS = 2;
+    public final static int FOUND_PATH = 3; //a path has been found
+    public final static int HIDE_PATHS = 4;
+    public final static int NO_PATH_FOUND = -1;
 
-    Locations locations;
+    Locations locations; //locations contain info related to unit-panel position relationships
 
-    //start & end node positions in graph
-    int startNodeX = 1; //where start node is
-    int startNodeY = 1;
-    int lastEndNodeX = -1; //where end node is
-    int lastEndNodeY = -1;
-
-    //unit type array - size & whether air, land or water
-    int[] unitType = {0,0};  //default is land & small
-
+    Array<PanelNode> moveNodes; //moves nodes
+    PanelNode startNode; //starting node
+    PanelNode endNode; //target node - Panel selected
     PanelGraph gameMap; //Graph containing PanelNode Array
-    Array<DefaultGraphPath<PanelNode>> unitPaths = new Array<DefaultGraphPath<PanelNode>>();
+
     DefaultGraphPath<PanelNode> resultPath; //resulting path for unit
-    PanelHeuristic heuristic;
+    IntMap<DefaultGraphPath<PanelNode>> allPaths; //all paths unit can move to
+
+    PanelHeuristic heuristic; //heuristic for finding path to target
     IndexedAStarPathFinder<PanelNode> pathFinder; //pathfinder from gdx-ai
+    float startTime; //start time for pathfinder
 
-
-    PanelPathUpdater pathPanelUpdater; //used by Unit to update on screen paths
-
-    //sets whether panels in range that can be moved to
-    // and the panelPath
-    public interface PanelPathUpdater {
-        void setPanelsInRange(Array<Panel> panelsInRange);
-
-        void setPath(Array<Panel> panelPath);
-    }
 
 
     public PanelPathfinder(){
@@ -91,108 +80,153 @@ public class PanelPathfinder implements Telegraph {
     public void initPathfinder(){
 
         resultPath = new DefaultGraphPath<PanelNode>(); //the path agent/player chose
-        heuristic = new PanelHeuristic(); //heuristic used by pathfinder
         pathFinder = new IndexedAStarPathFinder<PanelNode>(gameMap, true); //if true, calculates metrics
 
-        //register listeners
-        MessageManager.getInstance().addListener(UnitController.getInstance(), PF_FIND_PATH);
-        MessageManager.getInstance().addListener(UnitController.getInstance(), PF_SHOW_MOVES);
-//        PathFinderQueue<PanelNode> pathFinderQueue = new PathFinderQueue<PanelNode>(pathFinder); //queue for pathfinder
-//        MessageManager.getInstance().addListener(pathFinderQueue, PLAYER_REQUEST);
     }
-
-
-    //method updates move path using info about PanelNode position
-    public void updatePath(int nodeY, int nodeX){
-        //set the current nodes to operate on
-        PanelNode[] nodes = getCurrentNodes(nodeX, nodeY);
-
-        pathFinder.searchNodePath(nodes[0], nodes[1], heuristic, resultPath);
-
-        //get current request & set variables
-//        AgentPathFinderRequest pfRequest = new AgentPathFinderRequest();
-//        pfRequest.startNode = nodes[0];
-//        pfRequest.endNode = nodes[1];
-//        pfRequest.heuristic = heuristic;
-//        pfRequest.resultPath = resultPath;
-//        pfRequest.responseMessageCode = AI_RESPONSE;
-
-
-
-        //send message with code & extra info in pfRequest
-//        MessageManager.getInstance().dispatchMessage(this, PLAYER_REQUEST, pfRequest);
-    }
-
-
-
-
-    //where unit is
-    protected PanelNode[] getCurrentNodes(int nodeX, int nodeY){
-        PanelNode startNode = gameMap.getNode(startNodeX, startNodeY); //startNode
-        PanelNode endNode = gameMap.getNode(nodeX, nodeY); //end node
-
-        if (endNode.type == Panel.LAND){
-            lastEndNodeX = nodeX; //set lastEndNode to it
-            lastEndNodeY = nodeY;
-        }
-        else if (endNode.type == Panel.OBSTACLE){
-            if (unitType[0] == AgentManager.AIR_UNIT){
-                lastEndNodeX = nodeX; //set lastEndNode to it
-                lastEndNodeY = nodeY;
-            }
-            else{
-                endNode = gameMap.getNode(lastEndNodeX, lastEndNodeY);
-            }
-        }
-        else if (endNode.type == Panel.WATER){
-            if (unitType[0] == AgentManager.LAND_UNIT){
-                endNode = gameMap.getNode(lastEndNodeX, lastEndNodeY);
-            }
-            else{
-                lastEndNodeX = nodeX; //set lastEndNode to it
-                lastEndNodeY = nodeY;
-            }
-        }
-
-        return new PanelNode[]{startNode, endNode};
-    }
-
 
     /** This sets startNode positions based on where unit is
      *
-     * @param unit :
+     * @param unit : unit that is chosen
      */
-    public void setPanelsInRange(Unit unit){
+    public void showMovePaths(Unit unit){
         Locations.PositionData data = unit.getPosData();
+        heuristic = new PanelHeuristic(); //heuristic used by pathfinder
 
-        int[] ori = data.positions.get(0);
+        setUnitMovePanels(data); //set moveNodes
+    }
 
-        gameMap.getNode(ori[0], ori[1]);
-        gameMap.setUnitMoveGraph(data);
+    /** Sets unit movement graph, copying the main game graph nodes unit can move to
+     *
+     * @param pos : position of unit
+     */
+    public void setUnitMovePanels(Locations.PositionData pos){
+        moveNodes = new Array<PanelNode>(); //new array for movenodes
+        allPaths = new IntMap<DefaultGraphPath<PanelNode>>();
+
+        int[] originPos = gameMap.getStartNodePosition(pos); //get origin position
+        startNode = gameMap.getNode(originPos[0], originPos[1]); //set start node
+        gameMap.startNode = startNode; //for reference in connections
+        gameMap.data = pos; //for pathfinder costs
+
+        log("Start finding panels within range that are not blocked for unit: " + pos.name + "\n  position: (" +
+                originPos[0] + ", " + originPos[1] + ")" + "\n  size : " + pos.size +  "\n  type (terrain): "
+                + pos.type + "\n  range: " + pos.range + "\n  steps: x=" + pos.steps[0] + ", y=" + pos.steps[1]);
+
+        //set the x, y boundaries in graph
+        int right = originPos[0] + (pos.range * pos.steps[0]);
+        int left = originPos[0] - (pos.range * pos.steps[0]);
+        int upper = originPos[1] + (pos.range * pos.steps[1]);
+        int lower = originPos[1] - (pos.range * pos.steps[1]);
+
+        //for loop adds nodes to moveNodes Array
+        for (int x = left; x <= right; x++){
+            for (int y = lower; y <= upper; y++){
+                if (gameMap.isInBounds(x, y)){
+                    PanelNode node = gameMap.getNode(x, y);
+
+                    if (gameMap.isWithinRange(node, pos.range)){
+                        log("Checking node at " + x + ", " + y + ", of type: " + node.type);
+                        addMoveNode(node, pos); //adds node with method 1
+                    }
+                }
+            }
+        }
+
+    }
 
 
-        Array<PanelNode> moveNodes = gameMap.moveNodes;
-        for (PanelNode node : moveNodes){
-            GameData.panelMatrix[node.x][node.y].setPanelState(PanelState.MOVEABLE);
+    /** Adds a Panel to moveNodes by finding PanelNode that is in range of Unit's max move range and is passable and
+     *  not occupied by unit. The requirements for adding a node/making it moveable differ based on size of unit.
+     *  eg. large unit needs 3 extra spaces to fit, so any node in range needs to check whether neighbor nodes are not
+     *  blocked in any way so that all of large unit can fit in space.
+     *
+     * @param node : node being checked
+     * @param pos : position data of Unit
+     */
+    public void addMoveNode(PanelNode node, Locations.PositionData pos){
+        //&& !isStartNode (node) // note: used to be here
+        if (node.isPassable(pos.type) && !node.isNodeOccupied(pos.positions)) {
+
+            if (pos.size.equals(Unit.LARGE)){
+                int offset1L = pos.side == Unit.LEFT_SIDE ? 1 : -2; //for diagonal & x offset
+                int offsetY = 1; //same for both sides
+
+                if (gameMap.canUnitMoveTo_Large(node, offset1L, offsetY, pos.type)){
+                    log("Unit of size, " + pos.size + ", had extra room");
+                    log("Added node: (" + node.x + ", " + node.y + ")");
+                    moveNodes.add(node);
+                    node.setPanelMoveState(true);
+                }
+            }
+
+            if (pos.size.equals(Unit.MEDIUM)){
+                int offset = pos.side == Unit.LEFT_SIDE ? 1 : -1;
+                if (gameMap.canUnitMoveTo_Medium(node, offset, pos.type)){
+                    log("Added node: (" + node.x + ", " + node.y + ")");
+                    moveNodes.add(node);
+                    node.setPanelMoveState(true);
+                }
+            }
+
+            if (pos.size.equals(Unit.SMALL)){
+                log("Added node: (" + node.x + ", " + node.y + ")");
+                moveNodes.add(node);
+                node.setPanelMoveState(true);
+            }
+
         }
     }
 
-    public void setSearchRange(int[] origin, int range){
 
-    }
-
-
-
-    //Panel Heuristic - Manhattan Distance
-    class PanelHeuristic implements Heuristic<PanelNode>{
-
-        @Override
-        public float estimate(PanelNode node, PanelNode endNode) {
-            float x = Math.abs(node.x - endNode.x);
-            float y = Math.abs(node.y - endNode.y);
-            return x+y;
+    /** Resets move nodes by updating eawch panelNode panel's PanelState.
+     *
+     */
+    public void resetMoveNodes(){
+        if (moveNodes.size > 0){
+            for (PanelNode p : moveNodes){
+                p.setPanelMoveState(false);
+            }
         }
     }
+
+//    public boolean isStartNode(PanelNode node){
+//        return node.x != startNode.x && node.y != startNode.y;
+//    }
+
+    /** Finds shortest path between start and end (target) node
+     *
+     * @param endPos : end node position
+     */
+    public void findPath(int[] endPos){
+
+        resetMoveNodes(); //hide move panels (nodes)
+        endNode = gameMap.getNode(endPos[0], endPos[1]); //set end node
+
+        Array<Vector2> vectorPath = new Array<Vector2>(); //Array of Vector2 objects for adding Unit actions
+        resultPath = new DefaultGraphPath<PanelNode>(); //capacity of 10
+        startTime = pathFinder.metrics == null ? 0 : TimeUtils.nanoTime(); //record start time in nanoseconds
+
+        pathFinder.searchNodePath(startNode, endNode, heuristic, resultPath); //search path
+
+        logMetrics();
+
+        if (resultPath.getCount() > 0){
+
+            //add to vectorPath
+            for (PanelNode p : resultPath) {
+                vectorPath.add(p.getScreenPosition());
+            }
+
+            //send message with code & extra info in pfRequest
+            MessageManager.getInstance().dispatchMessage(this, UnitController.getInstance(), FOUND_PATH, vectorPath);
+        }
+        else{
+            //send message with code & extra info in pfRequest
+            MessageManager.getInstance().dispatchMessage(this, UnitController.getInstance(), NO_PATH_FOUND);
+        }
+    }
+
+
 
 
     /** Handles the messages to/from MessageDispatcher instance
@@ -202,67 +236,67 @@ public class PanelPathfinder implements Telegraph {
      */
     @Override
     public boolean handleMessage(Telegram msg) {
-        //TODO: figure this out for UnitAgent
+
         switch (msg.message) {
-            case AI_RESPONSE:
-
-            case PLAYER_REQUEST:
-
+            case FIND_PATH:
+                findPath((int[]) msg.extraInfo);
+                break;
+            case SHOW_ALL_PATHS:
+                showMovePaths((Unit) msg.extraInfo);
+                break;
+            case HIDE_PATHS:
+                resetMoveNodes();
                 break;
 
         }
         return true;
     }
 
-
-    /** A UnitAgent Pathfinder request which implements Telegraph
-     *  Allows for agent to get messages back about paths
-     */
-    class AgentPathFinderRequest extends PathFinderRequest<PanelNode> implements Telegraph{
-
-        public AgentPathFinderRequest() {
-        }
-
-//        public AgentPathFinderRequest(PanelNode startNode, PanelNode endNode, Heuristic<PanelNode> heuristic, GraphPath<PanelNode> resultPath) {
-//            super(startNode, endNode, heuristic, resultPath);
-//        }
-//
-//
-//        public AgentPathFinderRequest(PanelNode startNode, PanelNode endNode, Heuristic<PanelNode> heuristic, GraphPath<PanelNode> resultPath, MessageDispatcher dispatcher) {
-//            super(startNode, endNode, heuristic, resultPath, dispatcher);
-//        }
+    //Panel Heuristic - Manhattan Distance
+    public class PanelHeuristic implements Heuristic<PanelNode>{
 
         @Override
-        public void changeStatus(int newStatus) {
-            super.changeStatus(newStatus);
-        }
+        public float estimate(PanelNode node, PanelNode endNode) {
+            float x = Math.abs(node.x - endNode.x);
+            float y = Math.abs(node.y - endNode.y);
 
-        @Override
-        public boolean initializeSearch(long timeToRun) {
-            resultPath.clear();
-            gameMap.startNode = startNode;
-            return true;
-        }
+            log("Estimated heuristic: " + Float.toString(x+y));
 
-        @Override
-        public boolean search(PathFinder<PanelNode> pathFinder, long timeToRun) {
-            if (pathFound){
-                return true;
-            }
-
-            return false;
-        }
-
-        @Override
-        public boolean finalizeSearch(long timeToRun) {
-            return true;
-        }
-
-        @Override
-        public boolean handleMessage(Telegram msg) {
-            return false;
+            return x + y;
         }
     }
 
 
+    private void logPath(){
+        StringBuilder builder = new StringBuilder(); //for logging path info
+        builder.append("Path found, in graph,: \n {");
+        for (PanelNode p : resultPath){
+
+            builder.append("(" + p.x + ", " + p.y + "), ");
+        }
+        builder.append("}");
+        log(builder.toString());
+    }
+
+
+    /** Prints out metrics for {@link IndexedAStarPathFinder}
+     *
+     */
+    private void logMetrics(){
+        if (pathFinder.metrics != null) {
+            //convert elapsed time to seconds
+            float elapsed = (TimeUtils.nanoTime() - startTime) / 1000000f;
+            System.out.println("----------------- Indexed A* Path Finder Metrics -----------------");
+            System.out.println("Visited nodes................... = " + pathFinder.metrics.visitedNodes);
+            System.out.println("Open list additions............. = " + pathFinder.metrics.openListAdditions);
+            System.out.println("Open list peak.................. = " + pathFinder.metrics.openListPeak);
+            System.out.println("Path finding elapsed time (ms).. = " + elapsed);
+
+            logPath();
+        }
+    }
+
+    private void log(String message){
+        Gdx.app.log("PanelPathFinder LOG", message);
+    }
 }

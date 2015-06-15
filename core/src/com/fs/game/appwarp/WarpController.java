@@ -1,19 +1,17 @@
-package appwarp;
+package com.fs.game.appwarp;
 
 /** skeleton code obtained from https://github.com/SauravGShephertz/libgdxMultiplayerSuperJumper
  *
  */
 
 import com.fs.game.constants.Network;
-import com.fs.game.data.UserData;
-import com.fs.game.utils.AppWarpAPI;
 import com.shephertz.app42.gaming.multiplayer.client.WarpClient;
 import com.shephertz.app42.gaming.multiplayer.client.command.WarpResponseResultCode;
 import com.shephertz.app42.gaming.multiplayer.client.events.RoomEvent;
 
 import java.util.HashMap;
 
-//from SJDTutorial; organization: mcom.fs.game.appwarpals; appwarp realtime multiplayer
+//from SJDTutorial; organization: mcom.fs.game.appwarpals; com.fs.game.appwarp realtime multiplayer
 public class WarpController {
 
 	private static WarpController instance;
@@ -97,8 +95,7 @@ public class WarpController {
 
 	
 	public void sendGameUpdate(String msg){
-        System.out.println("Local user (warpcontroller) sending update: " + localUser);
-		if(isConnected){
+ 		if(isConnected){
 			if(isUDPEnabled){
 				warpClient.sendUDPUpdatePeers((localUser+"#@"+msg).getBytes());
 			}else{
@@ -141,16 +138,25 @@ public class WarpController {
 			warpClient.lockProperties(properties);
 		}
 	}
-	
+
+	int connectTries = 0; //number of connection attempts
 	public void onConnectDone(boolean status){
 
-		log("onConnectDone: "+status );
+		log("onConnectDone: "+ status );
 		if(status){
 			warpClient.initUDP(); //initializes UDP unless NAT does not allow
 			warpClient.joinRoomInRange(1, 1, false);
+			connectTries = 0; //reset connectTries
 		}else{
-			isConnected = false;
-			handleError();
+			//try to connect if failed, dc after 4 attempts
+			connectTries++;
+			if (connectTries <= 4){
+				startApp(localUser);
+			}
+			else {
+				isConnected = false;
+				handleError();
+			}
 		}
 	}
 	
@@ -199,9 +205,7 @@ public class WarpController {
 		log("onGetLiveRoomInfo: ");
 		if(liveUsers!=null){
 			if(liveUsers.length==2){
-//				startGame();
-				//FIXED: changed to send info relavent to user setups
-				startGameWithInfo();
+				startGame();
 			}else{
 				waitForOtherUser();
 			}
@@ -212,12 +216,12 @@ public class WarpController {
 	}
 	
 	public void onUserJoinedRoom(String roomId, String userName){
-		/* FIXED: changed to send info when user joins
+		/*
 		 * if room id is same and username is different then start the game
 		 */
 		if(localUser.equals(userName)==false){
-//			startGame();
-			startGameWithInfo();
+			startGame();
+//			startGameWithInfo();
 		}
 	}
 	
@@ -301,24 +305,24 @@ public class WarpController {
 	
 	private void startGame(){
 		STATE = STARTED;
-		
+//		AppWarpAPI.getInstance().sendGameSetupUpdate(); //update sent out here
 		warpListener.onGameStarted("Start the Game");
 	}
 
-	private void startGameWithInfo(){
-		STATE = STARTED;
+//	private void startGameWithInfo(){
+//		STATE = STARTED;
+//
+//		UserData data = AppWarpAPI.getInstance().getSetupUserData();
+//		String message = AppWarpAPI.getInstance().encodeUserData(data);
+//
+//		sendGameUpdate(message);
+//	}
 
-		UserData data = AppWarpAPI.getInstance().getSetupUserData();
-		String message = AppWarpAPI.getInstance().encodeUserData(data);
-
-		warpListener.onGameStarted(message);
-	}
-	
 	private void waitForOtherUser(){
 		STATE = WAITING;
 		warpListener.onWaitingStarted("Waiting for other user");
 	}
-	
+
 	private void handleError(){
 		if(roomId!=null && roomId.length()>0){
 			warpClient.deleteRoom(roomId);
@@ -337,9 +341,9 @@ public class WarpController {
 		}
 	}
 	
-//	public void onUpdatePeersReceived(UpdateEvent event) {  
-//	    callBack.onGameUpdateReceived(new String(event.getUpdate()));  
-//	}  
+//	public void onUpdatePeersReceived(UpdateEvent event) {
+//	    callBack.onGameUpdateReceived(new String(event.getUpdate()));
+//	}
 
 	
 	private void disconnect(){

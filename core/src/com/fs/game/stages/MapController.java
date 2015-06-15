@@ -12,6 +12,7 @@ import com.fs.game.map.MiniMap;
 /** Custom {@link DragListener} class that implements MapViewSetter
  *
  * @author Allen
+ * @deprecated No longer in use, using built-in stage InputAdapter methods for dragging
  */
 public class MapController extends DragListener implements MiniMap.MapviewSetter {
 

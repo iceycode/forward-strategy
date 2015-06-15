@@ -1,7 +1,7 @@
 package com.fs.game.screens;
 
-import appwarp.WarpController;
-import appwarp.WarpListener;
+import com.fs.game.appwarp.WarpController;
+import com.fs.game.appwarp.WarpListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -12,7 +12,7 @@ import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UserData;
-import com.fs.game.utils.AppWarpAPI;
+import com.fs.game.appwarp.AppWarpAPI;
 import com.fs.game.utils.PlayerUtils;
 
 /** the start screen for multiplayer
@@ -28,14 +28,13 @@ import com.fs.game.utils.PlayerUtils;
 public class StartMultiplayerScreen implements Screen, WarpListener{
 
     final MainGame game;
-//    MainScreen prevScreen;
 
     MultiplayerScreen multiplayerScreen;
 
     OrthographicCamera camera;
     GameState gameState;
 
-    boolean isReceived = false; //if true, means setup (other player) data is received
+    int playersReady = 0; //should be 2 once other player sends "ready" update state
     public UserData userData; //userData from this screen, if any received
 
     BitmapFont font;
@@ -46,9 +45,9 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
     private final String errorInConnection = Constants.ERROR_CONNECT_MSG;
 
     //messages for when won, lose or disconnecting
-    private final String game_win = "Congrats You Win!\nEnemy Defeated";
-    private final String game_lose = "You Lose!\nEnemy Won";
-    private final String enemy_left = "Congrats You Win!\nEnemy Left the Game";
+    private final String game_win = "Congrats You Win!\nEnemy Defeated ";
+    private final String game_lose = "You Lose!\nEnemy Won ";
+    private final String enemy_left = "Congrats You Win!\nEnemy Left the Game ";
     private final String game_tied = "Tied Game! Going to main screen in ";
     private final String[] gameOver = {game_win, game_lose, game_tied, enemy_left};
     private final String leavingMsg = "\n" + "Leaving in ";
@@ -59,7 +58,6 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
     boolean returnToMain = false; //return to main screen
 
 
-    boolean playerWon = false;
     boolean playerLeft = false;
 
 
@@ -67,7 +65,7 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
         this.game = game;
         this.gameState = GameState.WAITING;
         this.font = Assets.uiSkin.getFont("retro1");
-        this.font.scale(1.5f);
+//        this.font.scale(1.5f);
         this.msg = "Connecting to Server"; //initial message, before connected
 
         MainGame.setGameState(GameState.MULTIPLAYER); //set state to Multiplayer while waiting
@@ -91,7 +89,7 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
         float y = Constants.SCREENHEIGHT/2;
         float x = Constants.SCREENWIDTH/4;
-        font.drawMultiLine(game.batch, msg, x, y);
+//        font.drawMultiLine(game.batch, msg, x, y);
         game.batch.end();
     }
 
@@ -114,8 +112,8 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
         if (counter > 5.5){
             counter = 0;
-            this.font.scale(0.5f);
-            WarpController.getInstance().stopApp(); //stop the appwarp api
+//            this.font.scale(0.5f);
+            WarpController.getInstance().stopApp(); //stop the com.fs.game.appwarp api
             gameState = GameState.START_SCREEN;
         }
         else{
@@ -142,6 +140,7 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
                 drawMessage();
                 break;
             case STARTING_MULTI:
+                counter += delta; //increment counter
                 msg = "Starting game in " + Integer.toString(3 - (int)counter);
                 drawMessage();
                 if (counter > 3.5) {
@@ -202,7 +201,7 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
     @Override
     public void onWaitingStarted(String message) {
         System.out.println(" player waiting is " + WarpController.getInstance().getLocalUser());
-        this.msg = WAITING_FOR_USER  + "Player Name: " + GameData.getInstance().playerName;
+        this.msg = WAITING_FOR_USER  + "Player Name: " + GameData.playerName;
 
     }
 
@@ -213,13 +212,12 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
     @Override
     public void onGameStarted(String message) {
-        userData = AppWarpAPI.getInstance().decodeUserData(message);
+        log("OnGameStarted message: " + message);
 
-    	gameState = GameState.STARTING_MULTI;
+        AppWarpAPI.getInstance().sendGameSetupUpdate(); //update sent out here
 
+//    	gameState = GameState.STARTING_MULTI;
 
-//        log("onGameStarted..sending setup update");
-//        AppWarpAPI.getInstance().sendGameSetupUpdate(); //update sent out here
     }
 
     @Override
@@ -238,19 +236,26 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
 
     @Override
     public void onGameUpdateReceived(String message) {
-        UserData userData = AppWarpAPI.getInstance().decodeUserData(message);
+        UserData data = AppWarpAPI.getInstance().decodeUserData(message);
+        log("Player " + GameData.playerName + ", received setup info from " + data.getName() + "\n JSON = " +
+                message);
 
-        switch (userData.getUpdateState()){
-            case AppWarpAPI._SETUP:
-                this.userData = userData;
+        switch (data.getUpdateState()){
+            case AppWarpAPI.SETUP_UPDATE:
+                this.userData = data;
+                playersReady++;
                 AppWarpAPI.getInstance().sendReadyUpdate();
                 break;
-            case AppWarpAPI._READY_TO_START:
-                isReceived = true;
+            case AppWarpAPI.READY_TO_START:
+                playersReady++;
                 break;
         }
 
-        log("Player " + GameData.playerName + ", received setup info from " + userData.getName());
+
+        log("Players ready = " + playersReady);
+
+        if (playersReady == 2)
+            gameState = GameState.STARTING_MULTI;
     }
 
     public UserData getUserData(){
@@ -262,6 +267,6 @@ public class StartMultiplayerScreen implements Screen, WarpListener{
     }
 
     private void log(String message){
-        Gdx.app.log("StartMulti.. LOG", message);
+        Gdx.app.log("StartMultiplayerScreen LOG", message);
     }
 }

@@ -6,11 +6,11 @@ import com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser;
 import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.utils.StreamUtils;
 import com.fs.game.constants.Constants;
-import com.fs.game.ai.tasks.AdjustTask;
-import com.fs.game.ai.tasks.DamageTask;
+import com.fs.game.ai.tasks.EndTask;
+import com.fs.game.ai.tasks.ChooseTask;
 import com.fs.game.ai.tasks.PositionTask;
 import com.fs.game.map.Locations;
-import com.fs.game.ai.fsm.RiskFactors;
+import com.fs.game.ai.fsm.AgentUtils;
 import com.fs.game.ai.fsm.UnitAgent;
 import com.fs.game.ai.pf.PanelPathfinder;
 import com.fs.game.data.GameData;
@@ -39,16 +39,12 @@ import java.io.Reader;
  *
  * Created by Allen on 5/6/15.
  *
- * TODO:
- *
- * FIXME: implement Behavior Tree in higher difficulty
+ * TODO: test out behavior tree implementation with AgentManager as Blackboard object
  *
  */
 public class AgentManager {
 
     private static AgentManager aiManager;
-
-
 
     //animState of unit in terms of movement capability
     public static final int LAND_UNIT = 0;
@@ -62,12 +58,14 @@ public class AgentManager {
 
     int[] unitState; //current unit animState
 
-    MessageManager manager; //singleton which creates, manages & dispathes telegrams
-    PanelPathfinder pathFinder;
+    //singleton which creates, manages & dispathes telegrams
+    MessageManager manager = MessageManager.getInstance();
+
+    PanelPathfinder pathFinder  = PanelPathfinder.getInstance(); //finds paths for Units
     BehaviorTree<UnitAgent> btree;
 
-    AdjustTask adjustTask;
-    DamageTask damTask;
+    EndTask adjustTask;
+    ChooseTask damTask;
     PositionTask posTask;
 
     UnitAgent unitAgent;
@@ -79,8 +77,6 @@ public class AgentManager {
     float timeElapsed = 0; //total time elapsed
 
     public AgentManager(){
-        manager = MessageManager.getInstance();
-        pathFinder = PanelPathfinder.getInstance();
 
         //initialize UnitAgent (StateMachine)
         unitAgent = new UnitAgent(GameData.enemyUnits, GameData.playerUnits, GameData.difficulty);
@@ -127,7 +123,7 @@ public class AgentManager {
      */
     public static class AIData {
 
-        RiskFactors agentRisks; //perceieved risks by UnitAgent
+        AgentUtils agentRisks; //perceieved risks by UnitAgent
         Locations unitLocations; //all unit locations
 
 

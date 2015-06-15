@@ -91,7 +91,7 @@ public class PathGenerator {
 		this.unit = unit;
 		this.maxDistance = unit.getMaxMoves()*32;
 		this.unitSize = unit.getUnitSize();
-//		Gdx.app.log(LOG, "unit size = " + unitSize);
+//		Gdx.app.log(LOG, "unit size = " + size);
 		this.crossWater = unit.crossWater;
 		this.crossLand = unit.crossLand;
 		setOriginPanel(oriX, oriY);

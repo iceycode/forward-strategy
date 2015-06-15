@@ -8,17 +8,16 @@
 package com.fs.game.utils;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.fs.game.MainGame;
 import com.fs.game.assets.Assets;
@@ -26,6 +25,8 @@ import com.fs.game.constants.Constants;
 import com.fs.game.screens.GameState;
 import com.fs.game.screens.MainScreen;
 import com.fs.game.stages.InfoStage;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
 
 public class UIUtils {
@@ -164,8 +165,8 @@ public class UIUtils {
         //create rules as a label
         Label rulesLabel = new Label(rules, Assets.uiSkin.get("ruleLabelStyle", LabelStyle.class));
         rulesLabel.setWrap(true);
-        rulesLabel.setWidth(rulesLabel.getTextBounds().width);
-        rulesLabel.setHeight(rulesLabel.getTextBounds().height);
+        rulesLabel.setWidth(rulesLabel.getGlyphLayout().width);
+        rulesLabel.setHeight(rulesLabel.getGlyphLayout().height);
         rulesLabel.setAlignment(Align.top, Align.left);
         rulesLabel.setLayoutEnabled(true);
         rulesLabel.setFillParent(false);
@@ -173,7 +174,7 @@ public class UIUtils {
         table.add(rulesLabel).width(rulesLabel.getWidth()).height(rulesLabel.getHeight());
 
         ScrollPane ruleScrollPane = new ScrollPane(table, scrollStyle);
-        ruleScrollPane.setWidth(rulesLabel.getTextBounds().width);
+        ruleScrollPane.setWidth(rulesLabel.getGlyphLayout().width);
         ruleScrollPane.setHeight(Constants.RULES_SCROLL_SIZE[1]);
         ruleScrollPane.setFillParent(false);
         ruleScrollPane.setScrollingDisabled(true, false); //enables both vertical & horiz scrolling
@@ -199,12 +200,30 @@ public class UIUtils {
         scrollTable.row();
 
         scrollTable.add(backBtn).bottom().align(Align.left).width(Constants.BACK_SIZE[0]).height(Constants.BACK_SIZE[1]);
-        scrollTable.setBounds(40f, 40f, rulesLabel.getTextBounds().width, Constants.RULES_SCROLL_SIZE[1]);
+        scrollTable.setBounds(40f, 40f, rulesLabel.getGlyphLayout().width, Constants.RULES_SCROLL_SIZE[1]);
 
         return scrollTable;
     }
 
 
+    /** Shows a dialog on stage that displays any message and in any position/size and
+     *  fads over a designated time. Uses include indicating whose turn it is.
+     *
+     * @param message : message itself
+     * @param time : time to display message
+     * @param skin : skin used
+     * @param coords : coordinates of dialog
+     * @param size : size of dialog
+     * @oaran stage : stage to show dialog on
+     * @return : a dialog containing popup message
+     */
+    public static void fadingDialog(String message, float time, Skin skin, float[] coords, float[] size, Stage stage){
+        Dialog fadingDialog = new Dialog("", skin).text(message);
+        fadingDialog.setBounds(coords[0], coords[1], size[0], size[1]);
+
+        fadingDialog.show(stage);
+        fadingDialog.addAction(sequence(alpha(1), fadeOut(time, Interpolation.fade), removeActor(fadingDialog)));
+    }
  
 	/** Creates a timer as a Label
 	 * 
@@ -244,7 +263,7 @@ public class UIUtils {
 		styleDetail.background = Assets.uiSkin.getDrawable("detail-popup");
 		styleDetail.font = Assets.uiSkin.getFont("retro2");
 		styleDetail.fontColor = Color.GREEN;
-		styleDetail.font.scale(.01f);	//scale font a bit
+//		styleDetail.font.scale(.01f);	//scale font a bit
 		
 		Label unitDetails = new Label("Details (click on unit)",styleDetail);
 		unitDetails.setAlignment(Align.top, Align.left); //sets text alignment
@@ -329,7 +348,7 @@ public class UIUtils {
                     //if a multiplayer game, need to signal to other
                     // player that InfoStage needs to reset the turn
                     if (MainGame.isMultiGame()){
-                        stage.multiTurnEnd(false); //signal manual turn change for other player
+                        stage.multiTurnEnd( ); //signal manual turn change for other player
                     }
                     stage.resetTurn(); //reset turn
                 }

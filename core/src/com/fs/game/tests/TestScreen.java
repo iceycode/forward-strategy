@@ -1,6 +1,6 @@
 package com.fs.game.tests;
 
-import appwarp.WarpController;
+import com.fs.game.appwarp.WarpController;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -20,7 +20,11 @@ import com.fs.game.screens.MainScreen;
 import com.fs.game.screens.StartMultiplayerScreen;
 import com.fs.game.utils.PlayerUtils;
 
-/**
+/** TestScreen contains a dropdown (SelectBox) with list of tests
+ *  Similar to GameScreen except that it just allows selection of gameplay
+ *  related tests
+ *
+ * @author Allen
  * Created by Allen on 5/24/15.
  */
 public class TestScreen implements Screen {
@@ -125,11 +129,12 @@ public class TestScreen implements Screen {
     public void startMultiplayer(){
         MainGame.setGameState(GameState.MULTIPLAYER);
 
+
         Gdx.app.postRunnable(new Runnable() {
             @Override
             public void run() {
                 MainGame.setGameState(GameState.MULTIPLAYER);
-                WarpController.getInstance().startApp(GameData.playerName); //starts appwarp
+                WarpController.getInstance().startApp(GameData.playerName); //starts com.fs.game.appwarp
                 System.out.println("Player name: " + GameData.playerName);
                 game.setScreen(new StartMultiplayerScreen(game));
             }
@@ -140,10 +145,12 @@ public class TestScreen implements Screen {
     public void startSingleplayer(){
         MainGame.setGameState(gameState);
 
-        GameData.getInstance().playerName = PlayerUtils.setupUsername();
-        GameData.getInstance().enemyName = "testAI_V1";
-        GameData.getInstance().playerFaction = Constants.FACTION_LIST[0];
-        GameData.getInstance().enemyFaction = Constants.FACTION_LIST[1];
+        GameData.playerName = PlayerUtils.setupUsername();
+        GameData.enemyName = "testAI_V1";
+
+        //FIXME: move these to a less awkware place (maybe TestUtils)
+        GameData.playerFaction = Constants.FACTION_LIST[0];
+        GameData.enemyFaction = Constants.FACTION_LIST[1];
 
 
 
@@ -170,7 +177,7 @@ public class TestScreen implements Screen {
                 MainScreen.gameState = GameState.START_SCREEN;
                 break;
             case GAME_RULES:
-                //game.setScreen(game.getInfoScreen());
+//                game.setScreen(game.getInfoScreen());
                 //stage does everything, prevents others from being clicked
                 show();
                 break;

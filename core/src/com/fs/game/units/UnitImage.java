@@ -41,7 +41,7 @@ public class UnitImage extends Image {
     public UnitImage(UnitInfo unitInfo) {
         this.unitInfo = unitInfo;
         this.size = unitInfo.getSize();
-        this.key = GameData.getInstance().playerName;
+        this.key = GameData.playerName;
         this.setName(unitInfo.getUnit());
         this.copy = false; //initail animState is false
 
@@ -51,7 +51,7 @@ public class UnitImage extends Image {
         setupAnimation();
         setupCheckTexture();
 
-        this.addListener(UnitUtils.Listeners.unitImageActorListener);
+        this.addListener(UnitUtils.Listeners.unitImageListener());
 //        this.addListener(UnitUtils.Listeners.unitImageChangeListener);
     }
 

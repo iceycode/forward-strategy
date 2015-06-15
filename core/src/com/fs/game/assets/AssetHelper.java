@@ -16,7 +16,7 @@ import java.io.File;
  */
 public class AssetHelper {
     //------GameManager helper methods----------
-    //FreeType will not work in HTML5
+    //NOTE: FreeType will not work in HTML5
     public static BitmapFont fontFNTGenerator(String fontPath, int size, Color color) {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(fontPath));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();

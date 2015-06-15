@@ -1,0 +1,14 @@
+#
+# BehaviorTree for AgentManager actions
+#
+
+# Alias definitions
+import choose:"com.fs.game.ai.tasks.ChooseTask"
+import position:"com.fs.game.ai.tasks.PositionTask"
+
+# Tree definition (note that root is optional)
+root
+  sequence # being sequence
+    parallel # start parallel task
+      position # analyze Unit positions to move to
+

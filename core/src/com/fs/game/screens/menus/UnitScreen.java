@@ -8,7 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.fs.game.constants.Constants;
@@ -22,7 +22,8 @@ import com.fs.game.utils.UIUtils;
 
 import java.util.HashMap;
 
-/**
+/** UnitScreen
+ *
  * Created by Allen on 11/22/14.
  */
 public class UnitScreen implements Screen{
@@ -30,9 +31,7 @@ public class UnitScreen implements Screen{
     final MainGame game;
     final String LOG = "UNITSCREEN LOG: ";
 
-
     GameState gameState;
-
     OrthographicCamera camera;
     ScreenViewport viewport;
 
@@ -55,12 +54,11 @@ public class UnitScreen implements Screen{
     public UnitScreen(final MainGame game){
         this.game = game;
         this.gameState = GameState.UNIT_SELECT;
-        this.currPlayer = GameData.getInstance().player;
-        this.currFaction = GameData.getInstance().playerFaction;
+        this.currPlayer = GameData.player;
+        this.currFaction = GameData.playerFaction;
 
         setupCamera();
         setupStage();
-
     }
 
     public void setupCamera(){
@@ -129,7 +127,6 @@ public class UnitScreen implements Screen{
             case MAIN_MENU:
                 game.setScreen(game.menuScreen);
                 break;
-
         }
     }
 
@@ -142,6 +139,7 @@ public class UnitScreen implements Screen{
     public void show() {
         for (UnitImage u : factionUnits){
             Array<String> unitDetailText = MenuUtils.UnitMenu.updateUnitText(u.unitInfo);
+
             if (u.selected){
                 unitDetail.setText(unitDetailText.get(1));
                 unitDamageList.setText(unitDetailText.get(0));
@@ -159,7 +157,6 @@ public class UnitScreen implements Screen{
         if (Gdx.app.getInput().isKeyJustPressed(Input.Keys.ESCAPE)){
             gameState = GameState.FACTION_SELECT;
         }
-
     }
 
     /**

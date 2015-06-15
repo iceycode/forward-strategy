@@ -10,6 +10,14 @@ Info on game Artificial Intelligence component is [here](FS_AI.md).
 ####*Change Log*:####
 --
 
+*06-14-2015*
+
+- Everything is working like it was before recent change to code structure. Still a ton of bugs to take care of.
+
+*06-11-2015*
+
+- updated libgdx version from 1.5.0 to 1.6.2 
+
 *05-27-2015*
 
 - some major changes to project code structure and some of the game design

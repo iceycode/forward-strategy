@@ -6,7 +6,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
@@ -104,7 +104,7 @@ public class PauseWindow extends Window {
     }
 
     protected void setButtons(){
-        getButtonTable().add("Resume");
+        add("Resume");
 //
 //        .addListener(new ChangeListener() {
 //            @Override
@@ -113,11 +113,11 @@ public class PauseWindow extends Window {
 //            }
 //        });
 
-        getButtonTable().add("Exit");
+        add("Exit");
 
 
-        getButtonTable().setSize(WIDTH / 2, 50);
-        getButtonTable().center();
+        setSize(WIDTH / 2, 50);
+        center();
 
     }
 

@@ -52,7 +52,7 @@ public class GridNode extends Vector2 {
  		 
  		//for calculating H, or heuristic
  		if (goal!=null){
- 			this.costToGoal = calculateCostToGoal(); //this gets more accurate costs\
+ 			this.costToGoal = calculateCostManhattanDistance(); //this gets more accurate costs
  			//Gdx.app.log("LOG", " initial heuristic (H) of node " + this + " is " + costToGoal);
 		}
  		else 
@@ -93,7 +93,7 @@ public class GridNode extends Vector2 {
 	
 	/** returns the heuristic cost (Diagonal Shortcut Heuristic)
 	 * 
-	 * @return
+	 * @return : cost to goal
 	 */
  	public float calculateCostToGoal(){
 		float xDist = Math.abs(this.x - goal.x);
@@ -111,7 +111,7 @@ public class GridNode extends Vector2 {
  	 */
  	public void calculateTotalCosts(){
 		this.costFromStart = calculateCostFromStart();
-		this.costToGoal = calculateCostToGoal();
+		this.costToGoal = calculateCostManhattanDistance();
  	}
 	
 	/** returns total score F = G + H
@@ -143,16 +143,6 @@ public class GridNode extends Vector2 {
 	public float getCostFromStart() {
 		return costFromStart;
 	}
-  
-	public void setCostToGoal(int costToGoal) {
-		this.costToGoal = costToGoal;
-	}
- 
-
-	public GridNode getGoal() {
-		return goal;
-	}
-
 
 
 	public void setGoal(GridNode goal) {
@@ -161,44 +151,4 @@ public class GridNode extends Vector2 {
 
 
 
-	public float getCostToGoal() {
-		// TODO Auto-generated method stub
-		return costToGoal;
-	}
-
-
-
-	public float getGridDistX() {
-		return gridDistX;
-	}
-
-
-
-	public void setGridDistX(float gridDistX) {
-		this.gridDistX = gridDistX;
-	}
-
-
-
-	public float getGridDistY() {
-		return gridDistY;
-	}
-
-
-
-	public void setGridDistY(float gridDistY) {
-		this.gridDistY = gridDistY;
-	}
-
-
-
-	public float getEuclidDist() {
-		return euclidDist;
-	}
-
-
-
-	public void setEuclidDist(float euclidDist) {
-		this.euclidDist = euclidDist;
-	}
 }

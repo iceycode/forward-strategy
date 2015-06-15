@@ -1,24 +1,23 @@
 package com.fs.game.screens;
 
-import appwarp.WarpController;
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.BitmapFont.HAlignment;
-import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Array;
+import com.fs.game.MainGame;
+import com.fs.game.appwarp.WarpController;
 import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.MainGame;
 import com.fs.game.utils.PlayerUtils;
 import com.fs.game.utils.UIUtils;
 
@@ -62,7 +61,7 @@ public class MainScreen implements Screen {
         this.touchPoint = new Vector3();
 
         this.font = Assets.uiSkin.getFont("retro2");
-        this.font.scale(.03f); //scale to 3/4 original size
+//        this.font.scale(.03f); //scale to 3/4 original size
         this.font.setColor(Color.RED);
 
         GameData.playerName = PlayerUtils.setupUsername();
@@ -113,7 +112,7 @@ public class MainScreen implements Screen {
         Gdx.app.postRunnable(new Runnable() {
             @Override
             public void run() {
-                WarpController.getInstance().startApp(GameData.playerName); //starts appwarp
+                WarpController.getInstance().startApp(GameData.playerName); //starts com.fs.game.appwarp
                 System.out.println("Player name: " + GameData.playerName);
                 game.setScreen(new StartMultiplayerScreen(game));
             }
@@ -230,11 +229,15 @@ public class MainScreen implements Screen {
             float width = testTextures[i].getWidth();
             float height = testTextures[i].getHeight();
 
-            TextBounds bounds = font.getMultiLineBounds(mainMsgs[i]);
-            float x = testTexPos[i][0] ;
-            float y = testTexPos[i][1] + height/2 + bounds.height/2;
+//            TextBounds bounds = font.getMultiLineBounds(mainMsgs[i]);
+            GlyphLayout layout = new GlyphLayout();
+            layout.setText(font, mainMsgs[i]);
 
-            font.drawMultiLine(game.batch, mainMsgs[i], x, y, width, HAlignment.CENTER);
+            float x = testTexPos[i][0] ;
+            float y = testTexPos[i][1] + height/2 + layout.height/2;
+
+//            font.drawMultiLine(game.batch, mainMsgs[i], x, y, width, HAlignment.CENTER);
+            font.draw(game.batch, layout, x, y);
         }
 
         game.batch.end();

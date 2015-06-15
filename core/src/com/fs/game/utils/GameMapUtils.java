@@ -14,19 +14,18 @@ import com.fs.game.map.PanelState;
 import com.fs.game.stages.GameStage;
 import com.fs.game.units.Unit;
 import com.fs.game.units.UnitController;
-import com.fs.game.units.UnitState;
 import com.fs.game.utils.pathfinder.PathGenerator;
 
 /** Map Utility methods
- * - helps with creating TiledMap, Panel actors & setting up stage
+ * - helps with creating TiledMap, Panel actors & setting them up on stages
  * - methods for helping find & manipulate actors (units) on GameStage
- *
- * FIXME: swap rows & columns var names thorugout game
  *
  * Created by Allen on 5/7/15.
  */ //----------------------GAME MAP TOOLS--------------------------//
 public class GameMapUtils {
 
+    //for logging
+    public static boolean logEnabled = false;
 
     /**
      * Gets the map based on id
@@ -44,7 +43,7 @@ public class GameMapUtils {
         if (id == 1)
             tiledMap = new TmxMapLoader().load(Constants.TEST_MAP1);
         else if (id==2)
-            tiledMap = new TmxMapLoader().load(Constants.MAP_3A);
+            tiledMap = new TmxMapLoader().load(Constants.TEST_MAP1);
         else if (id == 3)
             tiledMap = new TmxMapLoader().load(Constants.TEST_MAP1);
         else if (id == 4){
@@ -140,7 +139,11 @@ public class GameMapUtils {
 
     }
 
-    //show moves of panel
+
+    /** Shows panels in range
+     *
+     * @param currUnit : current unit that is selected
+     */
     public static void setPanelsInRange(Unit currUnit){
         PathGenerator pg = PathGenerator.getPG();
         pg.update(currUnit, currUnit.getX(), currUnit.getY());
@@ -155,59 +158,22 @@ public class GameMapUtils {
 
     }
 
-    //hides Panels Unit can move to
+    //
+
+    /** Resets state of Panels Unit can move to
+     *
+     * @param unit : unit that moved or was deselected
+     */
     public static void resetPanelsInRange(Unit unit){
         Array<Panel> unitMoves = unit.panelArray;
         if (unitMoves!=null){
             for (Panel p : unitMoves) {
-//                p.selected = false; //in case p was selected
-//                p.moveableTo = false;
                 p.setPanelState(PanelState.NONE);
             }
         }
 
         unit.panelArray.clear();
     }
-//    /**
-//     * **Sets all the panels positions & actors in matrix
-//     * - sets all game board actors as arrays
-//     */
-//    public static void setupPanels16x12() {
-//
-//        int rows = 16;
-//        int columns = 12;
-//        float width = 32;
-//        float height = 32;
-//
-////            Array<Panel> panelsOnStage = new Array<Panel>(rows*columns);
-//        Panel[][] panelMatrix = new Panel[rows][columns];
-//        UnitController controller = UnitController.getInstance(); //create controller instance
-//
-//        for (int x = 0; x < rows; x++) {
-//            String panelName = "x" + x;
-//            for (int y = 0; y < columns; y++) {
-//                float stagePosX = x * width + Constants.MAP_X;
-//                float stagePosY = y * height + Constants.MAP_Y;
-//
-//
-//
-//                Panel panelActor = new Panel(stagePosX, stagePosY);
-//                panelActor.setName(panelName.concat("y" + y)); //used for id
-//                panelActor.setNodePosX(x);
-//                panelActor.setNodePosY(y);
-//
-//                panelActor.setUnitUpdater(controller); //set interface for controller
-//
-//                //panelActor.toFront();
-//                panelMatrix[x][y] = panelActor; //store in position matrix
-////                    panelsOnStage.add(panelActor);
-//            }
-//        }
-//
-//        //setup the game board = stored in constants for pathfinding
-//        //set the elements which will be used on MapStage by Units
-//        GameData.panelMatrix = panelMatrix;
-//    }
 
 
     //-----setup for Panels and MapActors for TiledMap
@@ -223,8 +189,6 @@ public class GameMapUtils {
         Panel[][] panelMatrix = new Panel[columns][rows];
         UnitController controller = UnitController.getInstance(); //create controller instance
 
-
-
         Array<String[]> positions = new Array<String[]>(); //array of positions NOTE: for printing purpsoses
 
         for (int x = 0; x < columns; x++) {
@@ -237,8 +201,8 @@ public class GameMapUtils {
 
                 Panel panelActor = new Panel(screenX, screenY);
                 panelActor.setName(panelName.concat("y" + y)); //used for id
-                panelActor.setNodePosX(x);
-                panelActor.setNodePosY(y);
+                panelActor.setGraphPosition(x, y);
+
 
                 panelActor.setUnitUpdater(controller); //set interface for unit controller
 
@@ -255,10 +219,16 @@ public class GameMapUtils {
         GameData.cols = columns;
         GameData.rows = rows;
 
-        logPanelPositions(positions, rows, columns);
+//        logPanelPositions(positions, rows, columns); //NOTE: don't delete, may be useful in future
     }
 
 
+    /** Prints out all panel positions in screen coordinate system
+     *
+     * @param positions : positions as String values
+     * @param rows : rows in grid (aka game map)
+     * @param cols : columns in grid (aka game map)
+     */
     private static void logPanelPositions(Array<String[]> positions, int rows, int cols){
 
         StringBuilder builder = new StringBuilder();
@@ -304,7 +274,7 @@ public class GameMapUtils {
 
 
     /** Update Unit states based on player turn.
-     *  Any current player Unit's are DONE, new players Units are set to STANDING
+     *  Any current player Unit's are DONE, new players Units are set to IS_STANDING
      *
      * @param player : next player, whose units are being locked
      */
@@ -314,9 +284,7 @@ public class GameMapUtils {
         //look through all units to see if certain ones locked or not
         for (int i = 0; i < allUnits.size; i++) {
             Unit u = allUnits.get(i);
-            log("Unit is owned by Player " + u.player);
-            //lock all units of this player, while unlocking others
-            u.state = u.player == player ? UnitState.STANDING : UnitState.DONE;
+            UnitController.getInstance().onTurnChange(u, player);
         }
     }
 
@@ -332,7 +300,7 @@ public class GameMapUtils {
 //        //look through all units to see if certain ones locked or not
 //        for (int i = 0; i < allUnits.size; i++) {
 //            u = allUnits.get(i);
-//            u.state = u.player == player ? UnitState.STANDING : UnitState.DONE;
+//            u.state = u.player == player ? UnitState.IS_STANDING : UnitState.DONE;
 //        }
 //    }
 
@@ -349,6 +317,17 @@ public class GameMapUtils {
 
         return new int[]{gridX, gridY};
     }
+
+    /** Checks to see whether x & y coordinates (screen coordinates) is within map boundaries on stage
+     *
+     * @param x : x position
+     * @param y : y position
+     * @return : true if is in bounds, false if otherwise
+     */
+    public static boolean isInMapBounds(float x, float y){
+        return !isPastLeft(x) && !isPastRight(x) && !isPastBottom(y) && !isPastTop(y);
+    }
+
 
     public static boolean isPastTop(float y) {
         if (y >= Constants.MAP_TOP_RIGHT[1])
@@ -376,7 +355,7 @@ public class GameMapUtils {
         return false;
     }
 
-    public static void log(String message){
+    private static void log(String message){
         Gdx.app.log("GameMapUtils LOG: ", message);
     }
 

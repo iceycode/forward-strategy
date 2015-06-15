@@ -29,8 +29,7 @@ public class Panel extends Actor {
 	final String LOG = "panel actor log : ";
 
 	//tiled map types
-	public static final int PASSABLE = 0;
-	public static final int LAND = 1; //this can be grass, desert, dirt, etc
+	public static final int LAND = 1; //this can be grass, desert, dirt, etc - any unit can pass over
 	public static final int WATER = 2;
 	public static final int OBSTACLE = 3; //any obstacle; eg, a large boulder
 	public static final int OCCUPIED = 4; //panel is occupied by a Unit
@@ -47,7 +46,6 @@ public class Panel extends Actor {
 	TextureRegion gridTexture; //main grid texture - just a black 32x32 box
 	TextureRegion terrainTex; //terrain texture
 
-	TextureRegion gridTex; //grid texture
 	Array<TextureRegion> textures = new Array<TextureRegion>(); //textures of other states
 	Animation moveAnim; //move animation
 	float stateTime = 0; //time for animation (time in seconds)
@@ -55,14 +53,17 @@ public class Panel extends Actor {
 //	AnimatedTiledMapTile animTile;
 //	Array<StaticTiledMapTile> panelTiles = new Array<StaticTiledMapTile>(); //panels tiles in layer
 
+
 	public Vector2 location; //the location on the grid from (0,0) to (11,11)
-	
+
+    private boolean isSpawnPanel = false; //if true, then Units can spawn here
  	public String terrainName;
 	public int terrainType = -1; //the type of panel - either terrain or position (at edge of map)
 
 	public Rectangle panelBox;
 
 	//position in a PanelGraph
+    public int[] graphPos;
 	public int gridPosX = 0; 
 	public int gridPosY = 0;
 
@@ -128,7 +129,6 @@ public class Panel extends Actor {
 	 */
 	public void signalSelected(){
 		unitUpdater.setSelectedPanel(this);
-		clickCount = 0;
 	}
 
 
@@ -157,9 +157,9 @@ public class Panel extends Actor {
 //
 //	}
 
-	public void viewStateChange(){
-		log("State changed to " + state.toString() + "\n Index: " + state.getIndex());
-	}
+//	public void viewStateChange(){
+//		log("State changed to " + state.toString() + "\n Index: " + state.getIndex());
+//	}
 
 	/** Sets up the Panel Tile textures which change based
 	 * on the PanelState value. Uses Panel sheet to set up
@@ -275,34 +275,20 @@ public class Panel extends Actor {
 	}
 
 
-	/**
-	 * @return the matrixPosX
-	 */
-	public int getNodePosX() {
-		return gridPosX;
-	}
+    //sets position in graph
+    public void setGraphPosition(int x, int y){
+        this.gridPosX = x;
+        this.gridPosY = y;
+        this.graphPos = new int[]{x, y};
+    }
+
 
 	/**
-	 * @param matrixPosX the matrixPosX to set
+	 * @return the graph position
 	 */
-	public void setNodePosX(int matrixPosX) {
-		this.gridPosX = matrixPosX;
+	public int[] getGraphPosition() {
+		return graphPos;
 	}
-
-	/**
-	 * @return the matrixPosY
-	 */
-	public int getNodePosY() {
-		return gridPosY;
-	}
-
-	/**
-	 * @param matrixPosY the matrixPosY to set
-	 */
-	public void setNodePosY(int matrixPosY) {
-		this.gridPosY = matrixPosY;
-	}
-
 
 	public Vector2 getLocation() {
 		return location;

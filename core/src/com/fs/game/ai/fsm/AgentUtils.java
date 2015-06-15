@@ -3,15 +3,18 @@ package com.fs.game.ai.fsm;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntMap;
 import com.fs.game.units.Unit;
-import com.fs.game.data.GameData;
+import com.fs.game.units.UnitController;
 
-/** RiskState contains information about
- *  Agent Units' & Player Units' health & damageList
+/** AgentUtils contains methods which help UnitAgent decide where
+ *  to move Units and sets up information about Units in game for Agent to use.
+ *
+
+ *
  * Created by Allen on 5/12/15.
  */
-public class RiskFactors {
+public class AgentUtils {
 
-    private static RiskFactors instance;
+    private static AgentUtils instance;
 
     //flags for damage types - get factored into UnitAgent decision
     public final static int KILL_DAMAGE = 4;
@@ -27,17 +30,6 @@ public class RiskFactors {
     public static IntMap<Array<Integer>> healthMap = new IntMap<Array<Integer>>();
 
 
-    public RiskFactors(){
-        initHealthMap(GameData.enemyUnits.size + GameData.playerUnits.size);
-        initDamageMap(GameData.enemyUnits, GameData.playerUnits);
-    }
-
-    public static RiskFactors getInstance() {
-        if (instance == null)
-            instance = new RiskFactors();
-
-        return instance;
-    }
 
 
 
@@ -77,14 +69,31 @@ public class RiskFactors {
     }
 
 
-//    //scores relating to decision UnitAgent makes
-//    public int[] initDecisionScores(){
-//
-//    }
+    /** Checks factors which affect where Unit will move
+     *  Finds health of other units, damages and other information such
+     *  as distance to and damage dealt to currUnit.
+     *
+     * @param currUnit : current Units
+     */
+    public void checkMoveFactors(Unit currUnit, Array<Unit> enemies){
 
-//
-//    public int[] getFactorScores(){
-//
-//    }
+        for (Unit u : enemies){
+            UnitController.getInstance().getEnemyDamage(u);
+        }
+    }
+
+    /** Assesses damage unit can do to all other units
+     *
+     * @param unitIndex : unit index
+     * @param healths :
+     */
+    public static void assessDamageTo(int unitIndex, Array<int[]> healths){
+
+    }
+
+    public static void assessDamageFrom(Unit unit, Array<int[]> damages){
+
+    }
+
 
 }

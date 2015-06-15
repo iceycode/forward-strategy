@@ -6,6 +6,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.fs.game.MainGame;
@@ -107,21 +108,23 @@ public class GameScreen implements Screen{
      * @param mapChoice : user or random map choice
      */
     protected void setStages(int mapChoice){
-        //sets HUD stage - shows unit damage & info, score, time
-        stage = new InfoStage(); //has its own batch
 
-        stageMap = new GameStage(mapChoice);
+
+        stageMap = new GameStage(mapChoice); //contains grid & units
+        stage = new InfoStage(); //sets HUD stage - shows unit damage & info, score, time
+
         // Add Units - for single player, units don't need to wait to be added.
         // For multiplayer, both players need to be linked up first.
         if (MainScreen.gameState == GameState.SINGLEPLAYER || TestScreen.gameState == GameState.SINGLEPLAYER) {
-            addUnits();
-            //initialize Locations singleton PanelGraph/Node/Connection data
+            setupUnits();
+            // Initialize Locations singleton PanelGraph/Node/Connection data
             // this is done after Panels AND Units are done setting up
             Locations.getLocations().initLocations();
         }
 
-
-        stage.setupMiniMap(stageMap);
+        //set up minimap only if stageMap has large tiled map as game map (testID = 4)
+        if (stageMap.largeMap)
+            stage.setupMiniMap();
 
         stage.setGameStageListener(stageMap);
         stageMap.setInfoStageListener(stage);
@@ -134,17 +137,23 @@ public class GameScreen implements Screen{
      *  - gets info from an array in an array
      *
      */
-    public void addUnits() {
+    public void setupUnits() {
 
         if (GameData.testType==1) {
             TestUtils.test2Units(stageMap);
         }
         else if (GameData.testType == 2){
+
             TestUtils.testBoardSetup3(stageMap);
         }
         else if (GameData.testType == 4){
             TestUtils.testBoardSetup4(stageMap);
         }
+
+        //setup damageMap for units in game
+//        for (int i = 0; i < GameData.playerUnits.size; i++){
+//
+//        }
     }
 
 
@@ -191,7 +200,11 @@ public class GameScreen implements Screen{
         game.batch.begin();
         float y = Constants.SCREENHEIGHT/2;
         float x = Constants.SCREENWIDTH/4;
-        game.font.drawMultiLine(game.batch, msg, x, y);
+
+        GlyphLayout layout = new GlyphLayout();
+        layout.setText(game.font, msg);
+
+        game.font.draw(game.batch, layout, x, y);
         game.batch.end();
     }
 
@@ -313,10 +326,6 @@ public class GameScreen implements Screen{
         this.gameState = state;
     }
 
-    //sets input to InputMultiplexer
-    public void setGameInput(){
-        Gdx.input.setInputProcessor(in);
-    }
 
     private void log(String message){
         Gdx.app.log(LOG, message);

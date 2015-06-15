@@ -2,6 +2,7 @@ package com.fs.game;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -10,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
+import com.fs.game.map.Locations;
 import com.fs.game.screens.GameState;
 import com.fs.game.screens.InfoScreen;
 import com.fs.game.screens.MainScreen;
@@ -17,6 +19,7 @@ import com.fs.game.screens.menus.FactionScreen;
 import com.fs.game.screens.menus.MapScreen;
 import com.fs.game.screens.menus.MenuScreen;
 import com.fs.game.tests.TestScreen;
+import com.fs.game.utils.GameMapUtils;
 
 public class MainGame extends Game{
 
@@ -82,6 +85,8 @@ public class MainGame extends Game{
                 this.setScreen(mainScreen);
                 screenSet = true;
             }
+
+            checkToggleDebug();
         }
     	else{
             //this shows a splash screen while assets load
@@ -117,12 +122,33 @@ public class MainGame extends Game{
     }
 
 
-    public static boolean isMultiGame(){
+
+
+    public static boolean isMultiGame() {
         if (gameState == GameState.MULTIPLAYER)
             return true;
 
         return false;
     }
+
+
+    /** If certain key combinations are presed, turns on logging for certain
+     *  classes; so far classes include:
+     *  Locations, GameMapUtils,
+     *
+     */
+    public void checkToggleDebug(){
+        if (Gdx.input.isKeyPressed(Input.Keys.D)){
+            if (Gdx.input.isKeyJustPressed(Input.Keys.L)){
+                Locations.getLocations().logEnabled = !Locations.getLocations().logEnabled;
+            }
+
+            if (Gdx.input.isKeyJustPressed(Input.Keys.M)){
+                GameMapUtils.logEnabled = !GameMapUtils.logEnabled;
+            }
+        }
+    }
+
 
 	public MainScreen getMainScreen() {
 		return mainScreen;

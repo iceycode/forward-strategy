@@ -6,10 +6,11 @@ import com.badlogic.gdx.ai.fsm.StateMachine;
 import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.ai.msg.Telegraph;
 import com.badlogic.gdx.utils.Array;
-import com.fs.game.units.Unit;
-import com.fs.game.units.UnitController;
+import com.badlogic.gdx.utils.OrderedMap;
 import com.fs.game.ai.pf.PanelPathfinder;
 import com.fs.game.map.Locations;
+import com.fs.game.units.Unit;
+import com.fs.game.units.UnitController;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -36,6 +37,8 @@ import java.util.concurrent.ThreadLocalRandom;
  *              --> act updates StateMachine State --> gets success or failure
  *              --> update UnitAgent action
  *
+ *
+ *
  * Example of enter/update/exit method
  * / Let Elsa know I'm home
  MessageManager.getInstance().dispatchMessage( //
@@ -44,32 +47,45 @@ import java.util.concurrent.ThreadLocalRandom;
      bob.elsa, // ID of recipient
      MessageType.HI_HONEY_I_M_HOME, // the message
      null);
+
+ ----UnitAgent Decisions----
+ UnitAgent Heuristics are based on a several variables:
+ *      1) Damage - dealt TO Units
+ *      2) Damage - taken FROM Units
+ *      3) Distance - distance to enemies,
+ *      4) Health - Current health of Unit chosen
+ *      5) Unit Count - number of units on board (if less then opponents, will preserve)
+ *      6) Unit Count Opponent - number of units opponent has on board
  *
  * Created by Allen on 3/14/15.
  */
 public class UnitAgent implements Telegraph{
 
-    final int difficulty;
-    public int unitsDone = 0; //number of units that have finished action
-
-    Locations locations;
-    RiskFactors riskFactors;
-
-//    //data that determines how UnitAgent decides Unit action
-//    DecisionUtils decisionUtils;
-
-    float currTime = 0; //current time
-    PanelPathfinder pathFinder ;
-
-    StateMachine<UnitAgent> stateMachine; //instance of animState machine class
-    BehaviorTree<UnitAgent> agentTree; //behavior tree helps UnitAgent decisions
-
-    Unit currUnit; //the unit currently chosen
-    int unitAction; //the current unit action taken
+    final int difficulty; //diffculty determines movement preferences
 
     Array<Unit> agentUnits;
     Array<Unit> opponents; //opponents of unit
     Array<Integer> unitsWaiting = new Array<Integer>(new Integer[]{0,1,2,3,4,5,6}); //indices of units not selected
+
+    public int unitsDone = 0; //number of units that have finished action
+    int[] target; //current Unit's target panel position
+    int[] currPos; //current Units position
+
+    Unit currUnit; //the unit currently chosen
+    UnitController uc = UnitController.getInstance();; //unit controller
+    Locations locations = Locations.getLocations();
+
+    OrderedMap<String, Array<Float>> distanceMap; //distances to enemies
+    OrderedMap<String, int[]> damageMap; //damages to enemies
+    OrderedMap<String, Integer> healthMap; //health of enemies
+    Array<Integer> moveRanges; //how far enemies can move
+
+    float currTime = 0; //current time
+    PanelPathfinder pathFinder;
+
+    StateMachine<UnitAgent> stateMachine; //instance of animState machine class
+    BehaviorTree<UnitAgent> agentTree; //behavior tree helps UnitAgent decisions
+
 
     public UnitAgent(Array<Unit> allies, Array<Unit> enemies, int difficulty){
         this.difficulty = difficulty;
@@ -82,16 +98,38 @@ public class UnitAgent implements Telegraph{
         stateMachine = new DefaultStateMachine<UnitAgent>(this, AgentState.GLOBAL_STATE);
         pathFinder = PanelPathfinder.getInstance(); //initialize pathfinder
 
-        riskFactors = RiskFactors.getInstance();
-        locations = Locations.getLocations();
-//        decisionUtils.init(allies, enemies);  //initialize decisionUtils
+
+
     }
 
-//    public UnitAgent(Unit unit, Array<Unit> opponents){
-//        this.currUnit = unit;
-//        this.opponents = opponents;
-//        stateMachine = new DefaultStateMachine<UnitAgent>(this, AgentState.GLOBAL_STATE);
-//    }
+    /** Sets up the percept maps with format: Unit name key, percept of enemy
+     *  Percept of enemy includes: damageTo/From, distance b/w, current health, move range
+     *  Used in conjunction with damage map to make movement decision
+     */
+    protected void setEnemyPercepts(){
+        distanceMap = new OrderedMap<String, Array<Float>>();
+        damageMap = new OrderedMap<String, int[]>();
+//        healthMap = new OrderedMap<String, Integer>();
+//        moveRanges = new Array<Integer>(); //move ranges
+        for (Unit unit : agentUnits){
+            int[] damArr = new int[opponents.size];
+            Array<Float> distances = new Array<Float>();
+            for (int i = 0; i < opponents.size; i++){
+                Unit enem = opponents.get(i);
+                float dist = locations.getManhattanDistance(unit.getGraphOrigin(), enem.getGraphOrigin());
+                distances.add(dist);
+                int damage = uc.getEnemyDamage(enem);
+                damArr[i] = damage;
+            }
+
+            distanceMap.put(unit.getName(), distances);
+            damageMap.put(unit.getName(), damArr);
+        }
+
+    }
+
+
+
 
     public void update(float delta){
         currTime += delta;
@@ -115,16 +153,17 @@ public class UnitAgent implements Telegraph{
 
         currUnit = agentUnits.get(randIndex); //set current unit
         UnitController.getInstance().selectUnit(currUnit); //chose unit
-
-        unitAction = CurrentState.CHOSEN;
     }
 
 
     //moves unit
     public void moveUnit(){
         switch(difficulty){
-            case Difficulty.VERY_EASY:
+            case Difficulty.EASY:
                 randomMove();
+                break;
+            case Difficulty.NORMAL:
+                decideUnitMove();
                 break;
             default:
                 randomMove();
@@ -133,7 +172,8 @@ public class UnitAgent implements Telegraph{
     }
 
     //decides what unit should do
-    protected void decideUnitAction(){
+    public void decideUnitMove(){
+
 
     }
 
@@ -142,15 +182,15 @@ public class UnitAgent implements Telegraph{
     protected void randomMove(){
         int in = ThreadLocalRandom.current().nextInt(0, currUnit.panelArray.size);
 //        currUnit.panelArray.get(in).setSelected(true);
-        unitAction = CurrentState.MOVE_ACTION;
     }
 
     public StateMachine<UnitAgent> getStateMachine(){
         return stateMachine;
     }
 
-    public int getUnitAction(){
-        return unitAction;
+
+    public boolean isAtTarget(){
+        return currPos[0] == target[0] && currPos[1]==target[1];
     }
 
     @Override
@@ -167,16 +207,4 @@ public class UnitAgent implements Telegraph{
         public static final int HARD = 3;
     }
 
-    //current unit animState of UnitAgent's currUnit
-    public static class CurrentState {
-
-        public final static int NONE = -1;
-        //current unit actions being taken
-        public static int CHOSEN = 0; //unit is chosen
-        public final static int MOVE_ACTION = 1;
-        public final static int ATTACK_ACTION = 2;
-
-        public final static int MOVE_ATTACK = 4;
-        public final static int ATTACK_MOVE = 5;
-    }
 }

@@ -1,4 +1,4 @@
-package appwarp;
+package com.fs.game.appwarp;
 
 import com.shephertz.app42.gaming.multiplayer.client.command.WarpResponseResultCode;
 import com.shephertz.app42.gaming.multiplayer.client.events.ConnectEvent;

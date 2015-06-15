@@ -1,6 +1,6 @@
 package com.fs.game.stages;
 
-import appwarp.WarpController;
+import com.fs.game.appwarp.WarpController;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector3;
@@ -10,13 +10,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UserData;
 import com.fs.game.map.MiniMap;
-import com.fs.game.units.TextActor;
+import com.fs.game.ui.TextActor;
 import com.fs.game.units.Unit;
-import com.fs.game.utils.AppWarpAPI;
+import com.fs.game.appwarp.AppWarpAPI;
 import com.fs.game.utils.UIUtils;
 import com.fs.game.utils.UnitUtils;
 
@@ -34,6 +35,10 @@ public class InfoStage extends Stage implements StageListener {
     final float VIEWPORTHEIGHT = Constants.SCREENHEIGHT;
 
     final float TIME_PER_TURN = Constants.MAX_TIME;
+
+
+    final float[] FD_COORDS  = Constants.TURN_MSG_COORD;
+    final float[] FD_SIZE = Constants.POPUP_SIZE;
 
     //widgets for HUD
     TextButton[] uiButtons = new TextButton[3]; //go button, p1 & p2 side button,
@@ -68,60 +73,49 @@ public class InfoStage extends Stage implements StageListener {
 
         UIUtils.setupUI(uiButtons, labels, this);
 
-        setTextActor();
-    }
-
-    //sets up textActor & adds to HUD stage, stage
-    protected void setTextActor(){
-        textActor = new TextActor("retro1", Constants.TURN_MSG_COORD);
-        addActor(textActor);
-    }
-
-
-    /** Sets up the MiniMap Window on this Stage and adds
-     *  sets interface with GameStage for MiniMap  .
-     *
-     */
-    public void setupMiniMap(GameStage stage){
         if (GameData.testType == 4){
             miniMap = new MiniMap(40, 30);
         }
-
-        // Set minimap interfaces b/w two stages so that info sent:
-        //  InfoStage.MiniMap <--> GameStage.Camera
-//        stage.setMapListener(this);
-//        stage.setMinimapListener(miniMap);
-
-        this.gameStageListener = stage; //set listeners
+//        setTextActor();
     }
 
-
-
-    boolean showMsg = true; //if true, shows message
-    public void showMessage(float delta){
-        msgTime += delta;
-
-        if (msgTime < endTime){
-            //check if actor is in back, since it will have ZIndex of 0
-            if (textActor.getZIndex() == 0)
-                textActor.toFront();
-        }
-        else{
-            textActor.toBack();
-            msgTime = 0;
-            showMsg = false;
-        }
-    }
-    /** Shows a message over all other actors on stage
+    /** Sets up the MiniMap Window on this Stage
      *
-     * @param message : message to show
-     * @param msgTime : time to show it for
      */
-    public void setStageMessage(String message, float msgTime){
-        showMsg = true;
-        textActor.setText(message);
-        this.endTime = msgTime;
+    public void setupMiniMap(){
+
+        miniMap = new MiniMap(40, 30);
     }
+
+
+
+//    boolean showMsg = true; //if true, shows message
+//    public void showMessage(float delta){
+//        msgTime += delta;
+//
+//        if (msgTime < endTime){
+//            //check if actor is in back, since it will have ZIndex of 0
+//            if (textActor.getZIndex() == 0)
+//                textActor.toFront();
+//        }
+//        else{
+//            textActor.toBack();
+//            msgTime = 0;
+//            showMsg = false;
+//        }
+//    }
+
+
+//    /** Shows a message over all other actors on stage
+//     *
+//     * @param message : message to show
+//     * @param msgTime : time to show it for
+//     */
+//    public void setStageMessage(String message, float msgTime){
+//        showMsg = true;
+//        textActor.setText(message);
+//        this.endTime = msgTime;
+//    }
 
 
     //resets players turn time & displays message alert
@@ -139,11 +133,9 @@ public class InfoStage extends Stage implements StageListener {
         gameStageListener.changePlayer(nextPlayer);
         currPlayer = nextPlayer;
 
-//        //need to send the updating data if is Multiplayer game
-//        if (MainGame.isMultiGame()){
-//            multiTurnEnd(true);
-//        }
     }
+
+
 
     public void checkMinimapInput(){
         if (GameData.cols > 16 && GameData.rows > 12 && Gdx.input.justTouched()){
@@ -167,17 +159,17 @@ public class InfoStage extends Stage implements StageListener {
     public void draw() {
         viewport.apply();
 
-        //need to offset the clipping done on GameStage
-        Gdx.gl.glScissor(0, 0, (int) VIEWPORTWIDTH, (int)VIEWPORTHEIGHT);
+        //need to offset the clipping done on GameStage if largeMap used
+        if (GameStage.largeMap){
+            Gdx.gl.glScissor(0, 0, (int) VIEWPORTWIDTH, (int)VIEWPORTHEIGHT);
 //        Gdx.gl20.glDisable(GL20.GL_SCISSOR_TEST);
 //        Gdx.gl20.glClear(GL20.GL_COLOR_BUFFER_BIT);
 //        Gdx.gl20.glEnable(GL20.GL_SCISSOR_TEST);
 
-        if (miniMap != null){
-            miniMap.render(getBatch());
+            if (miniMap != null){
+                miniMap.render(getBatch());
+            }
         }
-
-
 
         super.draw();
 
@@ -198,10 +190,9 @@ public class InfoStage extends Stage implements StageListener {
         //if the timer reached max time, button or "G" pressed, then player is done
         if (timerCount > TIME_PER_TURN|| Gdx.input.isKeyJustPressed(Input.Keys.G)) {
             resetTurn();// toggle side buttons to red (should be green if player's turn)
+            UIUtils.fadingDialog(playerTurnMsg, 2f, Assets.getDarkSkin(), FD_COORDS, FD_SIZE, this);
         }
 
-        if (showMsg)
-            showMessage(delta);
     }
 
     @Override
@@ -219,17 +210,14 @@ public class InfoStage extends Stage implements StageListener {
 
 
     /** Sends data about player during end of turn (score & to go or not)
-     *
-     * @param auto : if true, then signals other player to not manually reset InfoStage timer/info,
-     *             since this already occured b/c of time change
+     *  signals other player to manually reset InfoStage timer/info
      */
-    public void multiTurnEnd(boolean auto){
+    public void multiTurnEnd( ){
         UserData userData = new UserData();
         userData.setScore(scores[mPlayer - 1]);
-        userData.setPlayerTurn(auto); //sets other player turn as true
         userData.setPlayer(mPlayer);
         userData.setName(GameData.playerName);
-        userData.setUpdateState(AppWarpAPI._TURN_CHANGE);
+        userData.setUpdateState(AppWarpAPI.TURN_UPDATE);
 
         String data = AppWarpAPI.getInstance().encodeUserData(userData);
         WarpController.getInstance().sendGameUpdate(data);
@@ -262,9 +250,9 @@ public class InfoStage extends Stage implements StageListener {
     }
 
     @Override
-    public void updatePlayerScore(int player, int score) {
+    public void updatePlayerScore(int player, int points) {
         //increment player score
-        scores[player-1] += score;
+        scores[player-1] += points;
 
         String name = player == 1 ? GameData.playerName : GameData.enemyName;
 

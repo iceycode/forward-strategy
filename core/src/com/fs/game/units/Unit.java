@@ -7,11 +7,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.Pool;
 import com.fs.game.MainGame;
 import com.fs.game.assets.Assets;
@@ -22,7 +25,6 @@ import com.fs.game.map.Locations;
 import com.fs.game.map.Panel;
 import com.fs.game.map.PanelState;
 import com.fs.game.stages.GameStage;
-import com.fs.game.utils.AppWarpAPI;
 import com.fs.game.utils.UnitUtils;
 
 // so that Actions do not need reference to Actions
@@ -30,6 +32,15 @@ import com.fs.game.utils.UnitUtils;
 
 ////NOTE: USE NON- STATIC IMPORTS FOR ACTIONS
 
+/** Unit Actor - main actor (or characters) for players to control
+ *  Represents Units on the board, gets put into GameStage, its location based on panel it is on
+ *  Includes states, animations, damages, health, etc.
+ *
+ * TODO: restructure animation access
+ *
+ * @author Allen
+ *
+ */
 public class Unit extends Actor {
 
 	final String LOG = "UNIT ACTOR LOG: "; //for log message
@@ -41,14 +52,14 @@ public class Unit extends Actor {
     public static final String LARGE = "64x64";
 
     //type of unit: land, water, air
-    public static final int LAND = 0;
-    public static final int WATER = 1;
-    public static final int AIR = 2;
+    public static final int LAND = 1;
+    public static final int WATER = 2;
+    public static final int AIR = 3;
     public int unitType;
 
     //which side unit is on
-    public static final int LEFT_SIDE = 0;
-    public static final int RIGHT_SIDE = 1;
+    public static final int LEFT_SIDE = 1;
+    public static final int RIGHT_SIDE = 2;
     public int unitSide; //the unit's side it is on
 
 
@@ -58,8 +69,6 @@ public class Unit extends Actor {
 	
 	//arrays for panels & other units on stage	
 	public Array<Panel> panelArray; //created from panel position
-    public Array<Unit> enemiesInRange; //enemies in range
-    public Unit enemyUnit;
 	public Array<Vector2> panelPath; //the actual path unit takes when moving 
   
 	/**ANIMATION OBJECTS**/
@@ -67,6 +76,7 @@ public class Unit extends Actor {
     // 0=Still; 1=MoveRight; 2=MoveLeft; 3=MoveUp; 4=MoveDown
     // 5=AttackRight; 6=AttackLeft; 7=AttackUp; 8=AttackDown
     Array<Animation> animations; //stores all animations
+    Animation stillAlt; //alternate still anim; if Unit switches sides to move to
       
 	float timeInterval = 0.1f; //stores delta time for animations
 	float aniTime = .1f; //stores data related to animation between panels
@@ -74,6 +84,8 @@ public class Unit extends Actor {
 
     Texture attackFrame; //frame for when unit can be attacked
     public BitmapFont damageText;
+
+    ShapeRenderer renderer; //render box indicating enemy.ally around unit
 
 	//unit information
  	public UnitInfo unitInfo; //sets unit's information
@@ -87,29 +99,27 @@ public class Unit extends Actor {
 	public boolean crossWater = false;
 	public boolean crossLand = false; 
  	
-	public int health = 400; //each unit has 400 health FIXED: now set to 400 instead of 4
+	public int health = 400; //each unit has 400 health
 	public Texture healthBar; // the texture which is drawn with the unit
 	public int damage = 0; //the damage this unit IS dealt
-    int damageMod = 15; //damage mod, or multiplier
+    ObjectMap<String, Unit> enemyMap; //enemy map
+    boolean attackDone = false; //if false, then will have attacked already
 
  	//different states the unit can be in : attack, moving, etc
     public UnitState state; //actual active state of Unit
 	public AnimState animState; //for drawing the unit
 
-    //FIXME: use UnitState instead of boolean values
  	public int clickCount = 0; //if unit selected or not still
 
+    public boolean isSpawn; //means Unit was spawned (mainly for setting a different name for id purposes)
  	//related to unit moving on board
 	private int maxMoves; //maximum move distance of unit actor
 	private String unitSize; //size of unit in dimensions (can be 32x32, 64x32 or 64x64)
 
 	//for unit movements
 	Panel targetPan; //the target panel unit moves to
-    protected SequenceAction moveSequence;
-//    public ParallelAction attackAction;
 
     private Locations.PositionData posData; //unit position data
-    private int[] gridPos; //Unit grid position in Graph
 
     //for online multiplayer data
     private UnitData unitData;
@@ -138,48 +148,54 @@ public class Unit extends Actor {
 	
 	/** The NEW main constructor
 	 */
-	public Unit(UnitInfo unitInfo, float posX, float posY, int player) {
+	public Unit(UnitInfo unitInfo, float posX, float posY, int player, String owner) {
         //set texture, coordinates & other info
         //this.texture = UnitUtils.Setup.getUnitStill(unitInfo, player); //main unit texture for still animation
         this.unitInfo = unitInfo;
         this.player = player; //sets the player
+        this.owner = owner; //set name of player that controls unit
 
         setupUnit(posX, posY);
         setupUnitTextures();
         setupUnitData();
 
-        addListener(UnitUtils.Listeners.actorGestureListener);
-        otherUnits = new Array<Unit>(13); //all other units except this one
-        enemyUnits = new Array<Unit>(7);	//all enemy units
+        addListener(UnitUtils.Listeners.unitClickListener()); //add listener
 
-        //a new SequenceAction is obtained from the pool
-        moveSequence = actionPool.obtain();
         panelArray = new Array<Panel>();
 
         //set Unit initial state
         state = player == 1 ? UnitState.STANDING : UnitState.DONE;
+        //create shape renderer
+        renderer = new ShapeRenderer();
 
-
+        if (MainGame.isMultiGame() && getOwner() != GameData.playerName)
+            setTouchable(Touchable.disabled);
     }
 
 
     //sets up most of the unit attributes from actor class
 	public void setupUnit(float x, float y){
-		setUnitInfo(unitInfo);
-        setWidth(unitInfo.getWidth());
-        setHeight(unitInfo.getHeight());
-        setBounds(x, y, getWidth(), getHeight());
+        setSize(unitInfo.getWidth(), unitInfo.getHeight());
 
-		setFaction(unitInfo.getFaction()); //sets faction
-		setUnitID(unitInfo.getId()); //sets unit ID
-		setName(unitInfo.getUnit()); //sets unit name
+//        //aligns position to right if right side
+//        if (player == 1){
+//            setPosition(x, y);
+//        }
+//        else{
+//            setPosition(x, y, Align.right);
+//        }
 
-		setDamageList(unitInfo.damageList); //sets the damage list
-		setUnitSize(unitInfo.size);
-        setMaxMoves(unitInfo.getMaxMoves());
+        setPosition(x, y);
 
-        setPosition(getX(), getY());
-        setOrigin(getX(), getY()); //original positions for determining where unit has moved
+        setOrigin(x, y); //original positions for determining where unit has moved
+        setName(unitInfo.getUnit()); //sets unit name
+
+		faction = unitInfo.getFaction(); //sets faction
+		unitID = unitInfo.getId(); //sets unit ID
+		damageList = unitInfo.damageList; //sets the damage list
+		unitSize = unitInfo.getSize();
+        maxMoves = unitInfo.getMaxMoves();
+        unitSide = player; //side based on which player unit belongs to
 
         if (this.getUnitInfo().isCrossLandObst().equals("Yes")){
 			this.crossLand = true;
@@ -216,8 +232,7 @@ public class Unit extends Actor {
     public void setupUnitData(){
         this.unitData = new UnitData();
         unitData.setUnitID(unitID);
-        unitData.setSize(unitSize);
-        unitData.setState(animState.getValue());
+        unitData.setState(UnitData.IS_STANDING);
         unitData.setDamage(damage);
         unitData.setHealth(health);
         unitData.setUnitPosition(new Vector2(getX(), getY()));
@@ -239,20 +254,46 @@ public class Unit extends Actor {
 
         batch.draw(animations.get(aniIndex).getKeyFrame(timeInterval, true), getX(), getY());
 
-		//POSSIBLE temporary draw setup for healthbar
+		// POSSIBLE temporary draw setup for healthbar
+        // displays a small bar overhead
 		float healthBarWidth = healthBar.getWidth() * (health/400f);
   		batch.draw(healthBar, this.getX(), this.getY(), healthBarWidth, healthBar.getHeight());
 
         if (state == UnitState.DONE && !isPlayerUnit()){
-            //displays a small bar overhead
+            // Display currUnit damage to this unit & also set it
             if (UnitController.getInstance().currUnit != null){
                 damage = UnitController.getInstance().getEnemyDamage(this);
-                this.damageText.draw(batch, Integer.toString(-damage*damageMod) + "", getX()+getWidth()-10f, getY()+getHeight
+                this.damageText.draw(batch, Integer.toString(-damage) + "", getX()+getWidth()-10f, getY()+getHeight
                         ()-10f);
             }
-
         }
+
+        renderBoxVisual(batch);
  	}
+
+    /** Renders the box around the unit
+     *
+     * @param batch
+     */
+    public void renderBoxVisual(Batch batch){
+        batch.end();
+
+        //transform & projection matrices used for renderer
+//        renderer.setProjectionMatrix(batch.getProjectionMatrix());
+//        renderer.setTransformMatrix(batch.getTransformMatrix());
+//        renderer.translate(getX(), getY(), 0);
+
+        renderer.begin(ShapeRenderer.ShapeType.Line); //just an outline
+
+        Color color = isPlayerUnit() ? Color.GREEN : Color.RED;
+
+        renderer.setColor(color);
+        renderer.rect(getX(), getY(), getWidth(), getHeight());
+        renderer.end();
+
+        //start batch again
+        batch.begin();
+    }
 
 	/** overridden act method
 	 * - holds the actions of the actor child Unit
@@ -270,13 +311,10 @@ public class Unit extends Actor {
 
     //new unit act method
     public void unitActs(){
-//        if (!isPlayerUnit()){
-//            lock = true; //always keep it locked
-//        }
 
         switch(state){
             case STANDING:
-                setUnitPanelState(isPlayerUnit() ? PanelState.ALLY : PanelState.ENEMY);
+                //NOTHING HERE...waiting to be selected
                 break;
             case CHOSEN: //chosen but not moving
                 ((GameStage)getStage()).setCurrentUnit(this);
@@ -285,25 +323,25 @@ public class Unit extends Actor {
                 updatePosition();
                 break;
             case ATTACKING: //attacking
-                enemyUnit.unitAttacked(); //attacks enemy Unit set by Controller
-                UnitController.getInstance().onTurnFinish(); //TODO: move this once attack animations done
+//                enemyUnit.damageUnit(); //attacks enemy Unit set by Controller
+//                UnitController.getInstance().onTurnFinish(this);
                 break;
             case UNDER_ATTACK:
                 attackTime += Gdx.graphics.getDeltaTime();
                 setUnitPanelState(PanelState.ATTACK);
-                if (attackTime > 2f)
+                //show attack animation/panel for 2 seconds, then set to done
+                if (attackTime > 2.5f){
                     state = UnitState.DONE;
+                    attackTime = 0; //reset attackTime
+                }
                 break;
             case AT_ENEMY_BORDER:
                 //TODO: finish this state case
                 break;
             case DONE:
-                PanelState stateDONE = isPlayerUnit() ? PanelState.ALLY : PanelState.ENEMY;
-                setUnitPanelState(stateDONE);
-                clickCount = 0; // Unit clickCount reset
                 break;
             case DEAD:
-                //DO NOTHING HERE...everything done in UnitController, via currUnit that attacked
+                //NOTHING DONE HERE YET...TODO: setup an animation of some sort
                 break;
         }
     }
@@ -312,51 +350,28 @@ public class Unit extends Actor {
     /** Units is attacked
      *  NOTE: health is currently at 400 per Unit, damage is multiplied by 15
      */
-    public void unitAttacked(){
-        health += damage * damageMod; //damage set by other Unit
+    public void damageUnit(){
+        health += damage ; //damage set by other Unit
 
         if (health > 0)
             state = UnitState.UNDER_ATTACK; //set state as under attack
         else{
             state = UnitState.DEAD;
-            ((GameStage)getStage()).updateScore(this); //update score
+            UnitController.getInstance().unitDeathUpdate(this); //updates score, stage & it multi, other player unit
         }
-
-        if (unitData!=null)
-            selfUpdateData();
     }
-
-    //only updates if a Multiplayer Game
-    public void selfUpdateData(){
-
-        unitData.updateData(this, new Vector2(getX(), getY()));
-
-        AppWarpAPI.getInstance().sendUnitUpdate(unitData);
-    }
-
-    /** For updating Unit for Multiplayer
-     *  Previous method, selfUpdateData(), sends out the UserData with UnitData in it
-     * @param unitData : unitData is data sent from AppWarp
-     */
-    public void updateUnit(UnitData unitData){
-        setX(unitData.getUnitPosition().x);
-        setY(unitData.getUnitPosition().y);
-
-        posData = unitData.getPosData();
-        Locations.getLocations().updateUnitNodePosition(posData, this);
-        setUnitPanelState(PanelState.ENEMY);
-        unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
-
-        //animState.setValue(unitData.getState());
-        health = unitData.getHealth();
-        damage = unitData.getDamage();
-    }
-
 
     //signals to player whether unit is enemy or ally
+
+    /** Sets the Panel(s) unit occupies to a specific state
+     *
+     * @param state : state of panel
+     */
     public void setUnitPanelState(PanelState state){
-        for (int[] pos : posData.positions){
-        //FIXME: from updateUnit(), GdxRunTimeException... #iterator() cannot be used nested
+        Array.ArrayIterator<int[]> posIter = posData.getPosIterator();
+
+        while (posIter.hasNext()){
+            int[] pos = posIter.next();
             GameData.panelMatrix[pos[0]][pos[1]].setPanelState(state);
         }
     }
@@ -364,24 +379,15 @@ public class Unit extends Actor {
 
 	/** updates unit position location variables on board
 	 * important for finding panels units can move to
+     *
 	 */
 	public void updatePosition() {
-        Locations.getLocations().updateUnitNodePosition(posData, this);
-        setUnitPanelState(PanelState.ALLY); //set as Ally, since moving
-        //        //update node positions as well, but only if on 32x32 region
-//        if (getX()/32>=0 && getX()/32 <= 0.5 && getY()/32>=0 && getY()/32 <= 0.5f)
-//            Locations.getLocations().updateUnitNodePosition(this);
-
-        // If multiplayer game, send update of relavent info via AppWarp by  JSON to other User
-        // whose AppWarp WarpListener will recieve and update the related Unit setup in beginning
-        if (MainGame.isMultiGame()){
-            selfUpdateData();
-        }
-
         if (this.getX() == targetPan.getX() && this.getY() == targetPan.getY()) {
+            Locations.getLocations().updateUnitNodePosition(posData, this);
+
             setOrigin(getX(), getY()); //update origin
+            setPosition(getX(), getY()); //set position
             this.unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
-            //        state = UnitState.DONE_MOVING;
             animState = AnimState.STILL;
 
             panelPath.clear();
@@ -389,11 +395,7 @@ public class Unit extends Actor {
 
             clickCount = 0;
 
-    //		moveSequence.reset(); //NOTE: this is required to reset sequence so it doesn't cause infinite loop
-    //		actionPool.free(moveSequence);
-    //		actionPool.clear();
-
-            UnitController.getInstance().onMoveFinish();
+            UnitController.getInstance().onMoveFinish(this);
         }
 	}
 
@@ -406,49 +408,39 @@ public class Unit extends Actor {
 		return maxMoves;
 	}
 
-	/**
-	 * @param maxMoves the maxmoves to set
-	 */
-	public void setMaxMoves(int maxMoves) {
-		//need to add extra move to large & medium units
-		if (this.getWidth()>32 && this.getHeight()>32) {   
-			maxMoves++;
-		}
-				
-		this.maxMoves = maxMoves;
-	}
 
-    public void setGridPos(int[] gridPos){
-        this.gridPos = gridPos;
+    /** Returns unit origin on graph.
+     *  For larger units on right side, their panel graph (or game board) origin will be the second position (origin
+     *  + 1 tile) since the actual actor origin is always on the bottom left even if units face different direction.
+     *
+     * @return : the graph origin as int array
+     */
+    public int[] getGraphOrigin(){
+        if (player == 2 && getWidth() > 32)
+            return posData.positions.get(1);
+
+        return posData.positions.get(0);
     }
 
-    public int getGridPosX(){
-        return gridPos[0];
-    }
-
-    public int getGridPosY(){
-        return gridPos[1];
-    }
 
     /** Check to see if this is a Unit owned by actual player
      *
      * @return : true if it is player's Unit
      */
     public boolean isPlayerUnit(){
-        return player == ((GameStage)getStage()).getPlayer() ? true : false;
+
+        if (MainGame.isMultiGame())
+             return player == ((GameStage)getStage()).getPlayer() ? true : false;
+
+        return player == ((GameStage)getStage()).getCurrPlayer() ? true : false;
     }
+
+
 	/**
 	 * @return the unitID
 	 */
 	public int getUnitID() {
 		return unitID;
-	}
-
-	/**
-	 * @param unitID the unitID to set
-	 */
-	public void setUnitID(int unitID) {
-		this.unitID = unitID;
 	}
 
 	/**
@@ -492,19 +484,6 @@ public class Unit extends Actor {
 	}
 
 	/**
-	 * @param faction the faction to set
-	 */
-	public void setFaction(String faction) {
-		this.faction = faction;
-	}
-
-
-
-	public void setDamageList(int[] damageList) {
-		this.damageList = damageList;
-	}
-
-	/**
 	 * @return the player
 	 */
 	public int getPlayer() {
@@ -523,19 +502,6 @@ public class Unit extends Actor {
 		return unitSize;
 	}
 
-	public void setUnitSize(String unitSize) {
-		
-		this.unitSize = unitSize;
-	}
-
-//    //sets side based on x-axis position & size
-//    public void setUnitSide(){
-//        if (getX()==Constants.MAP_TOP_RIGHT[0] - 32 || getX()==Constants.MAP_TOP_RIGHT[0]-64)
-//            unitSide = RIGHT_SIDE;
-//        else
-//            unitSide = LEFT_SIDE;
-//    }
-
     public int getUnitSide(){
         return unitSide;
     }
@@ -549,65 +515,37 @@ public class Unit extends Actor {
         this.owner = owner;
     }
 
-//    @Override
-//    public void setSelectedPanel(Panel panel) {
-//        this.targetPan = panel;
-//        state = UnitState.MOVING; //set state to MOVING
-//
-//        UnitUtils.Movement.hideMoves(this);  //hide panels
-//        moveSequence = UnitUtils.Movement.createMoveAction(this); //create moveSequence
-//        updatePosition();
-//    }
 
     private void log(String message){
     Gdx.app.log(LOG, message);
 }
 }
+//OLD AppWarp Unit update methods
 
 
-//	/** contains methods which updates unit positions, animState &
-//	 * arrays which contain ally/enemy unit info
-//	 *
-//	 */
-//	public void updateAfterMoving() {
-//        //update unit position, animation & selection information
+//only updates if a Multiplayer Game
+//    public void selfUpdateData(){
 //
-//		updatePosition();
+//        unitData.updateData(this, new Vector2(getX(), getY()));
 //
-////        state = UnitState.DONE_MOVING;
-//        animState = AnimState.STILL;
-//        clickCount = 0;
-//		panelPath.clear();
-//		panelArray.clear();
-//
-//
-//
-//        //reset/clear movement actions
-////		moveSequence.reset(); //NOTE: this is required to reset sequence so it doesn't cause infinite loop
-////		actionPool.free(moveSequence);
-////		actionPool.clear();
-//
-//
-//        UnitController.getInstance().onMoveFinish();
-////        isAtEnemyBorder(); //clones enemy & resets Unit position
-//
-//  	}
-
-
-
-//    //starts or finishes unit turn
-//    public void turnSwitch(){
-//        lock = lock == true ? false : true;
-//
-//        PanelState state = isPlayerUnit() ? PanelState.ALLY : PanelState.ENEMY;
-//        setUnitPanelState(state);
+//        AppWarpAPI.getInstance().sendUnitUpdate(unitData);
 //    }
 
-//    public void moveUnit(){
-////        moveSequence = UnitUtils.Movement.createMoveAction(actionPool.obtain(), this);
-////        moveSequence = UnitUtils.Movement.createMoveAction(this);
+//    /** For updating Unit for Multiplayer
+//     *  Previous method, selfUpdateData(), sends out the UserData with UnitData in it
+//     * @param unitData : unitData is data sent from AppWarp
+//     */
+//    public void updateUnit(UnitData unitData){
+//        setX(unitData.getUnitPosition().x);
+//        setY(unitData.getUnitPosition().y);
 //
-//        addAction(sequence());
-//        addAction(UnitUtils.Movement.createMoveAction(moveSequence, this));
+//        posData = unitData.getPosData();
+//        Locations.getLocations().updateUnitNodePosition(posData, this);
+////        setUnitPanelState(PanelState.ENEMY);
+//        unitBox.set(getX(), getY(), this.getWidth(), this.getHeight()); //update the unit box
 //
+//        //animState.setValue(unitData.getState());
+//        health = unitData.getHealth();
+//        damage = unitData.getDamage();
 //    }
+

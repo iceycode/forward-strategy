@@ -1,7 +1,15 @@
 package com.fs.game.utils.pathfinder;
 
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
+import com.fs.game.units.Unit;
+import com.fs.game.map.Panel;
+
+
 /** PathFinder.java
- * an A* search algorithm 
+ * an A* search algorithm
  * Steps:
  *  1) add start to open list, set as parent
  *  2) add adjacent panels to open list
@@ -12,47 +20,40 @@ package com.fs.game.utils.pathfinder;
  *  5) check adjacent squares (ignore units & terrain)
  *  	add to open list if they are not in it
  *  	make current target the parent
- *  6) Check to see if adjacent square is lower then current 
+ *  6) Check to see if adjacent square is lower then current
  *  	if current > adjacent
  *  		add adjacent to list, recalculate G
  *  	else ignore
- * 
- * 
+ *
+ *
  REF http://web.mit.edu/eranki/www/tutorials
-// A* Pseudocode 
-initialize the open list
-initialize the closed list
-put the starting node on the open list (you can leave its f at zero)
+ // A* Pseudocode
+ initialize the open list
+ initialize the closed list
+ put the starting node on the open list (you can leave its f at zero)
 
-while the open list is not empty
-    find the node with the least f on the open list, call it "q"
-    pop q off the open list
-    generate q's 8 successors and set their parents to q
-    for each successor
-    	if successor is the goal, stop the search
-        successor.g = q.g + distance between successor and q
-        successor.h = distance from goal to successor
-        successor.f = successor.g + successor.h
+ while the open list is not empty
+   	find the node with the least f on the open list, call it "q"
+   	pop q off the open list
+   	generate q's 8 successors and set their parents to q
+ 	for each successor
+		if successor is the goal, stop the search
+ 	successor.g = q.g + distance between successor and q
+ 	successor.h = distance from goal to successor
+ 	successor.f = successor.g + successor.h
 
-        if a node with the same position as successor is in the OPEN list \
-            which has a lower f than successor, skip this successor
-        if a node with the same position as successor is in the CLOSED list \ 
-            which has a lower f than successor, skip this successor
-        otherwise, add the node to the open list
-    end
-    push q on the closed list
-end
+ if a node with the same position as successor is in the OPEN list \
+   which has a lower f than successor, skip this successor
+ if a node with the same position as successor is in the CLOSED list \
+   which has a lower f than successor, skip this successor
+ otherwise, add the node to the open list
+ end
+ push q on the closed list
+ end
 
- * 
+ *
  * @author Allen Jagoda
  */
-
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
-import com.fs.game.units.Unit;
-import com.fs.game.map.Panel;
-
 public class PathFinder {
 	
 	final String LOG = "PathFinder LOG : ";
@@ -189,7 +190,7 @@ public class PathFinder {
 				else if (openList.contains(node, false) && node.getCostFromStart() < parent.getCostFromStart() ){
 					node.setParent(parent);
 					node.calculateCostFromStart();
-					node.calculateCostToGoal();
+					node.calculateCostManhattanDistance();
 
 					//openList.add(node);
 //					Gdx.app.log(LOG, " new cost (G) of node in open list is "+ node.getCostFromStart());
@@ -197,7 +198,7 @@ public class PathFinder {
 				else if (!closedList.contains(node, false) && !openList.contains(node, false)){
 					node.setParent(parent);
 					node.calculateCostFromStart();
-					node.calculateCostToGoal();
+					node.calculateCostManhattanDistance();
 					
 					openList.add(node);
 				}

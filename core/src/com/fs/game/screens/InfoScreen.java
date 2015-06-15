@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -47,7 +48,7 @@ public class InfoScreen implements Screen{
     public InfoScreen(MainGame game){
         this.game = game;
         this.font = Assets.uiSkin.getFont("default-small");
-        this.font.scale(.1f);
+//        this.font.scale(.1f);
 
         //load the textures
         this.rulesBackground = Assets.uiSkin.get("rulesBackground", Texture.class);
@@ -78,11 +79,15 @@ public class InfoScreen implements Screen{
     public void drawRules(){
         float width = rulesBackground.getWidth();
         float height = rulesBackground.getHeight();
-        BitmapFont.TextBounds bounds = font.getMultiLineBounds(RULES);
-        float x = RULES_POS[0] + width/2 - bounds.width/2;
-        float y = RULES_POS[1] + height/2 + bounds.height/2;
+//        BitmapFont.TextBounds bounds = font.getMultiLineBounds(RULES);
+        GlyphLayout layout = new GlyphLayout();
+        layout.setText(font, RULES);
 
-        font.drawMultiLine(game.batch, RULES, x, y, width, BitmapFont.HAlignment.LEFT);
+        float x = RULES_POS[0] + width/2 - layout.width/2;
+        float y = RULES_POS[1] + height/2 + layout.height/2;
+
+//        font.drawMultiLine(game.batch, RULES, x, y, width, BitmapFont.HAlignment.LEFT);
+        font.draw(game.batch, layout, x, y);
     }
 
     public void update(){

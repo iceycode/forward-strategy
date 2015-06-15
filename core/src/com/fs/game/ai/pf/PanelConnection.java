@@ -9,8 +9,8 @@ import com.badlogic.gdx.ai.pfa.DefaultConnection;
  */
 public class PanelConnection extends DefaultConnection<PanelNode>{
 
-    public static final float OBSTACLE_COST = 3f; //obstacle fromNode
-    public static final float OCCUPIED_COST = 2f; //occupied toNode cost
+    //obstacle and occupied costs are high so that there is no chance of using them
+    public static final float REGULAR_COST = (float)Math.sqrt(2); //as if no obstacle was there
 
     PanelGraph gameMap;
 
@@ -20,13 +20,15 @@ public class PanelConnection extends DefaultConnection<PanelNode>{
         this.gameMap = gameMap;
     }
 
-
     @Override
     public float getCost() {
-        if (toNode.isNodeOccupied())
-            return OCCUPIED_COST;
+//        return gameMap.startNode.x == getToNode().x && gameMap.startNode.y == getToNode().y ? 1
+//                :getToNode().getTypeCost() ;
 
-        return gameMap.isNodeStart(getToNode()) && getToNode().isNodePassable(gameMap.getCurrPos().type) ? OBSTACLE_COST : 1;
+        if (gameMap.isNodeUnitPosition(getToNode()))
+            return 0;
+
+        return Math.abs(gameMap.data.type - getToNode().getTypeCost());
     }
 
 }

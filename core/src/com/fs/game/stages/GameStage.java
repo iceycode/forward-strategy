@@ -13,18 +13,18 @@ import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.fs.game.assets.Assets;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
-import com.fs.game.data.UnitData;
 import com.fs.game.map.Locations;
 import com.fs.game.map.MiniMap;
+import com.fs.game.screens.StartMultiplayerScreen;
 import com.fs.game.tests.TestUtils;
-import com.fs.game.units.TextActor;
+import com.fs.game.ui.TextActor;
 import com.fs.game.units.Unit;
 import com.fs.game.utils.GameMapUtils;
 
@@ -48,12 +48,15 @@ public class GameStage extends Stage implements StageListener {
 	final String LOG = "GAMESTAGE LOG: ";
 
  	public TiledMap tiledMap; 	//creates the actual map
-    boolean largeMap = false; //if true, then large, scrollable map
+    public static boolean largeMap = false; //if true, then large, scrollable map
 
 	//variables related to stage/screen placements
 	final float SCREENWIDTH = Constants.SCREENWIDTH;
 	final float SCREENHEIGHT = Constants.SCREENHEIGHT;
     final float ASPECT_RATIO = SCREENHEIGHT/SCREENWIDTH; //aspect ratio of view
+
+    final float[] FD_COORDS  = Constants.TURN_MSG_COORD;
+    final float[] FD_SIZE = Constants.POPUP_SIZE;
 
     final Vector3 curr = new Vector3();
     final Vector3 last = new Vector3(-1, -1, -1);
@@ -101,7 +104,8 @@ public class GameStage extends Stage implements StageListener {
     //global fields for showing message over GameMap
     float msgTime = 0f; //time start for message
     float endTime = 2f; //time message stops
-    TextActor textActor;
+
+    TextActor popupMsg; //popup a small message
     String msg = "START GAME!"; // game message, initially start game
     String playerTurnMsg = "PLAYER " + currPlayer + " TURN";
 
@@ -130,7 +134,8 @@ public class GameStage extends Stage implements StageListener {
             setupView();
         }
 
-        setTextActor(); //textActor for displaying messages
+        //setTextActor(); //textActor for displaying messages
+        setPopup();
     }
 
 
@@ -144,8 +149,8 @@ public class GameStage extends Stage implements StageListener {
 	
 	//sets up camera
 	public void setupView(){
-		camera = new OrthographicCamera(Constants.SCREENWIDTH, Constants.SCREENHEIGHT);
-//		camera.setToOrtho(false, 800, 500); //FIXED: got rid of it
+		camera = new OrthographicCamera();//Constants.SCREENWIDTH, Constants.SCREENHEIGHT FIXED: got rid of it
+		camera.setToOrtho(false, Constants.SCREENWIDTH, Constants.SCREENHEIGHT);
 
  		//tiled map lines up well with this setup
         camera.position.set(MAP_X + 112, MAP_Y + 50, 0);
@@ -183,25 +188,23 @@ public class GameStage extends Stage implements StageListener {
 //        playerMessenger = new MessageDispatcher();
 //    }
 
-    //sets up textActor & adds to HUD stage, stage
-    protected void setTextActor(){
-        textActor = new TextActor("retro1", Constants.TURN_MSG_COORD);
-        addActor(textActor);
-    }
 
-    /** adds all player's units to stage
+    /** Adds a player's units to stage
      *
      * @param unitArray : an Array of Units that are added to stage
      */
-    public void addUnits(Array<Unit> unitArray ){
+    public void addUnits(Array<Unit> unitArray){
         for (Unit u : unitArray){
-            if (u.getOwner() != GameData.playerName)
-                u.setTouchable(Touchable.disabled);
             addActor(u);
         }
     }
 
-
+    /** Sets up multiplayer units. Unit info comes from {@link StartMultiplayerScreen#getUserData()}
+     *
+     * @param player : player
+     * @param faction : faction of player
+     * @param enemyFaction : enemy player faction
+     */
     public void setupUnitsMulti(int player, String faction, String enemyFaction){
         this.mPlayer = player; //set the player
 
@@ -217,66 +220,29 @@ public class GameStage extends Stage implements StageListener {
 
         Locations.getLocations().initLocations();
 
-        GameMapUtils.togglePlayerUnits(1, this);
+//        GameMapUtils.togglePlayerUnits(1, this); //FIXED ?
     }
 
-    /** gets updated data from multiplayerscreen
-     *
-     * @param player : player who is doing the sending
-     * @param data : data from multiplayer screen
-     */
-    public void updateUnit(int player, UnitData data){
-        String name = data.getOwner();
-
-        Unit u = player == 1 ? GameData.p1Units.get(data.getName()) : GameData.p2Units.get(data.getName());
-        System.out.println("Unit " + data.getName() + " is enemy, owned by "+ name);
-        u.updateUnit(data);
-
-//        int unitID = data.getUnitID();
-//        Array<Unit> unitsInGame = GameMapUtils.findAllUnits(getActors());
-//        for (Unit u : unitsInGame){
-//            if (unitID == u.getUnitID() && u.getOwner().equals(name)){
-//                System.out.println("Unit " + u.getName() + " is enemy, owned by "+ name);
-//                u.updateUnit(data);
-//
-//                break;
-//            }
-//        }
+    protected void setPopup(){
+//        popup = new PopupDialog(Assets.getDarkSkin(), viewport);
+//        addActor(popup);
+        popupMsg = new TextActor(Assets.getDarkSkin().getFont("default-font"), FD_COORDS);
+        addActor(popupMsg);
     }
 
 
-    boolean showMsg = true; //if true, shows message
-    public void showMessage(float delta){
-        msgTime += delta;
-
-        if (msgTime < endTime){
-            //check if actor is in back, since it will have ZIndex of 0
-            if (textActor.getZIndex() == 0)
-                textActor.toFront();
-        }
-        else{
-            textActor.toBack();
-            msgTime = 0;
-            showMsg = false;
-        }
-    }
-
-    /** Shows a message over all other actors on stage
-     *
-     * @param message : message to show
-     * @param msgTime : time to show it for
-     */
-    public void setStageMessage(String message, float msgTime){
-        showMsg = true;
-        textActor.setText(message);
-        this.endTime = msgTime;
-    }
-
-
+    Vector3 touchPoint = new Vector3(); //touchPoint for stage
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (screenX < MAP_WIDTH && screenY < MAP_HEIGHT && screenY > MAP_Y && screenX > MAP_X)
+
+        camera.unproject(touchPoint.set(screenX, screenY, 0));
+
+        // Only recieves touchdown from within map bounds on screen
+        if (GameMapUtils.isInMapBounds(touchPoint.x, touchPoint.y)){
+            log("touchDown on stage at " + screenX + ", " + screenY);
             return super.touchDown(screenX, screenY, pointer, button);
+        }
+
 
         return false;
     }
@@ -311,13 +277,15 @@ public class GameStage extends Stage implements StageListener {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        camera.unproject(touchPoint.set(screenX, screenY, 0));
+
         last.set(-1, -1, -1);
         if (isDragging){
             log("New Camera position after dragging: " + camera.position.x + ", " + camera.position.y);
             isDragging = false;
         }
 
-        if (screenX < MAP_VIEW_WIDTH && screenY < MAP_VIEW_HEIGHT && screenY > MAP_Y && screenX > MAP_X)
+        if (GameMapUtils.isInMapBounds(touchPoint.x, touchPoint.y))
             return super.touchUp(screenX, screenY, pointer, button);
 
         return false;
@@ -326,31 +294,35 @@ public class GameStage extends Stage implements StageListener {
     /* stage maps draw method */
     @Override
     public void draw() {
+//        if (showMsg)
+//            showMessage(Gdx.graphics.getDeltaTime());
+
 
         viewport.apply();
-        Gdx.gl20.glScissor((int) MAP_X, (int) MAP_Y, (int) MAP_VIEW_WIDTH, (int) MAP_VIEW_HEIGHT);
-        Gdx.gl20.glDisable(GL20.GL_SCISSOR_TEST);
-        Gdx.gl20.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        Gdx.gl20.glEnable(GL20.GL_SCISSOR_TEST);
+
+        if (largeMap){
+            Gdx.gl20.glScissor((int) MAP_X, (int) MAP_Y, (int) MAP_VIEW_WIDTH, (int) MAP_VIEW_HEIGHT);
+            Gdx.gl20.glDisable(GL20.GL_SCISSOR_TEST);
+            Gdx.gl20.glClear(GL20.GL_COLOR_BUFFER_BIT);
+            Gdx.gl20.glEnable(GL20.GL_SCISSOR_TEST);
+        }
+
 
         //render(); //renders the tiled map & actors
 
         super.draw(); //updates viewport/camera & draws actors
-
-
     }
 
 
     /**
      *  map stage act method
-     *
+     *Actions.sequence(Actions.fadeOut(2f, Interpolation.fade),
+     Actions.removeActor())
      */
     @Override
     public void act(float delta) {
         super.act(delta);
 
-        if (showMsg)
-            showMessage(delta);
     }
 
 
@@ -373,18 +345,16 @@ public class GameStage extends Stage implements StageListener {
     }
 
 
-    public void updateScore(Unit unit){
-        int player = unit.player; //get unit player
-
-        //set score based on unit size
-        int score = unit.getUnitSize() == Unit.SMALL ? 10
-                : unit.getUnitSize() == Unit.MEDIUM ? 20
-                : 30;
+    /** Updates points for player based on which unit died
+     *
+     * @param player : player who gains points from Unit death
+     * @param points : points awarded (based on Unit size)
+     */
+    public void updateScore(int player, int points){
 
 //        int resources = score*5; //resources for creating buildings TODO: implement resources for buildings
-        infoStageListener.updatePlayerScore(player, score);
+        infoStageListener.updatePlayerScore(player, points);
     }
-
 
     @Override
     public void updateUnitInfo(Unit unit) {
@@ -419,8 +389,9 @@ public class GameStage extends Stage implements StageListener {
         GameMapUtils.togglePlayerUnits(nextPlayer, this);
         currPlayer = nextPlayer;
 
-        msg = playerTurnMsg;
-        setStageMessage(msg, 3f);
+        msg = "PLAYER " + currPlayer + " TURN";
+        popupMsg.showTimedMessage(msg, 2f);
+
     }
 
     @Override

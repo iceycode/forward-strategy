@@ -37,7 +37,6 @@ public class Constants {
     public static final String PANELS_32X32 = "maps/tilesets/Tileset-Panels_32x32.png";
 
     //----SKINS----
-    public static final String TEST_SKIN_GDX = TEST_ASSET_DIR + "data/uiskin.json";
     public static final String DARK_SKIN = "skins/dark/darkSkin.json"; //dark skin - taken from my EJuice Toolkit App
 
 //---------------Skin screen dimensions, positions, messages-----------------//
@@ -81,7 +80,7 @@ public class Constants {
             " - if it is green, it is your turn\n" +
             " Score boards keep track of score & are on side of player\n" +
             " - every time a unit is killed, player gets 10 points (this will probably change)\n" +
-            "\nMOVING:\n" +
+            "\nIS_MOVING:\n" +
             " - clicking on unit will highlight panels it can move to on board\n" +
             " - clicking on a highlighted panel will move chosen unit to it \n" +
             "\nATTACKING:\n" +
@@ -286,11 +285,15 @@ public class Constants {
  * 
  */
     //text for when player goes
-    public static final float[] TURN_MSG_COORD = {Constants.SCREENWIDTH / 4, Constants.SCREENHEIGHT / 2};
+    public static final float[] TURN_MSG_COORD = {Constants.SCREENWIDTH / 2, Constants.SCREENHEIGHT / 2};
+    public static final float[] POPUP_SIZE = {150f, 75f};
 
 	/* unit information
 	 * 
 	 */
+    //setup y positions - how much to offset unit based on order in array
+    public static final int[] SETUP_Y_OFFSETS = {0, 1, 10, 11, 3, 8, 5};
+
 	//health
 	public static final float HEALTH = 4f; //health is out of 4
 	public static final int HLTH_W = 12; //this is the width in pixels of the health bar when full

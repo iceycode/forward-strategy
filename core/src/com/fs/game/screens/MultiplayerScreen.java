@@ -1,17 +1,16 @@
 package com.fs.game.screens;
 
-import appwarp.WarpController;
-import appwarp.WarpListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.utils.Json;
 import com.fs.game.MainGame;
+import com.fs.game.appwarp.AppWarpAPI;
+import com.fs.game.appwarp.WarpController;
+import com.fs.game.appwarp.WarpListener;
 import com.fs.game.constants.Constants;
 import com.fs.game.data.GameData;
 import com.fs.game.data.UserData;
-import com.fs.game.utils.AppWarpAPI;
-import com.fs.game.utils.PlayerUtils;
+import com.fs.game.units.UnitController;
 
 /** The multiplayer screen implements Screen and  WarpListener
  * - the online multiplayer version of GameScreen
@@ -24,18 +23,16 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
 
     StartMultiplayerScreen prevScreen; //the previous screen (MainScreen or MenuScreen)
 
-    float timerCount = 0;
-
     //player variables
     boolean playerTurn = false;
     public int currPlayer = 1; //current player whose turn it is (1 goes first always)
-    public int playerScore = 0;
+//    public int playerScore = 0;
     public int enemyScore = 0;
     public int[] unitCounts = {7, 7};
 
     private int player = 0; //player turn/positioning
     private String playerFaction;
-    private int playerID; //playecom.fs.game.appwarp positions //for appwarp sdk
+    private int playerID; //playecom.fs.game.com.fs.game.appwarp positions //for com.fs.game.appwarp sdk
 
     boolean setupDone = false; //tells whether setup is done
 
@@ -43,12 +40,11 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
     private final String errorInConnection = Constants.ERROR_CONNECT_MSG;
     String msg = tryingToConnect;
     private String inGameMsg; //in game message
-    private String startMsg = "Game Starting for player: "+ GameData.getInstance().playerName + "\n Game Starting in ";
+    private String startMsg = "Game Starting for player: "+ GameData.playerName + "\n Game Starting in ";
 
 
     public MultiplayerScreen(final MainGame game, StartMultiplayerScreen screen){
         super(game);
-
 
         this.prevScreen = screen;
         this.gameState = GameState.RUN;
@@ -77,25 +73,13 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
             Gdx.input.setInputProcessor(pauseStage);
             Gdx.app.log(LOG, "gameState is paused");
             gameState = GameState.PAUSE;
-            sendPauseData();
+            AppWarpAPI.getInstance().sendPauseUpdate();
         }
 
         if (unitCounts[0]==0 || unitCounts[1]==0)
             gameState = GameState.QUIT;
 
     }
-
-//    @Override
-//    public void pauseCurrent(float delta){
-//        pauseWindow.act(delta);
-//        pauseStage.act(delta);
-//
-//        if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
-//            Gdx.app.log(LOG, "game is resuming");
-//            gameState = GameState.RESUME;
-//        }
-//    }
-
 
     public void gameOver(){
         prevScreen.setGameState(GameState.GAME_OVER);
@@ -120,14 +104,6 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
     }
 
 
-//    // FIXME: should work in GameScreen!
-//    // should come after stage draw methods
-//    public void drawGameMsg(){
-//        super.drawGameMsg();
-//    }
-
-
-//    float countDown = 0; //FIXED: in GameScreen
     @Override
     public void show() {
 //        Gdx.graphics.getGL20().glClearColor(0, 0, 0, 1); //sets the color of clear screen
@@ -154,24 +130,13 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
             music.setVolume(currVolumeMusic);
         //music.play();
 
+        //FIXED: now countdown occurs in StartMultiplayerScreen, no longer case STARTING required
         switch (gameState){
-            case STARTING: //FIXME: screen not rendering countdown or stages after setup is done
-                countDown += delta;
-                msg = startMsg + Integer.toString(3 - (int)countDown);
-//                super.drawGameMsg();
-                if (countDown > 3.5) {
-                    log("Countdown time : " + countDown);
-                    gameState = GameState.RUN;
-                    countDown = 0;
-                }
-                show();
-                break;
             case RUN :
                 updateCurrent(delta);
                 super.show();
                 break;
             case PAUSE :
-                //in GameScreen method
                 pause();
                 break;
             case RESUME :
@@ -192,11 +157,15 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
 
     @Override
     public void pause() {
-        Gdx.graphics.getGL20().glClearColor(0, 1, 0, 1); //sets the color of clear screen
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         pauseStage.act(Gdx.graphics.getDeltaTime());
         pauseStage.draw();
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+            Gdx.app.log(LOG, "game is resuming");
+            gameState = GameState.RESUME;
+            AppWarpAPI.getInstance().sendResumeUpdate(); //send resume update to player
+        }
     }
 
     @Override
@@ -227,7 +196,9 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
 //===================WarpListener Interface Methods=========================//
     @Override
     public void onWaitingStarted(String message) {
-		
+        /** DO NOTHING HERE
+         *  Everything is done in {@link StartMultiplayerScreen}
+         */
     }
 
     @Override
@@ -239,7 +210,9 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
 
     @Override
     public void onGameStarted(String message) {
-
+        /** DO NOTHING HERE
+         *  Everything is done in {@link StartMultiplayerScreen}
+         */
     }
 
     @Override
@@ -269,21 +242,24 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
         log("Update state : "+ updateState);
 
         switch (updateState){
-            case AppWarpAPI._SETUP: //initiate setup
+            case AppWarpAPI.SETUP_UPDATE: //initiate setup
                 updateSetup(data);
                 setupDone = true;
                 break;
-            case AppWarpAPI._UNIT_UPDATE:
+            case AppWarpAPI.UNIT_UPDATE:
                 updateUnit(data);
                 break;
-            case AppWarpAPI._TURN_CHANGE:
+            case AppWarpAPI.TURN_UPDATE:
                 updatePlayer(data);
                 break;
-            case AppWarpAPI._PAUSE:
-                gameState = GameState.PAUSE; //game is paused
+            case AppWarpAPI.PAUSE_UPDATE:
+                gameState = GameState.PAUSE; //game is now paused
                 break;
-            case AppWarpAPI._RESUME:
+            case AppWarpAPI.RESUME_UPDATE:
                 gameState = GameState.RUN;
+                break;
+            case AppWarpAPI.GAME_END_UPDATE:
+                gameState = GameState.GAME_OVER;
                 break;
             default:
                 //do nothing
@@ -292,42 +268,10 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
     }
 
 
-    public void sendSetupData(){
-        playerID = PlayerUtils.randomLengthPlayerID();
-
-        UserData userData = new UserData();
-        userData.setName(GameData.playerName);
-        userData.setPlayerID(playerID);
-        userData.setFaction(playerFaction);
-        userData.setUpdateState(0);
-
-        String data = AppWarpAPI.getInstance().encodeUserData(userData);
-
-        WarpController.getInstance().sendGameUpdate(data);
-    }
-
-
-
-
-    private void sendPauseData(){
-        try{
-            Json json = new Json();
-            json.setIgnoreUnknownFields(true);
-
-            UserData userData = new UserData();
-            userData.setName(GameData.playerName);
-            userData.setUpdateState(3);
-
-            String data = json.toJson(userData, UserData.class);
-            WarpController.getInstance().sendGameUpdate(data);
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
-
-    //updates the initial setup data
+    /**
+     *
+     * @param data
+     */
     public void updateSetup(UserData data){
         playerID = AppWarpAPI.getInstance().getPlayerID(); //player id for comparison
 
@@ -338,7 +282,7 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
 
         //set player
         player = playerID > enemyID ? 1 : 2;
-        playerTurn = player == 1 ? true : false;
+//        playerTurn = player == 1 ? true : false;
 
         stage.setPlayer(player);
         stageMap.setupUnitsMulti(player, playerFaction, enemyFaction);
@@ -347,11 +291,12 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
     //updates a single unit on stage
     private void updateUnit(UserData data){
         if (data.getUnitData().getHealth() <= 0){
-            enemyScore += 10;
+
             unitCounts[data.getPlayer()-1]--;
         }
         else{
-            stageMap.updateUnit(data.getPlayer(), data.getUnitData());
+//            stageMap.updateUnit(data.getPlayer(), data.getUnitData());
+            UnitController.getInstance().updateUnitMulti(data);
         }
     }
 
@@ -362,12 +307,19 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
         this.playerTurn = data.isPlayerTurn();
 
         System.out.println("unlocking player " + currPlayer + " units");
+        stage.resetTurn();
         //stageMap.unlockPlayerUnits(GameData.getInstance().playerName);
 //        this.currPlayer = player;
+//
+//        //reset if false, since does not know it is this players turn
+//        if (!playerTurn)
+//            stage.resetTurn();
+    }
 
-        //reset if false, since does not know it is this players turn
-        if (!playerTurn)
-            stage.resetTurn();
+    protected void updatePlayerScore(UserData data){
+
+
+
     }
 
     //shows message about what is going on
@@ -376,6 +328,24 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
     }
 
 }
+
+// NOTE: this is now done in StartMultiplayerScreen
+//    public void sendSetupData(){
+//        playerID = PlayerUtils.randomLengthPlayerID();
+//
+//        UserData userData = new UserData();
+//        userData.setName(GameData.playerName);
+//        userData.setPlayerID(playerID);
+//        userData.setFaction(playerFaction);
+//        userData.setUpdateState(0);
+//
+//        String data = AppWarpAPI.getInstance().encodeUserData(userData);
+//
+//        WarpController.getInstance().sendGameUpdate(data);
+//    }
+
+
+
 //Methods found in GameScreen used in initialization
 //GLOBAL variables in GameScreen
 
@@ -458,3 +428,4 @@ public class MultiplayerScreen extends GameScreen implements WarpListener{
 //        GameData.volumes[1] = .5f;
 //        music.setVolume(GameData.volumes[1]);
 //    }
+

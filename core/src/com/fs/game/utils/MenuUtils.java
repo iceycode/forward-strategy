@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
-import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.fs.game.assets.Assets;
@@ -138,8 +138,8 @@ public class MenuUtils {
                     @Override
                     public void changed(ChangeEvent event, Actor actor) {
                         Gdx.app.log("Faction Menu LOG: ", "selected " + faction);
-                        if (GameData.getInstance().playerFaction == null) {
-                            GameData.getInstance().playerFaction = faction;
+                        if (GameData.playerFaction == null) {
+                            GameData.playerFaction = faction;
 
                         }
 
@@ -186,6 +186,7 @@ public class MenuUtils {
             return textLabels;
         }
 
+
         /** creates a HashMap containing keys for UnitImage Arrays by type
          * 0=small, 1=med, 2=large
          * - correlates with the Labels of unit type
@@ -214,7 +215,6 @@ public class MenuUtils {
                     largeUnits.add(image);
                     allUnits.add(image);
                 }
-
             }
 
             unitImages.put(0, smallUnits);
@@ -240,7 +240,6 @@ public class MenuUtils {
                     UnitImage unitImage = unitImages.get(i).get(j);
                     GameData.factUnitImages.add(unitImage);
                     imageTable.add(unitImage).width(unitImage.getWidth()).height(unitImage.getHeight());
-
                 }
                 imageTable.row();
             }
@@ -391,12 +390,12 @@ public class MenuUtils {
             return confirm;
         }
 
-
     }
 
 
     /** PauseMenu class
      * - contains methods for creation of pause menu widgets & functions
+     *
      * TODO: create the other pause menu features
      *
      */
@@ -415,7 +414,7 @@ public class MenuUtils {
             //sets the window style
             WindowStyle winStyle = new WindowStyle();
             winStyle.titleFont = Assets.uiSkin.getFont("default-small");
-            winStyle.titleFont.scale(.01f); //scale it down a bit
+//            winStyle.titleFont.scale(.01f); //scale it down a bit
             winStyle.background = Assets.uiSkin.getDrawable("pause-background");
             //create the window
             Window win = new Window("PAUSED", winStyle);

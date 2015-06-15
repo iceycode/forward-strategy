@@ -1,4 +1,4 @@
-package appwarp;
+package com.fs.game.appwarp;
 
 public interface WarpListener {
 	

@@ -46,7 +46,9 @@ public class Assets {
 
     public static OrderedMap<String, Array<UnitInfo>> unitInfoMap; //keys are factions, arrays store unitInfo
     public static Array<UnitInfo> unitInfoArray; //1-5 small, 6-8 medium, 9-10 large
-    public static Array<int[]> damageListArray;
+    public static Array<int[]> damageListArray; //list of damage of one unit to another
+
+    public static int damageMod = 15; //modifier for damage (multiplier)
 
 	/** this returns the asset manager
  	 * TODO: organize, optimize, organize...
@@ -75,11 +77,10 @@ public class Assets {
         String jsonAsStringDL = handleDL.readString();
         JsonValue rootDL = new JsonReader().parse(jsonAsStringDL);
 
-		/*
-		//GameMananager will hold templates of these scene2d & ui objects
-		//GameInfo holds versions of templates updated for current game
-		// ie, UnitInfo always holds 7-8 fields, but will vary based on unit
-		*/
+		/* Assets will hold templates of these scene2d & ui objects
+		 * GameData holds versions of templates updated for current game
+		 *  ie, UnitInfo always holds 7-8 fields, but will vary based on unit
+		 */
 		for (JsonValue entry = root.child; entry!=null; entry = entry.next) {
             JsonValue dlentry = rootDL.child;
             for (int i = 0; i < entry.size; i++) {
@@ -94,6 +95,9 @@ public class Assets {
 
                 if (dlentry!=null){
                     int[] dl = dlentry.asIntArray();
+                    modifyDamages(dl); //modifies the damages
+
+
                     uInfo.setDamageList(dl); //add int[] damageList
                     damageListArray.add(dl);
                     dlentry = dlentry.next;
@@ -189,6 +193,12 @@ public class Assets {
         return unitTexPaths;
     }
 
+    protected static void modifyDamages(int[] damages){
+        for (int i = 0; i < damages.length; i++){
+            damages[i] = damages[i]*damageMod;
+        }
+    }
+
 
 	/** creates the skins for unit UI
 	 * 
@@ -201,7 +211,7 @@ public class Assets {
         loadStartScreenAssets(skin);
         loadRuleWindowAssets(skin);
         loadGameScreenAssets(skin); //for gamescreen ui (game play)
-        loadMapAssets(skin);
+//        loadMapAssets(skin);
 
         //------assets for menus-------
         loadMenuAssets(skin);
@@ -221,7 +231,7 @@ public class Assets {
         BitmapFont defaultFont = new BitmapFont();
         skin.add("default", defaultFont); //default regular font via libgdx
 
-        defaultFont.scale(.5f); //smaller default font
+//        defaultFont.scale(.5f); //smaller default font
         skin.add("default-small", defaultFont);
 
         //For HTML, gdx freetype will not work, so need fnt format with tga images
@@ -312,7 +322,7 @@ public class Assets {
 
         Window.WindowStyle winStyle = new Window.WindowStyle();
         winStyle.titleFont = skin.getFont("default-small");
-        winStyle.titleFont.scale(.01f); //scale it down a bit
+//        winStyle.titleFont.scale(.01f); //scale it down a bit
         winStyle.stageBackground = new TextureRegionDrawable(new TextureRegion(new Texture(pixmap)));
         skin.add("ruleWinStyle", winStyle);
 
@@ -487,7 +497,7 @@ public class Assets {
         //sets the window style for pause menu
         Window.WindowStyle winStyle = new Window.WindowStyle();
         winStyle.titleFont = skin.getFont("default-small");
-        winStyle.titleFont.scale(.01f); //scale it down a bit
+//        winStyle.titleFont.scale(.01f); //scale it down a bit
         winStyle.background = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("menu/pause menu/pauseMenu-background.png"))));
 
         Slider.SliderStyle soundStyle = new Slider.SliderStyle();
